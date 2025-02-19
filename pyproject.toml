@@ -18,11 +18,23 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 # Declare any run-time dependencies that should be installed with the package.
-#dependencies = [
-#    "importlib-resources;python_version<'3.10'",
-#]
+dependencies = [
+    "numpy",
+    "pandas",
+    "lightgbm",
+    "pingouin",
+    "xgboost",
+    "torch",
+    "rdkit",
+    "torchaudio",
+    "torchvision",
+    "catboost",
+    "deepchem",
+    "scikit-learn",
+    "scikit-posthocs",
+]
 
 # Update the urls once the hosting is set up.
 #[project.urls]
