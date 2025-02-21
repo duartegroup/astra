@@ -1,17 +1,23 @@
 name: test
 channels:
-
+  - conda-forge
   - defaults
 dependencies:
-    # Base depends
-  - python
   - pip
-
-    # Testing
+  - rdkit
+  # Testing
   - pytest
   - pytest-cov
-
   # Pip-only installs
   - pip:
     - codecov
-
+    - catboost
+    - deepchem
+    - lightgbm
+    - pingouin
+    - scikit-learn
+    - scikit-posthocs
+    - xgboost
+    - torch
+    - torchvision
+    - torchaudio
