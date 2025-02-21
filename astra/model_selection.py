@@ -60,7 +60,7 @@ from sklearn.metrics import (
     matthews_corrcoef,
     make_scorer,
 )
-from models.classification import non_probabilistic_models
+from .models.classification import non_probabilistic_models
 
 # Evaluation metrics for ordinal classification:
 # Weighted Cohen Kappa Score, Ref.: https://aclanthology.org/2021.acl-long.214.pdf
