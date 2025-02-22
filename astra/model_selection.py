@@ -5,6 +5,12 @@ This module contains functions for model selection and evaluation.
 
 Functions
 ---------
+get_kendalltau_score(y_true, y_pred)
+    Calculate the Kendall Tau correlation coefficient.
+get_pearsonr_score(y_true, y_pred)
+    Calculate the Pearson correlation coefficient.
+get_spearmanr_score(y_true, y_pred)
+    Calculate the Spearman correlation coefficient.
 find_n_best_models(results_dic, metric, bf_corr=True)
     Find the n best models that don't perform significantly differently with respect to a given metric as determined using the Friedman test.
 perform_statistical_tests(results_dic, metric)
@@ -42,7 +48,7 @@ import pandas as pd
 import numpy as np
 import pingouin as pg
 import scikit_posthocs as sp
-from scipy.stats import ranksums
+from scipy.stats import ranksums, kendalltau, pearsonr, spearmanr
 from sklearn.base import clone, BaseEstimator
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.pipeline import make_pipeline
@@ -62,6 +68,64 @@ from sklearn.metrics import (
 )
 from .models.classification import non_probabilistic_models
 
+
+def get_kendalltau_score(y_true, y_pred):
+    """
+    Calculate the Kendall Tau correlation coefficient.
+
+    Parameters
+    ----------
+    y_true : list
+        True values.
+    y_pred : list
+        Predicted values.
+
+    Returns
+    -------
+    float
+        The Kendall Tau correlation coefficient.
+    """
+    return kendalltau(y_true, y_pred).statistic
+
+
+def get_pearsonr_score(y_true, y_pred):
+    """
+    Calculate the Pearson correlation coefficient.
+
+    Parameters
+    ----------
+    y_true : list
+        True values.
+    y_pred : list
+        Predicted values.
+
+    Returns
+    -------
+    float
+        The Pearson correlation coefficient.
+    """
+    return pearsonr(y_true, y_pred).statistic
+
+
+def get_spearmanr_score(y_true, y_pred):
+    """
+    Calculate the Spearman correlation coefficient.
+
+    Parameters
+    ----------
+    y_true : list
+        True values.
+    y_pred : list
+        Predicted values.
+
+    Returns
+    -------
+    float
+        The Spearman correlation
+    """
+    return spearmanr(y_true, y_pred).statistic
+
+
 # Evaluation metrics for ordinal classification:
 # Weighted Cohen Kappa Score, Ref.: https://aclanthology.org/2021.acl-long.214.pdf
 # RMSE and MSE, Ref.: https://link.springer.com/chapter/10.1007/978-3-642-01818-3_25
@@ -76,6 +140,9 @@ REGRESSION_METRICS = {
     "RMSE": root_mean_squared_error,
     "MSE": mean_squared_error,
     "MAE": mean_absolute_error,
+    "KendallTau": get_kendalltau_score,
+    "PearsonR": get_pearsonr_score,
+    "SpearmanR": get_spearmanr_score,
 }
 MULTICLASS_METRICS = {
     "Cohen Kappa": cohen_kappa_score,
@@ -84,6 +151,9 @@ MULTICLASS_METRICS = {
 }
 KNOWN_METRICS = {**CLASSIFICATION_METRICS, **REGRESSION_METRICS, **MULTICLASS_METRICS}
 lin_kappa_score = make_scorer(cohen_kappa_score, weights="linear")
+kendalltau_score = make_scorer(get_kendalltau_score)
+pearsonr_score = make_scorer(get_pearsonr_score)
+spearmanr_score = make_scorer(get_spearmanr_score)
 SCORING = {
     "F1": "f1",
     "PR AUC": "average_precision",
@@ -93,6 +163,9 @@ SCORING = {
     "RMSE": "neg_root_mean_squared_error",
     "MSE": "neg_mean_squared_error",
     "MAE": "neg_mean_absolute_error",
+    "KendallTau": kendalltau_score,
+    "PearsonR": pearsonr_score,
+    "SpearmanR": spearmanr_score,
     "Cohen Kappa": lin_kappa_score,
 }
 HIGHER_BETTER = ["F1", "PR AUC", "ROC AUC", "MCC", "R2", "Cohen Kappa"]
