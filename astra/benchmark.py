@@ -3,16 +3,18 @@ import pandas as pd
 import numpy as np
 import pickle
 import logging
-from data.splitting import get_splits  # TODO: Move away from deepchem
-from featurisation.features import get_fingerprints, RDKit_descriptors
-from model_selection import (
+from .data.splitting import get_splits  # TODO: Move away from deepchem
+from .featurisation.features import get_fingerprints, RDKit_descriptors
+from .model_selection import (
     CLASSIFICATION_METRICS,
     REGRESSION_METRICS,
+    LOWER_BETTER,
     get_cv_performance,
     get_optimised_cv_performance,
     get_best_hparams,
     find_n_best_models,
     get_best_model,
+    get_estimator_name,
 )
 
 # TODO: extract some of the code here and in compare.py into functions
@@ -21,16 +23,16 @@ from model_selection import (
 def run(
     data: str,
     name: str,
-    run_nested_CV: bool,
-    fold_col: str,
-    main_metric: str,
-    sec_metrics: list[str],
-    split: str,
-    n_folds: int,
-    fp_type: str,
-    incl_RDKit_feats: bool,
-    scaler: str,
-    n_jobs: int,
+    run_nested_CV: bool = False,
+    fold_col: str = "Fold",
+    main_metric: str = "R2",
+    sec_metrics: list[str] = ["MSE", "MAE"],
+    split: str | None = None,
+    n_folds: int = 5,
+    fingerprint: str | None = None,
+    incl_RDKit_feats: bool = False,
+    scaler: str | None = None,
+    n_jobs: int = 1,
 ) -> None:
     """
     Run the benchmark.
@@ -42,9 +44,9 @@ def run(
         pickled pd.DataFrame, at least with a column called 'Target', containing the
         target variable. Precomputed features should be in column called 'Features'.
         If the data is not prefeaturised, it should contain a column called 'SMILES'.
-    name : str, default='results'
-        Name of the experiment to save the results to. Will be used to load cached
-        results if they exist.
+    name : str
+        Name of the experiment. Results will be saved in a folder with this name in the
+        'results' directory. Will be used to load cached results if they exist.
     run_nested_CV : bool, default=False
         Whether or not to run nested CV with hyperparameter tuning for the best models.
     fold_col : str, default='Fold'
@@ -54,14 +56,14 @@ def run(
         prediction task (classification or regression).
     sec_metrics : list[str], default=['MSE', 'MAE']
         Secondary metrics to use for model selection.
-    split : str, default=None
+    split : str or None, default=None
         Type of split to use, if the data is to be resplit first. Valid choices are
         'Scaffold' and 'Fingerprint'. If this is not specified, the data is assumed to
         already be split. If the data is not to be split, do not specify this argument,
         as it will override the original split.
     n_folds : int, default=5
         Number of folds to split the data into, if the data is to be resplit first.
-    fp_type : str, default=None
+    fingerprint : str or None, default=None
         Type of fingerprint to use, if the data is to be featurised first.
         Valid choices are 'Morgan', 'Avalon', 'RDKit', 'MACCS', 'AtomPair', 'TopTorsion'.
         If this is not specified, the data is assumed to already be featurised. If the data
@@ -71,7 +73,7 @@ def run(
     incl_RDKit_feats : bool, default=False
         Whether or not to include RDKit features, if the data is to be featurised first.
         If 'fingerprint' isn't specified, this argument is ignored.
-    scaler : str, default=None
+    scaler : str or None, default=None
         Type of scaler to use, if the data is to be scaled first. Valid choices are
         'Standard' and 'MinMax'.
     n_jobs : int, default=1
@@ -96,7 +98,7 @@ def run(
     data = pd.read_pickle(data)
 
     if main_metric in REGRESSION_METRICS:
-        from models.regression import regressors, regressor_params
+        from .models.regression import regressors, regressor_params
 
         for metric in sec_metrics:
             assert (
@@ -107,7 +109,7 @@ def run(
         params = regressor_params
         logging.info("Benchmarking regression models.")
     elif main_metric in CLASSIFICATION_METRICS:
-        from models.classification import (
+        from .models.classification import (
             classifiers,
             classifier_params,
             non_probabilistic_models,
@@ -137,6 +139,7 @@ def run(
 
     os.makedirs("cache", exist_ok=True)
     os.makedirs("results", exist_ok=True)
+    os.makedirs(f"results/{name}", exist_ok=True)
 
     if split is not None:
         logging.info("Splitting data.")
@@ -144,10 +147,10 @@ def run(
         assert split in ["Scaffold", "Fingerprint"], "Invalid split type."
         data = get_splits(data, split, n_folds)
 
-    if fp_type is not None:
+    if fingerprint is not None:
         logging.info("Featurising data.")
         assert "SMILES" in data.columns, "Data does not contain a 'SMILES' column."
-        assert fp_type in [
+        assert fingerprint in [
             "Morgan",
             "Avalon",
             "RDKit",
@@ -156,14 +159,14 @@ def run(
             "TopTorsion",
         ], "Invalid fingerprint type."
 
-        if fp_type.startswith("Morgan"):
-            radius, fpsize = map(int, fp_type.split("_")[1:])
-            fp_type = "Morgan"
+        if fingerprint.startswith("Morgan"):
+            radius, fpsize = map(int, fingerprint.split("_")[1:])
+            fingerprint = "Morgan"
         else:
             radius, fpsize = None, None
 
         smiles_list = data["SMILES"].tolist()
-        fingerprints = get_fingerprints(smiles_list, fp_type, radius, fpsize)
+        fingerprints = get_fingerprints(smiles_list, fingerprint, radius, fpsize)
         if incl_RDKit_feats:
             rdkit_feats = RDKit_descriptors(smiles_list)
             fingerprints = np.concatenate([fingerprints, rdkit_feats], axis=1)
@@ -181,9 +184,9 @@ def run(
     logging.info(
         f"Starting {n_folds}-fold CV for all models using default hyperparameters."
     )
-    if os.path.exists(f"results/{name}_CV.pkl"):
+    if os.path.exists(f"results/{name}/default_CV.pkl"):
         logging.info("Loading existing results.")
-        with open(f"results/{name}_CV.pkl", "br") as f:
+        with open(f"results/{name}/default_CV.pkl", "br") as f:
             results = pickle.load(f)
     else:
         try:
@@ -208,7 +211,7 @@ def run(
             )
             with open(f"cache/{name}_CV_ckpt.pkl", "wb") as f:
                 pickle.dump(results, f)
-        with open(f"results/{name}_CV.pkl", "wb") as f:
+        with open(f"results/{name}/default_CV.pkl", "wb") as f:
             pickle.dump(results, f)
         os.remove(f"cache/{name}_CV_ckpt.pkl")
         logging.info("Done!")
@@ -217,9 +220,9 @@ def run(
         logging.info(
             "Starting nested CV with hyperparameter tuning for the best models."
         )
-        if os.path.exists(f"results/{name}_nested_CV.pkl"):
+        if os.path.exists(f"results/{name}/nested_CV.pkl"):
             logging.info("Loading existing results.")
-            with open(f"results/{name}_nested_CV.pkl", "br") as f:
+            with open(f"results/{name}/nested_CV.pkl", "br") as f:
                 results = pickle.load(f)
         else:
             logging.info("Selecting best models.")
@@ -253,7 +256,7 @@ def run(
                 )
                 with open(f"cache/{name}_nested_CV_ckpt.pkl", "wb") as f:
                     pickle.dump(results, f)
-            with open(f"results/{name}_nested_CV.pkl", "wb") as f:
+            with open(f"results/{name}/nested_CV.pkl", "wb") as f:
                 pickle.dump(results, f)
             os.remove(f"cache/{name}_nested_CV_ckpt.pkl")
             logging.info("Done!")
@@ -294,20 +297,39 @@ def run(
         ]
         for i in range(n_folds)
     ]
-    mean_score = np.mean(all_scores)
-    std_score = np.std(all_scores)
-    with open(f"results/{name}_final_model.pkl", "wb") as f:
+    mean_score_main = (
+        -np.mean(all_scores) if (main_metric in LOWER_BETTER) else np.mean(all_scores)
+    )
+    std_score_main = np.std(all_scores)
+    sec_metrics_scores = {}
+    for metric in sec_metrics:
+        all_scores = [
+            cv_results_df[cv_results_df[f"rank_test_{metric}"] == 1].iloc[0][
+                f"split{i}_test_{metric}"
+            ]
+            for i in range(n_folds)
+        ]
+        sec_metrics_scores[metric] = (
+            -np.mean(all_scores) if (metric in LOWER_BETTER) else np.mean(all_scores),
+            np.std(all_scores),
+        )
+    with open(f"results/{name}/final_model.pkl", "wb") as f:
         pickle.dump(final_model, f)
-    with open(f"results/{name}_final_hyperparameters.pkl", "wb") as f:
+    with open(f"results/{name}/final_hyperparameters.pkl", "wb") as f:
         pickle.dump(final_hyperparameters, f)
-    cv_results_df.to_csv(f"results/{name}_cv_results.csv")
+    cv_results_df.to_csv(f"results/{name}/final_CV_results.csv")
 
     print("-" * 50)
     print("Final results")
     print("-" * 50)
-    print("Final model:", final_model)
+    print("Final model:", get_estimator_name(final_model))
     print("Hyperparameters:")
     for f in final_hyperparameters:
         print(f + ":", final_hyperparameters[f])
-    print(f"Mean {main_metric}:", f"{mean_score:.3f} ± {std_score:.3f}.")
+    print(f"Mean {main_metric}:", f"{mean_score_main:.3f} ± {std_score_main:.3f}.")
+    for metric in sec_metrics_scores:
+        print(
+            f"Mean {metric}:",
+            f"{sec_metrics_scores[metric][0]:.3f} ± {sec_metrics_scores[metric][1]:.3f}.",
+        )
     print("-" * 50)

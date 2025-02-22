@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import logging
-from model_selection import (
+from .model_selection import (
     find_n_best_models,
     perform_statistical_tests,
     check_best_model,

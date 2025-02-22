@@ -69,14 +69,13 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         "target variable. Precomputed features should be in column called 'Features'.\n"
         "If the data is not prefeaturised and presplit, it should contain a column\n"
         "called 'SMILES'.",
-        required=True,
     )
     benchmark_parser.add_argument(
         "--name",
         type=str,
-        default="results",
-        help="Name of the experiment to save the results to. Will be used to load\n"
-        "existing results if they exist. Default: results.",
+        help="Name of the experiment. Results will be saved in a folder with this name\n"
+        "in the 'results' directory. Will be used to load cached results if they exist.",
+        required=True,
     )
     benchmark_parser.add_argument(
         "--run_nested_CV",
@@ -157,7 +156,6 @@ def get_CLI_parser() -> argparse.ArgumentParser:
     compare_parser.add_argument(
         "CV_results_path",
         type=str,
-        required=True,
         help="Path to the directory containing the CV results",
     )
     compare_parser.add_argument(
@@ -185,6 +183,19 @@ def main() -> int:
     int
         Exit code. 0 if successful, 1 if an error occurred.
     """
+    print(
+        r"""
+        ----------------------------------------------
+                             _
+                  __ _  ___ | |_  _ __   __ _
+                 / _` |/ __|| __|| '__| / _` |
+                | (_| |\__ \| |_ | |   | (_| |
+                 \__,_||___/ \__||_|    \__,_|
+
+        ----------------------------------------------
+        """,
+        flush=True,
+    )
     parser = get_CLI_parser()
     args = parser.parse_args()
 
@@ -218,17 +229,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    print(
-        r"""
-        ----------------------------------------------
-                             _
-                  __ _  ___ | |_  _ __   __ _
-                 / _` |/ __|| __|| '__| / _` |
-                | (_| |\__ \| |_ | |   | (_| |
-                 \__,_||___/ \__||_|    \__,_|
-
-        ----------------------------------------------
-        """,
-        flush=True,
-    )
     exit(main())

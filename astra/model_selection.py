@@ -25,6 +25,8 @@ get_best_hparams(model_class, df, n_folds, fold_col, metric, parameters, n_jobs,
     Get the best hyperparameters for a model using grid search with (non-nested) cross-validation.
 get_best_model(results_dict, main_metric, secondary_metrics, bf_corr=True)
     Get the best model from a dictionary of model results.
+get_estimator_name(estimator)
+    Get the name of a scikit-learn estimator.
 
 Attributes
 ----------
@@ -47,6 +49,7 @@ LOWER_BETTER : list
 import pandas as pd
 import numpy as np
 import pingouin as pg
+import warnings
 import scikit_posthocs as sp
 from scipy.stats import ranksums, kendalltau, pearsonr, spearmanr
 from sklearn.base import clone, BaseEstimator
@@ -539,7 +542,11 @@ def get_cv_performance(
         test_data = all_folds[test_fold]
         X_test = np.vstack(test_data["Features"].to_numpy())
         y_test = np.vstack(test_data["Target"].to_numpy()).ravel()
-        y_pred = m.predict(X_test)
+        with warnings.catch_warnings():
+            warnings.simplefilter(
+                "ignore", UserWarning
+            )  # Suppress UserWarnings for LightGBM
+            y_pred = m.predict(X_test)
         if model_class not in non_probabilistic_models and classification:
             y_prob = m.predict_proba(X_test)[:, 1]
 
@@ -687,7 +694,11 @@ def get_optimised_cv_performance(
         test_data = all_folds[test_fold]
         X_test = np.vstack(test_data["Features"].to_numpy())
         y_test = np.vstack(test_data["Target"].to_numpy()).ravel()
-        y_pred = clf.predict(test_data)
+        with warnings.catch_warnings():
+            warnings.simplefilter(
+                "ignore", UserWarning
+            )  # Suppress UserWarnings for LightGBM
+            y_pred = clf.predict(test_data)
         if model_class not in non_probabilistic_models and classification:
             y_prob = clf.predict_proba(X_test)[:, 1]
 
@@ -807,3 +818,24 @@ def get_best_hparams(
     clf.fit(X, y)
 
     return clf
+
+
+def get_estimator_name(model: BaseEstimator) -> str:
+    """
+    Get the name of the estimator from a scikit-learn model.
+
+    Parameters
+    ----------
+    model : BaseEstimator
+        A scikit-learn model. Can be a Pipeline or a direct estimator.
+
+    Returns
+    -------
+    str
+        The name of the estimator.
+    """
+    if hasattr(model, "steps"):  # Pipeline
+        estimator = model.steps[-1][1]
+    else:  # direct estimator
+        estimator = model
+    return estimator.__class__.__name__
