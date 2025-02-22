@@ -1,7 +1,5 @@
 import os
 import pandas as pd
-import argparse
-from argparse import RawTextHelpFormatter
 import logging
 from model_selection import (
     find_n_best_models,
@@ -11,44 +9,23 @@ from model_selection import (
 )
 
 
-def get_argparser() -> argparse.ArgumentParser:
+def run(CV_results_path: str, main_metric: str, sec_metrics: list) -> None:
     """
-    Get the argument parser. Arguments are as follows:
-    - CV_results_path: Path to the directory containing the CV results
-    - main_metric: The main metric to use for comparison
-    - sec_metrics: Secondary metrics to use for comparison
+    Compare the results of different models using the CV results.
+
+    Parameters
+    ----------
+    CV_results_path : str
+        Path to the directory containing the CV results.
+    main_metric : str
+        The main metric to use for comparison.
+    sec_metrics : list
+        Secondary metrics to use for comparison.
+
+    Returns
+    -------
+    None
     """
-    parser = argparse.ArgumentParser(
-        description="Compare the results of multiple models",
-        formatter_class=RawTextHelpFormatter,
-    )
-    parser.add_argument(
-        "--CV_results_path",
-        type=str,
-        required=True,
-        help="Path to the directory containing the CV results",
-    )
-    parser.add_argument(
-        "--main_metric",
-        type=str,
-        required=True,
-        help="The main metric to use for comparison",
-    )
-    parser.add_argument(
-        "--sec_metrics",
-        type=str,
-        nargs="+",
-        help="Secondary metrics to use for comparison",
-    )
-    return parser
-
-
-if __name__ == "__main__":
-    args = get_argparser().parse_args()
-    CV_results_path = args.CV_results_path
-    main_metric = args.main_metric
-    sec_metrics = args.sec_metrics
-
     logging.basicConfig(
         level=logging.INFO,
         datefmt="%d-%m %H:%M",
