@@ -6,6 +6,7 @@ from .model_selection import (
     perform_statistical_tests,
     check_best_model,
     get_best_model,
+    LOWER_BETTER,
 )
 from .utils import get_scores
 
@@ -88,6 +89,10 @@ def run(CV_results: list[str], main_metric: str, sec_metrics: list[str], n_folds
                         ][col]
                         for col in test_score_columns
                     ]
+                    # for metrics where lower is better, we need to negate the scores
+                    # as they will have been negated in the CV
+                    if metric in LOWER_BETTER:
+                        scores = [-score for score in scores]
                     all_results[model_name][metric] = scores
     
     if len(all_results) == 0:
