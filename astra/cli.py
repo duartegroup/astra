@@ -117,8 +117,9 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         "--n_folds",
         type=int,
         default=5,
-        help="Number of folds to split the data into, if the data is to be resplit first.\n"
-        "Default: 5.",
+        help="Number of CV folds. Default: 5.",
+        # TODO: At the moment, users need to specify the number of folds even if the data is already split.
+        #       This can be improved by automatically inferring the number of folds from the data.
     )
     benchmark_parser.add_argument(
         "--fingerprint",
@@ -154,9 +155,17 @@ def get_CLI_parser() -> argparse.ArgumentParser:
 
     compare_parser = subparsers.add_parser("compare", help="Compare model performance")
     compare_parser.add_argument(
-        "CV_results_path",
+        "CV_results",
         type=str,
-        help="Path to the directory containing the CV results",
+        nargs="+",
+        help="Path to a single directory containing CV results, or a list of directories\n"
+        "containing CV results, as returned by scikit-learn's BaseSearchCV.cv_results_.\n"
+        "If a single directory is provided, CV results for the different models should be\n"
+        "saved in a file ending with '_CV_results.csv', and this ending will be removed to\n"
+        "get the model name.\n"
+        "If multiple directories are provided, each should contain the CV results for a\n"
+        "different model saved in a file ending with '_CV_results.csv', and the parent\n"
+        "directory will be used as the model name.",
     )
     compare_parser.add_argument(
         "--main_metric",
@@ -169,6 +178,12 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         type=str,
         nargs="+",
         help="Secondary metrics to use for comparison",
+    )
+    compare_parser.add_argument(
+        "--n_folds",
+        type=int,
+        default=5,
+        help="Number of CV folds. Default: 5.",
     )
 
     return parser
@@ -216,10 +231,10 @@ def main() -> int:
         )
     elif args.command == "compare":
         compare.run(
-            results_dir=args.CV_results_path,
-            output_file=args.main_metric,
+            CV_results=args.CV_results,
             main_metric=args.main_metric,
             sec_metrics=args.sec_metrics,
+            n_folds=args.n_folds,
         )
     else:
         parser.print_help()

@@ -25,8 +25,6 @@ get_best_hparams(model_class, df, n_folds, fold_col, metric, parameters, n_jobs,
     Get the best hyperparameters for a model using grid search with (non-nested) cross-validation.
 get_best_model(results_dict, main_metric, secondary_metrics, bf_corr=True)
     Get the best model from a dictionary of model results.
-get_estimator_name(estimator)
-    Get the name of a scikit-learn estimator.
 
 Attributes
 ----------
@@ -688,7 +686,11 @@ def get_optimised_cv_performance(
         )
         X = np.vstack(cv_data["Features"].to_numpy())
         y = np.vstack(cv_data["Target"].to_numpy()).ravel()
-        clf.fit(X, y)
+        with warnings.catch_warnings():
+            warnings.simplefilter(
+                "ignore", UserWarning
+            )  # Suppress UserWarnings for LightGBM
+            clf.fit(X, y)
 
         # evaluate model
         test_data = all_folds[test_fold]
@@ -698,7 +700,7 @@ def get_optimised_cv_performance(
             warnings.simplefilter(
                 "ignore", UserWarning
             )  # Suppress UserWarnings for LightGBM
-            y_pred = clf.predict(test_data)
+            y_pred = clf.predict(X_test)
         if model_class not in non_probabilistic_models and classification:
             y_prob = clf.predict_proba(X_test)[:, 1]
 
@@ -815,27 +817,10 @@ def get_best_hparams(
     )
     X = np.vstack(df["Features"].to_numpy())
     y = np.vstack(df["Target"].to_numpy()).ravel()
-    clf.fit(X, y)
+    with warnings.catch_warnings():
+        warnings.simplefilter(
+            "ignore", UserWarning
+        )  # Suppress UserWarnings for LightGBM
+        clf.fit(X, y)
 
     return clf
-
-
-def get_estimator_name(model: BaseEstimator) -> str:
-    """
-    Get the name of the estimator from a scikit-learn model.
-
-    Parameters
-    ----------
-    model : BaseEstimator
-        A scikit-learn model. Can be a Pipeline or a direct estimator.
-
-    Returns
-    -------
-    str
-        The name of the estimator.
-    """
-    if hasattr(model, "steps"):  # Pipeline
-        estimator = model.steps[-1][1]
-    else:  # direct estimator
-        estimator = model
-    return estimator.__class__.__name__

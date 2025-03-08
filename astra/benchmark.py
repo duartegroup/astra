@@ -3,19 +3,18 @@ import pandas as pd
 import numpy as np
 import pickle
 import logging
-from .data.splitting import get_splits  # TODO: Move away from deepchem
+# from .data.splitting import get_splits  # TODO: Move away from deepchem
 from .featurisation.features import get_fingerprints, RDKit_descriptors
 from .model_selection import (
     CLASSIFICATION_METRICS,
     REGRESSION_METRICS,
-    LOWER_BETTER,
     get_cv_performance,
     get_optimised_cv_performance,
     get_best_hparams,
     find_n_best_models,
     get_best_model,
-    get_estimator_name,
 )
+from .utils import get_estimator_name, get_scores
 
 # TODO: extract some of the code here and in compare.py into functions
 
@@ -62,7 +61,7 @@ def run(
         already be split. If the data is not to be split, do not specify this argument,
         as it will override the original split.
     n_folds : int, default=5
-        Number of folds to split the data into, if the data is to be resplit first.
+        Number of CV folds.
     fingerprint : str or None, default=None
         Type of fingerprint to use, if the data is to be featurised first.
         Valid choices are 'Morgan', 'Avalon', 'RDKit', 'MACCS', 'AtomPair', 'TopTorsion'.
@@ -291,28 +290,9 @@ def run(
         for key, value in final_hyperparameters.items()
     }
     cv_results_df = pd.DataFrame(model.cv_results_)
-    all_scores = [
-        cv_results_df[cv_results_df[f"rank_test_{main_metric}"] == 1].iloc[0][
-            f"split{i}_test_{main_metric}"
-        ]
-        for i in range(n_folds)
-    ]
-    mean_score_main = (
-        -np.mean(all_scores) if (main_metric in LOWER_BETTER) else np.mean(all_scores)
+    mean_score_main, std_score_main, sec_metrics_scores = get_scores(
+        cv_results_df, main_metric, sec_metrics, n_folds
     )
-    std_score_main = np.std(all_scores)
-    sec_metrics_scores = {}
-    for metric in sec_metrics:
-        all_scores = [
-            cv_results_df[cv_results_df[f"rank_test_{metric}"] == 1].iloc[0][
-                f"split{i}_test_{metric}"
-            ]
-            for i in range(n_folds)
-        ]
-        sec_metrics_scores[metric] = (
-            -np.mean(all_scores) if (metric in LOWER_BETTER) else np.mean(all_scores),
-            np.std(all_scores),
-        )
     with open(f"results/{name}/final_model.pkl", "wb") as f:
         pickle.dump(final_model, f)
     with open(f"results/{name}/final_hyperparameters.pkl", "wb") as f:
