@@ -48,6 +48,7 @@ import pandas as pd
 import numpy as np
 import pingouin as pg
 import warnings
+import os
 import scikit_posthocs as sp
 from scipy.stats import ranksums, kendalltau, pearsonr, spearmanr
 from sklearn.base import clone, BaseEstimator
@@ -686,11 +687,11 @@ def get_optimised_cv_performance(
         )
         X = np.vstack(cv_data["Features"].to_numpy())
         y = np.vstack(cv_data["Target"].to_numpy()).ravel()
-        with warnings.catch_warnings():
-            warnings.simplefilter(
-                "ignore", UserWarning
-            )  # Suppress UserWarnings for LightGBM
-            clf.fit(X, y)
+        # Suppress warnings for LGBM, needs to be done using os.environ, as GridSearchCV uses
+        # parallel processing, which means that warnings.filterwarnings does not work
+        if model_class.__class__.__name__[:4] == "LGBM":
+            os.environ["PYTHONWARNINGS"] = "ignore"
+        clf.fit(X, y)
 
         # evaluate model
         test_data = all_folds[test_fold]
@@ -817,10 +818,10 @@ def get_best_hparams(
     )
     X = np.vstack(df["Features"].to_numpy())
     y = np.vstack(df["Target"].to_numpy()).ravel()
-    with warnings.catch_warnings():
-        warnings.simplefilter(
-            "ignore", UserWarning
-        )  # Suppress UserWarnings for LightGBM
-        clf.fit(X, y)
+    # Suppress warnings for LGBM, needs to be done using os.environ, as GridSearchCV uses
+    # parallel processing, which means that warnings.filterwarnings does not work
+    if model_class.__class__.__name__[:4] == "LGBM":
+        os.environ["PYTHONWARNINGS"] = "ignore"
+    clf.fit(X, y)
 
     return clf

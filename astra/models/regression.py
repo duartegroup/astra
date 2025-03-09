@@ -90,7 +90,7 @@ regressor_params = {
         kernel=["linear", "poly", "polynomial", "rbf", "laplacian", "sigmoid"],
     ),
     "LGBMRegressor": dict(
-        boosting_type=["gbdt", "dart", "rf"],
+        boosting_type=["gbdt", "dart"],
         num_leaves=[10, 30, 50],
         max_depth=[10, 30, -1],
         learning_rate=[0.01, 0.1, 1],
