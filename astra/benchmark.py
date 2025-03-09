@@ -284,9 +284,10 @@ def run(
     logging.info("Done!")
 
     final_model = model.best_estimator_
+    final_model_name = get_estimator_name(final_model)
     final_hyperparameters = model.best_params_
     final_hyperparameters = {
-        key.replace("model__", ""): value
+        key.replace(f"{final_model_name.lower()}__", ""): value
         for key, value in final_hyperparameters.items()
     }
     cv_results_df = pd.DataFrame(model.cv_results_)
@@ -302,7 +303,7 @@ def run(
     print("-" * 50)
     print("Final results")
     print("-" * 50)
-    print("Final model:", get_estimator_name(final_model))
+    print(f"Final model: {final_model_name}")
     print("Hyperparameters:")
     for f in final_hyperparameters:
         print(f + ":", final_hyperparameters[f])
