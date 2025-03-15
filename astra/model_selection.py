@@ -133,8 +133,8 @@ def get_spearmanr_score(y_true, y_pred):
 # RMSE and MSE, Ref.: https://link.springer.com/chapter/10.1007/978-3-642-01818-3_25
 CLASSIFICATION_METRICS = {
     "F1": f1_score,
-    "PR AUC": average_precision_score,
-    "ROC AUC": roc_auc_score,
+    "PR_AUC": average_precision_score,
+    "ROC_AUC": roc_auc_score,
     "MCC": matthews_corrcoef,
 }
 REGRESSION_METRICS = {
@@ -158,8 +158,8 @@ pearsonr_score = make_scorer(get_pearsonr_score)
 spearmanr_score = make_scorer(get_spearmanr_score)
 SCORING = {
     "F1": "f1",
-    "PR AUC": "average_precision",
-    "ROC AUC": "roc_auc",
+    "PR_AUC": "average_precision",
+    "ROC_AUC": "roc_auc",
     "MCC": "matthews_corrcoef",
     "R2": "r2",
     "RMSE": "neg_root_mean_squared_error",
@@ -546,8 +546,8 @@ def get_cv_performance(
                 "ignore", UserWarning
             )  # Suppress UserWarnings for LightGBM
             y_pred = m.predict(X_test)
-        if model_class not in non_probabilistic_models and classification:
-            y_prob = m.predict_proba(X_test)[:, 1]
+            if model_class.__class__.__name__ not in non_probabilistic_models and classification:
+                y_prob = m.predict_proba(X_test)[:, 1]
 
         for metric in metric_list:
             if (
