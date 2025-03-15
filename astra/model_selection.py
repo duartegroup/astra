@@ -702,8 +702,8 @@ def get_optimised_cv_performance(
                 "ignore", UserWarning
             )  # Suppress UserWarnings for LightGBM
             y_pred = clf.predict(X_test)
-        if model_class not in non_probabilistic_models and classification:
-            y_prob = clf.predict_proba(X_test)[:, 1]
+            if model_class not in non_probabilistic_models and classification:
+                y_prob = clf.predict_proba(X_test)[:, 1]
 
         for metric in metric_list:
             if (
