@@ -58,7 +58,7 @@ classifiers = {
     "GradientBoostingClassifier": GradientBoostingClassifier(random_state=42),
     "BaggingClassifier": BaggingClassifier(random_state=42),
     "HistGradientBoostingClassifier": HistGradientBoostingClassifier(random_state=42),
-    "AdaBoostClassifier": AdaBoostClassifier(random_state=42, algorithm="SAMME"),
+    "AdaBoostClassifier": AdaBoostClassifier(random_state=42),
     "KNeighborsClassifier": KNeighborsClassifier(),
     "NearestCentroid": NearestCentroid(),
     "LinearDiscriminantAnalysis": LinearDiscriminantAnalysis(),
@@ -165,7 +165,6 @@ classifier_params = {
     "AdaBoostClassifier": dict(
         n_estimators=[10, 50, 100],
         learning_rate=[0.1, 1.0, 10],
-        algorithm=["SAMME", "SAMME.R"],
     ),
     "KNeighborsClassifier": dict(
         n_neighbors=[3, 5, 10, 20],
