@@ -170,7 +170,7 @@ SCORING = {
     "SpearmanR": spearmanr_score,
     "Cohen Kappa": lin_kappa_score,
 }
-HIGHER_BETTER = ["F1", "PR AUC", "ROC AUC", "MCC", "R2", "Cohen Kappa"]
+HIGHER_BETTER = ["F1", "PR_AUC", "ROC_AUC", "MCC", "R2", "Cohen Kappa"]
 LOWER_BETTER = ["RMSE", "MSE", "MAE"]
 
 
@@ -551,8 +551,8 @@ def get_cv_performance(
 
         for metric in metric_list:
             if (
-                metric in ["PR AUC", "ROC AUC"]
-                and model_class not in non_probabilistic_models
+                metric in ["PR_AUC", "ROC_AUC"]
+                and model_class.__class__.__name__ not in non_probabilistic_models
             ):
                 metrics_dict[metric].append(KNOWN_METRICS[metric](y_test, y_prob))
             elif metric == "Cohen Kappa":
@@ -702,13 +702,13 @@ def get_optimised_cv_performance(
                 "ignore", UserWarning
             )  # Suppress UserWarnings for LightGBM
             y_pred = clf.predict(X_test)
-            if model_class not in non_probabilistic_models and classification:
+            if model_class.__class__.__name__ not in non_probabilistic_models and classification:
                 y_prob = clf.predict_proba(X_test)[:, 1]
 
         for metric in metric_list:
             if (
-                metric in ["PR AUC", "ROC AUC"]
-                and model_class not in non_probabilistic_models
+                metric in ["PR_AUC", "ROC_AUC"]
+                and model_class.__class__.__name__ not in non_probabilistic_models
             ):
                 metrics_dict[metric].append(KNOWN_METRICS[metric](y_test, y_prob))
             elif metric == "Cohen Kappa":
