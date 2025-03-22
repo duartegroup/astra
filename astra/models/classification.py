@@ -193,7 +193,6 @@ classifier_params = {
             "log_loss",
             "modified_huber",
             "squared_hinge",
-            "perceptron",
         ],
         penalty=["l2", "l1", "elasticnet", None],
         alpha=[0.00001, 0.0001, 0.001],
