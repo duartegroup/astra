@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import logging
+
 # from .data.splitting import get_splits  # TODO: Move away from deepchem
 from .featurisation.features import get_fingerprints, RDKit_descriptors
 from .model_selection import (
@@ -22,6 +23,8 @@ from .utils import get_estimator_name, get_scores
 def run(
     data: str,
     name: str,
+    features: str = "Features",
+    target: str = "Target",
     run_nested_CV: bool = False,
     fold_col: str = "Fold",
     main_metric: str = "R2",
@@ -39,13 +42,14 @@ def run(
     Parameters
     ----------
     data : str
-        Path to the dataset to train and evaluate models on. This should point to a
-        pickled pd.DataFrame, at least with a column called 'Target', containing the
-        target variable. Precomputed features should be in column called 'Features'.
-        If the data is not prefeaturised, it should contain a column called 'SMILES'.
+        Path to the dataset to train and evaluate models on. This should be a pickled
+        pd.DataFrame. If the data is not prefeaturised and presplit, it should contain
+        a column called 'SMILES'.
     name : str
         Name of the experiment. Results will be saved in a folder with this name in the
         'results' directory. Will be used to load cached results if they exist.
+    - features: Name of the column containing the features. Default: Features.
+    - target: Name of the column containing the target. Default: Target.
     run_nested_CV : bool, default=False
         Whether or not to run nested CV with hyperparameter tuning for the best models.
     fold_col : str, default='Fold'
@@ -57,18 +61,15 @@ def run(
         Secondary metrics to use for model selection.
     split : str or None, default=None
         Type of split to use, if the data is to be resplit first. Valid choices are
-        'Scaffold' and 'Fingerprint'. If this is not specified, the data is assumed to
-        already be split. If the data is not to be split, do not specify this argument,
-        as it will override the original split.
+        'Scaffold' and 'Fingerprint'. Results (fold number) will be saved in a column
+        called 'Fold'.
     n_folds : int, default=5
         Number of CV folds.
     fingerprint : str or None, default=None
         Type of fingerprint to use, if the data is to be featurised first.
         Valid choices are 'Morgan', 'Avalon', 'RDKit', 'MACCS', 'AtomPair', 'TopTorsion'.
-        If this is not specified, the data is assumed to already be featurised. If the data
-        is not to be featurised, do not specify this argument, as it will override the
-        'Features' column. For Morgan fingerprints, specify the radius and fingerprint size
-        as 'Morgan_{radius}_{fpsize}'.
+        Results will be saved in a column called 'Features'. For Morgan fingerprints,
+        specify the radius and fingerprint size as 'Morgan_{radius}_{fpsize}'.
     incl_RDKit_feats : bool, default=False
         Whether or not to include RDKit features, if the data is to be featurised first.
         If 'fingerprint' isn't specified, this argument is ignored.
@@ -174,9 +175,9 @@ def run(
         logging.info("Featurisation complete. Saving data.")
         data.to_pickle("cache/featurised_data.pkl")
 
-    assert "Features" in data.columns, "Data does not contain a 'Features' column."
-    assert "Target" in data.columns, "Data does not contain a 'Target' column."
-    assert "Fold" in data.columns, "Data does not contain a 'Fold' column."
+    assert features in data.columns, f"Data does not contain a '{features}' column."
+    assert target in data.columns, f"Data does not contain a '{target}' column."
+    assert fold_col in data.columns, f"Data does not contain a '{fold_col}' column."
 
     logging.info("Starting benchmarking.")
 
@@ -203,6 +204,8 @@ def run(
             results[model] = get_cv_performance(
                 model_class=models[model],
                 df=data,
+                features_col=features,
+                target_col=target,
                 n_folds=n_folds,
                 fold_col=fold_col,
                 metric_list=[main_metric] + sec_metrics,
@@ -245,6 +248,8 @@ def run(
                 results[model] = get_optimised_cv_performance(
                     model_class=models[model],
                     df=data,
+                    features_col=features,
+                    target_col=target,
                     n_folds=n_folds,
                     fold_col=fold_col,
                     metric_list=[main_metric] + sec_metrics,

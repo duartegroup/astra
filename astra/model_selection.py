@@ -470,6 +470,8 @@ def get_best_model(
 def get_cv_performance(
     model_class: BaseEstimator,
     df: pd.DataFrame,
+    features_col: str,
+    target_col: str,
     n_folds: int,
     fold_col: str,
     metric_list: list[str],
@@ -483,9 +485,11 @@ def get_cv_performance(
     model_class : BaseEstimator
         A scikit-learn model.
     df : pd.DataFrame
-        A dataframe containing the features and target values. Must contain a column
-        with the fold indices. The features must be in a column called 'Features' and
-        the target values in a column called 'Target'.
+        A dataframe containing the features and target values.
+    features_col : str
+        The name of the column containing the features.
+    target_col : str
+        The name of the column containing the target values.
     n_folds : int
         The number of folds in the cross-validation.
     fold_col : str
@@ -532,21 +536,24 @@ def get_cv_performance(
             ]
         ]
         train_data = pd.concat([f for f in train_folds])
-        X = np.vstack(train_data["Features"].to_numpy())
-        y = np.vstack(train_data["Target"].to_numpy()).ravel()
+        X = np.vstack(train_data[features_col].to_numpy())
+        y = np.vstack(train_data[target_col].to_numpy()).ravel()
         m = clone(model)
         m.fit(X, y)
 
         # evaluate model
         test_data = all_folds[test_fold]
-        X_test = np.vstack(test_data["Features"].to_numpy())
-        y_test = np.vstack(test_data["Target"].to_numpy()).ravel()
+        X_test = np.vstack(test_data[features_col].to_numpy())
+        y_test = np.vstack(test_data[target_col].to_numpy()).ravel()
         with warnings.catch_warnings():
             warnings.simplefilter(
                 "ignore", UserWarning
             )  # Suppress UserWarnings for LightGBM
             y_pred = m.predict(X_test)
-            if model_class.__class__.__name__ not in non_probabilistic_models and classification:
+            if (
+                model_class.__class__.__name__ not in non_probabilistic_models
+                and classification
+            ):
                 y_prob = m.predict_proba(X_test)[:, 1]
 
         for metric in metric_list:
@@ -568,6 +575,8 @@ def get_cv_performance(
 def get_optimised_cv_performance(
     model_class: BaseEstimator,
     df: pd.DataFrame,
+    features_col: str,
+    target_col: str,
     n_folds: int,
     fold_col: str,
     metric_list: list[str],
@@ -585,9 +594,11 @@ def get_optimised_cv_performance(
     model_class : BaseEstimator
         A scikit-learn model.
     df : pd.DataFrame
-        A dataframe containing the features and target values. Must contain a column
-        with the fold indices. The features must be in a column called 'Features' and
-        the target values in a column called 'Target'.
+        A dataframe containing the features and target values.
+    features_col : str
+        The name of the column containing the features.
+    target_col : str
+        The name of the column containing the target values.
     n_folds : int
         The number of folds in the cross-validation.
     fold_col : str
@@ -685,8 +696,8 @@ def get_optimised_cv_performance(
             cv=cv,
             pre_dispatch="n_jobs",
         )
-        X = np.vstack(cv_data["Features"].to_numpy())
-        y = np.vstack(cv_data["Target"].to_numpy()).ravel()
+        X = np.vstack(cv_data[features_col].to_numpy())
+        y = np.vstack(cv_data[target_col].to_numpy()).ravel()
         # Suppress warnings for LGBM, needs to be done using os.environ, as GridSearchCV uses
         # parallel processing, which means that warnings.filterwarnings does not work
         if model_class.__class__.__name__[:4] == "LGBM":
@@ -695,14 +706,17 @@ def get_optimised_cv_performance(
 
         # evaluate model
         test_data = all_folds[test_fold]
-        X_test = np.vstack(test_data["Features"].to_numpy())
-        y_test = np.vstack(test_data["Target"].to_numpy()).ravel()
+        X_test = np.vstack(test_data[features_col].to_numpy())
+        y_test = np.vstack(test_data[target_col].to_numpy()).ravel()
         with warnings.catch_warnings():
             warnings.simplefilter(
                 "ignore", UserWarning
             )  # Suppress UserWarnings for LightGBM
             y_pred = clf.predict(X_test)
-            if model_class.__class__.__name__ not in non_probabilistic_models and classification:
+            if (
+                model_class.__class__.__name__ not in non_probabilistic_models
+                and classification
+            ):
                 y_prob = clf.predict_proba(X_test)[:, 1]
 
         for metric in metric_list:
@@ -724,6 +738,8 @@ def get_optimised_cv_performance(
 def get_best_hparams(
     model_class: BaseEstimator,
     df: pd.DataFrame,
+    features_col: str,
+    target_col: str,
     n_folds: int,
     fold_col: str,
     main_metric: str,
@@ -740,9 +756,11 @@ def get_best_hparams(
     model_class : BaseEstimator
         A scikit-learn model.
     df : pd.DataFrame
-        A dataframe containing the features and target values. Must contain a column
-        with the fold indices. The features must be in a column called 'Features' and
-        the target values in a column called 'Target'.
+        A dataframe containing the features and target values.
+    features_col : str
+        The name of the column containing the features.
+    target_col : str
+        The name of the column containing the target values.
     n_folds : int
         The number of folds in the cross-validation.
     fold_col : str
@@ -816,8 +834,8 @@ def get_best_hparams(
         cv=cv,
         pre_dispatch="n_jobs",
     )
-    X = np.vstack(df["Features"].to_numpy())
-    y = np.vstack(df["Target"].to_numpy()).ravel()
+    X = np.vstack(df[features_col].to_numpy())
+    y = np.vstack(df[target_col].to_numpy()).ravel()
     # Suppress warnings for LGBM, needs to be done using os.environ, as GridSearchCV uses
     # parallel processing, which means that warnings.filterwarnings does not work
     if model_class.__class__.__name__[:4] == "LGBM":
