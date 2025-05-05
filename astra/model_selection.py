@@ -66,6 +66,7 @@ from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
     matthews_corrcoef,
+    precision_score,
     make_scorer,
 )
 from .models.classification import non_probabilistic_models
@@ -136,6 +137,7 @@ CLASSIFICATION_METRICS = {
     "PR_AUC": average_precision_score,
     "ROC_AUC": roc_auc_score,
     "MCC": matthews_corrcoef,
+    "Precision": precision_score,
 }
 REGRESSION_METRICS = {
     "R2": r2_score,
@@ -161,6 +163,7 @@ SCORING = {
     "PR_AUC": "average_precision",
     "ROC_AUC": "roc_auc",
     "MCC": "matthews_corrcoef",
+    "Precision": "precision",
     "R2": "r2",
     "RMSE": "neg_root_mean_squared_error",
     "MSE": "neg_mean_squared_error",
