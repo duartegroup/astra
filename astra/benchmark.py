@@ -120,7 +120,11 @@ def run(
                 metric in CLASSIFICATION_METRICS
             ), "Secondary metrics must be classification metrics too."
 
-        if main_metric in ["ROC_AUC", "PR_AUC"]:
+        if (
+            main_metric in ["ROC_AUC", "PR_AUC"]
+            or ("ROC_AUC" in sec_metrics)
+            or ("PR_AUC" in sec_metrics)
+        ):
             classifiers = {
                 c: classifiers[c]
                 for c in classifiers
@@ -128,6 +132,10 @@ def run(
             }
         models = classifiers
         params = classifier_params
+        # drop MultinomialNB for standard scaler
+        if scaler == "Standard":
+            models.pop("MultinomialNB")
+            params.pop("MultinomialNB")
         logging.info("Benchmarking classification models.")
     else:
         raise ValueError(
@@ -278,6 +286,8 @@ def run(
     model = get_best_hparams(
         model_class=models[best_model],
         df=data,
+        features_col=features,
+        target_col=target,
         n_folds=n_folds,
         fold_col=fold_col,
         main_metric=main_metric,
