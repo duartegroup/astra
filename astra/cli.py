@@ -224,6 +224,8 @@ def main() -> int:
         benchmark.run(
             data=args.data,
             name=args.name,
+            features=args.features,
+            target=args.target,
             run_nested_CV=args.run_nested_CV,
             fold_col=args.fold_col,
             main_metric=args.main_metric,
