@@ -189,7 +189,6 @@ classifier_params = {
     ),
     "SGDClassifier": dict(
         loss=[
-            "hinge",
             "log_loss",
             "modified_huber",
             "squared_hinge",
