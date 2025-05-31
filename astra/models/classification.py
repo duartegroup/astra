@@ -58,7 +58,7 @@ classifiers = {
     "GradientBoostingClassifier": GradientBoostingClassifier(random_state=42),
     "BaggingClassifier": BaggingClassifier(random_state=42),
     "HistGradientBoostingClassifier": HistGradientBoostingClassifier(random_state=42),
-    "AdaBoostClassifier": AdaBoostClassifier(random_state=42, algorithm="SAMME"),
+    "AdaBoostClassifier": AdaBoostClassifier(random_state=42),
     "KNeighborsClassifier": KNeighborsClassifier(),
     "NearestCentroid": NearestCentroid(),
     "LinearDiscriminantAnalysis": LinearDiscriminantAnalysis(),
@@ -188,11 +188,7 @@ classifier_params = {
         alpha=[0.1, 0.5, 1.0, 2, 5],
     ),
     "SGDClassifier": dict(
-        loss=[
-            "log_loss",
-            "modified_huber",
-            "squared_hinge",
-        ],
+        loss=["log_loss", "modified_huber"],
         penalty=["l2", "l1", "elasticnet", None],
         alpha=[0.00001, 0.0001, 0.001],
     ),
