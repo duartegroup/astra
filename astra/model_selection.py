@@ -173,7 +173,7 @@ SCORING = {
     "SpearmanR": spearmanr_score,
     "Cohen Kappa": lin_kappa_score,
 }
-HIGHER_BETTER = ["F1", "PR_AUC", "ROC_AUC", "MCC", "R2", "Cohen Kappa"]
+HIGHER_BETTER = ["F1", "PR_AUC", "ROC_AUC", "MCC", "Precision", "R2", "Cohen Kappa"]
 LOWER_BETTER = ["RMSE", "MSE", "MAE"]
 
 
