@@ -3,9 +3,11 @@ import pandas as pd
 import numpy as np
 import pickle
 import logging
-from .data.splitting import (
-    get_splits,
-)  # TODO: Move away from deepchem (look at asap-challenge repo)
+import ast
+
+# from .data.splitting import (
+#     get_splits,
+# )  # TODO: Move away from deepchem (look at asap-challenge repo)
 from .featurisation.features import get_fingerprints, RDKit_descriptors
 from .model_selection import (
     CLASSIFICATION_METRICS,
@@ -50,8 +52,10 @@ def run(
         Name of the experiment. Results will be saved in a folder with this name in the
         'results' directory. Will be used to load cached results if they exist. If None,
         the name will be the file name of the data file without extension.
-    - features: Name of the column containing the features. Default: Features.
-    - target: Name of the column containing the target. Default: Target.
+    features : str, default='Features'
+        Name of the column containing the features. Default: Features.
+    target : str, default='Target'
+        Name of the column containing the target. Default: Target.
     run_nested_CV : bool, default=False
         Whether or not to run nested CV with hyperparameter tuning for the best models.
     fold_col : str, default='Fold'
@@ -90,20 +94,41 @@ def run(
     -------
     None
     """
+    if name is None:
+        name = os.path.splitext(os.path.basename(data))[0]
+    os.makedirs("cache", exist_ok=True)
+    os.makedirs("results", exist_ok=True)
+    os.makedirs(f"results/{name}", exist_ok=True)
+
     logging.basicConfig(
         level=logging.INFO,
         datefmt="%d-%m %H:%M",
         format="%(asctime)s - %(levelname)s: %(message)s",
+        handlers=[
+            logging.FileHandler(f"results/{name}/benchmark.log"),
+            logging.StreamHandler(),
+        ],
     )
-
-    if name is None:
-        name = os.path.splitext(os.path.basename(data))[0]
 
     logging.info(f"Starting benchmark for {name}.")
 
     logging.info("Loading data.")
     if data.endswith(".csv"):
         data = pd.read_csv(data)
+        # convert features column from string representation of list to list (if it exists)
+        if features in data.columns:
+            try:
+                data[features] = data[features].apply(lambda x: ast.literal_eval(x))
+            except (ValueError, SyntaxError):
+                try:
+                    data[features] = data[features].apply(
+                        lambda x: np.fromstring(x.strip("[]"), sep=" ")
+                    )
+                except ValueError:
+                    logging.warning(
+                        f"Could not convert {features} column to list. "
+                        "Using it as is, but this may cause issues."
+                    )
     elif data.endswith(".pkl") or data.endswith(".pickle"):
         data = pd.read_pickle(data)
     elif data.endswith(".parquet"):
@@ -158,10 +183,6 @@ def run(
             "and",
             CLASSIFICATION_METRICS,
         )
-
-    os.makedirs("cache", exist_ok=True)
-    os.makedirs("results", exist_ok=True)
-    os.makedirs(f"results/{name}", exist_ok=True)
 
     if split is not None:
         logging.info("Splitting data.")
