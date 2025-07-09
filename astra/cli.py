@@ -1,5 +1,6 @@
 import argparse
 from argparse import RawTextHelpFormatter
+from rich.console import Console
 from . import benchmark
 from . import compare
 
@@ -204,19 +205,39 @@ def main() -> int:
     int
         Exit code. 0 if successful, 1 if an error occurred.
     """
-    print(
-        r"""
-        ----------------------------------------------
-                             _
-                  __ _  ___ | |_  _ __   __ _
-                 / _` |/ __|| __|| '__| / _` |
-                | (_| |\__ \| |_ | |   | (_| |
-                 \__,_||___/ \__||_|    \__,_|
-
-        ----------------------------------------------
-        """,
-        flush=True,
+    console = Console()
+    console.print(
+        "\n[bold blue]:wave: Welcome to ASTRA - Automated model selection using statistical testing[/bold blue]",
+        justify="center",
     )
+    astra_string = """
+    ----------------------------------------------
+    _
+      __ _  ___ | |_  _ __   __ _
+     / _` |/ __|| __|| '__| / _` |
+    | (_| |\__ \| |_ | |   | (_| |
+     \__,_||___/ \__||_|    \__,_|
+
+    ----------------------------------------------
+        """
+    console.print(
+        astra_string,
+        style="bold blue",
+        justify="center",
+    )
+    console.print(
+        "[bold cyan]:thinking_face: For help, run: astra --help[/bold cyan]",
+        justify="center",
+    )
+    console.print(
+        "[bold cyan]:test_tube: To benchmark models, run: astra benchmark --help[/bold cyan]",
+        justify="center",
+    )
+    console.print(
+        "[bold cyan]:trophy: To compare models, run: astra compare --help[/bold cyan]",
+        justify="center",
+    )
+
     parser = get_CLI_parser()
     args = parser.parse_args()
 
