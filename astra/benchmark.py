@@ -157,7 +157,7 @@ def run(
         for metric in sec_metrics:
             assert (
                 metric in CLASSIFICATION_METRICS
-            ), "Secondary metrics must be classification metrics too."
+            ), f"Secondary metric '{metric}' is not a classification metric."
 
         if (
             main_metric in ["ROC_AUC", "PR_AUC"]
