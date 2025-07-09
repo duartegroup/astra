@@ -3,8 +3,9 @@ import pandas as pd
 import numpy as np
 import pickle
 import logging
-
-# from .data.splitting import get_splits  # TODO: Move away from deepchem
+from .data.splitting import (
+    get_splits,
+)  # TODO: Move away from deepchem (look at asap-challenge repo)
 from .featurisation.features import get_fingerprints, RDKit_descriptors
 from .model_selection import (
     CLASSIFICATION_METRICS,
@@ -94,8 +95,17 @@ def run(
         format="%(asctime)s - %(levelname)s: %(message)s",
     )
 
+    logging.info(f"Starting benchmark for {name}.")
+
     logging.info("Loading data.")
-    data = pd.read_pickle(data)
+    if data.endswith(".csv"):
+        data = pd.read_csv(data)
+    elif data.endswith(".pkl") or data.endswith(".pickle"):
+        data = pd.read_pickle(data)
+    elif data.endswith(".parquet"):
+        data = pd.read_parquet(data)
+    else:
+        raise ValueError("Unsupported file format. Use CSV, pickle, or parquet.")
 
     if main_metric in REGRESSION_METRICS:
         from .models.regression import regressors, regressor_params

@@ -25,7 +25,7 @@ Use `astra benchmark` to run performance benchmarks across different models usin
 ```bash
 astra benchmark <data>
 ```
-where `data` is the path to the dataset to train and evaluate models on. This should be a pickled pd.DataFrame. If the data is not prefeaturised and presplit, it should contain a column called 'SMILES'.
+where `data` is the path to the dataset to train and evaluate models on. This should be a `pd.DataFrame`, saved in CSV, pickle, or parquet format (which will be inferred from the file ending, and needs to be `.csv`, `.pkl`, `.pickle`, or `.parquet`). If the data is not prefeaturised and presplit, it should contain a column called 'SMILES'. See [here](astra/data/example_df.csv) for an example.
 
 Options:
 - `--name`: Name of the experiment. Results will be saved in a folder with this name in the 'results' directory. Will be used to load cached results if they exist.
