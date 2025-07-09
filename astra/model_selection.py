@@ -17,11 +17,11 @@ perform_statistical_tests(results_dic, metric)
     Perform Conover post-hoc and rank-sum tests on the performance of models.
 check_best_model(results_dic, test_statistics, metric)
     Check if there is a model that is significantly better than the others.
-get_cv_performance(model_class, df, n_folds, fold_col, metric_list, scaler=None)
+get_cv_performance(model_class, df, fold_col, metric_list, scaler=None)
     Get the cross-validated performance of a model.
-get_optimised_cv_performance(model_class, df, n_folds, fold_col, metric_list, main_metric, parameters, n_jobs, scaler=None)
+get_optimised_cv_performance(model_class, df, fold_col, metric_list, main_metric, parameters, n_jobs, scaler=None)
     Get the cross-validated performance of a model with optimised hyperparameters using grid search with nested cross-validation.
-get_best_hparams(model_class, df, n_folds, fold_col, metric, parameters, n_jobs, scaler=None)
+get_best_hparams(model_class, df, fold_col, metric, parameters, n_jobs, scaler=None)
     Get the best hyperparameters for a model using grid search with (non-nested) cross-validation.
 get_best_model(results_dict, main_metric, secondary_metrics, bf_corr=True)
     Get the best model from a dictionary of model results.
@@ -475,7 +475,6 @@ def get_cv_performance(
     df: pd.DataFrame,
     features_col: str,
     target_col: str,
-    n_folds: int,
     fold_col: str,
     metric_list: list[str],
     scaler: str | None = None,
@@ -493,8 +492,6 @@ def get_cv_performance(
         The name of the column containing the features.
     target_col : str
         The name of the column containing the target values.
-    n_folds : int
-        The number of folds in the cross-validation.
     fold_col : str
         The name of the column containing the fold indices.
     metric_list : list[str]
@@ -515,6 +512,7 @@ def get_cv_performance(
 
     classification = True if metric_list[0] in CLASSIFICATION_METRICS else False
 
+    n_folds = df[fold_col].nunique()
     all_folds = [df[df[fold_col] == i] for i in range(n_folds)]
 
     if scaler:
@@ -580,7 +578,6 @@ def get_optimised_cv_performance(
     df: pd.DataFrame,
     features_col: str,
     target_col: str,
-    n_folds: int,
     fold_col: str,
     metric_list: list[str],
     main_metric: str,
@@ -602,8 +599,6 @@ def get_optimised_cv_performance(
         The name of the column containing the features.
     target_col : str
         The name of the column containing the target values.
-    n_folds : int
-        The number of folds in the cross-validation.
     fold_col : str
         The name of the column containing the fold indices.
     metric_list : list[str]
@@ -635,6 +630,7 @@ def get_optimised_cv_performance(
 
     classification = True if metric_list[0] in CLASSIFICATION_METRICS else False
 
+    n_folds = df[fold_col].nunique()
     all_folds = [df[df[fold_col] == i] for i in range(n_folds)]
 
     if scaler:
@@ -743,7 +739,6 @@ def get_best_hparams(
     df: pd.DataFrame,
     features_col: str,
     target_col: str,
-    n_folds: int,
     fold_col: str,
     main_metric: str,
     sec_metrics: list[str],
@@ -764,8 +759,6 @@ def get_best_hparams(
         The name of the column containing the features.
     target_col : str
         The name of the column containing the target values.
-    n_folds : int
-        The number of folds in the cross-validation.
     fold_col : str
         The name of the column containing the fold indices.
     main_metric : str
@@ -793,6 +786,7 @@ def get_best_hparams(
         ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
     scoring = {metric: SCORING[metric] for metric in [main_metric] + sec_metrics}
 
+    n_folds = df[fold_col].nunique()
     all_folds = [df[df[fold_col] == i] for i in range(n_folds)]
 
     if scaler:

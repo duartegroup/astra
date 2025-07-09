@@ -125,9 +125,8 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         "--n_folds",
         type=int,
         default=5,
-        help="Number of CV folds. Default: 5.",
-        # TODO: At the moment, users need to specify the number of folds even if the data is already split.
-        #       This can be improved by automatically inferring the number of folds from the data.
+        help="Number of folds to split the data into, if the data is to be resplit first. \n"
+        "Default: 5.",
     )
     benchmark_parser.add_argument(
         "--fingerprint",

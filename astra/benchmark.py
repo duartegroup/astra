@@ -65,7 +65,7 @@ def run(
         'Scaffold' and 'Fingerprint'. Results (fold number) will be saved in a column
         called 'Fold'.
     n_folds : int, default=5
-        Number of CV folds.
+        Number of folds to split the data into, if the data is to be resplit first.
     fingerprint : str or None, default=None
         Type of fingerprint to use, if the data is to be featurised first.
         Valid choices are 'Morgan', 'Avalon', 'RDKit', 'MACCS', 'AtomPair', 'TopTorsion'.
@@ -164,6 +164,7 @@ def run(
         assert "SMILES" in data.columns, "Data does not contain a 'SMILES' column."
         assert split in ["Scaffold", "Fingerprint"], "Invalid split type."
         data = get_splits(data, split, n_folds)
+    n_folds = data[fold_col].nunique()
 
     if fingerprint is not None:
         logging.info("Featurising data.")
@@ -224,7 +225,6 @@ def run(
                 df=data,
                 features_col=features,
                 target_col=target,
-                n_folds=n_folds,
                 fold_col=fold_col,
                 metric_list=[main_metric] + sec_metrics,
                 scaler=scaler,
@@ -268,7 +268,6 @@ def run(
                     df=data,
                     features_col=features,
                     target_col=target,
-                    n_folds=n_folds,
                     fold_col=fold_col,
                     metric_list=[main_metric] + sec_metrics,
                     main_metric=main_metric,
@@ -298,7 +297,6 @@ def run(
         df=data,
         features_col=features,
         target_col=target,
-        n_folds=n_folds,
         fold_col=fold_col,
         main_metric=main_metric,
         sec_metrics=sec_metrics,
