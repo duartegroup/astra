@@ -15,7 +15,7 @@ def get_CLI_parser() -> argparse.ArgumentParser:
             pd.DataFrame. If the data is not prefeaturised and presplit, it should contain
             a column called 'SMILES'.
     - name: Name of the experiment to save the results to. Will be used to load cached
-            results if they exist. Default: results.
+            results if they exist. Default: `data` file name without extension.
     - features: Name of the column containing the features. Default: Features.
     - target: Name of the column containing the target. Default: Target.
     - run_nested_CV: Whether or not to run nested CV with hyperparameter tuning for the best
@@ -71,8 +71,9 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         "--name",
         type=str,
         help="Name of the experiment. Results will be saved in a folder with this name\n"
-        "in the 'results' directory. Will be used to load cached results if they exist.",
-        required=True,
+        "in the 'results' directory. Will be used to load cached results if they exist. \n"
+        "Default: `data` file name without extension.",
+        default=None,
     )
     benchmark_parser.add_argument(
         "--features",

@@ -23,7 +23,7 @@ from .utils import get_estimator_name, get_scores
 
 def run(
     data: str,
-    name: str,
+    name: str | None = None,
     features: str = "Features",
     target: str = "Target",
     run_nested_CV: bool = False,
@@ -46,9 +46,10 @@ def run(
         Path to the dataset to train and evaluate models on. This should be a pickled
         pd.DataFrame. If the data is not prefeaturised and presplit, it should contain
         a column called 'SMILES'.
-    name : str
+    name : str or None, default=None
         Name of the experiment. Results will be saved in a folder with this name in the
-        'results' directory. Will be used to load cached results if they exist.
+        'results' directory. Will be used to load cached results if they exist. If None,
+        the name will be the file name of the data file without extension.
     - features: Name of the column containing the features. Default: Features.
     - target: Name of the column containing the target. Default: Target.
     run_nested_CV : bool, default=False
@@ -94,6 +95,9 @@ def run(
         datefmt="%d-%m %H:%M",
         format="%(asctime)s - %(levelname)s: %(message)s",
     )
+
+    if name is None:
+        name = os.path.splitext(os.path.basename(data))[0]
 
     logging.info(f"Starting benchmark for {name}.")
 
