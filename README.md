@@ -42,6 +42,8 @@ Options:
 - `--scaler`: Type of scaler to use, if the data is to be scaled first. Valid choices are 'Standard' and 'MinMax'. Default: None.
 - `--n_jobs`: Number of jobs to run in parallel for hyperparameter tuning. Default: 1.
 
+**Note**: Metrics are not case-sensitive. See [here](astra/metrics.py) for an overview of available metrics.
+
 The benchmark script will create the following files under `results/<name>`:
 - `default_CV.pkl`: A dictionary containing CV scores of the main and secondary metrics for all models using default hyperparameters.
 - `nested_CV.pkl`: A dictionary containing CV scores of the main and secondary metrics for all models with optimised hyperparameters using nested grid-search.

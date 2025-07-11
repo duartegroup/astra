@@ -241,6 +241,10 @@ def main() -> int:
     parser = get_CLI_parser()
     args = parser.parse_args()
 
+    # convert all args.main_metric and args.sec_metrics to lowercase
+    args.main_metric = args.main_metric.lower()
+    args.sec_metrics = [metric.lower() for metric in args.sec_metrics]
+
     if args.command == "benchmark":
         benchmark.run(
             data=args.data,

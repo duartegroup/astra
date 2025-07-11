@@ -5,12 +5,6 @@ This module contains functions for model selection and evaluation.
 
 Functions
 ---------
-get_kendalltau_score(y_true, y_pred)
-    Calculate the Kendall Tau correlation coefficient.
-get_pearsonr_score(y_true, y_pred)
-    Calculate the Pearson correlation coefficient.
-get_spearmanr_score(y_true, y_pred)
-    Calculate the Spearman correlation coefficient.
 find_n_best_models(results_dic, metric, bf_corr=True)
     Find the n best models that don't perform significantly differently with respect to a given metric as determined using the Friedman test.
 perform_statistical_tests(results_dic, metric)
@@ -25,23 +19,6 @@ get_best_hparams(model_class, df, fold_col, metric, parameters, n_jobs, scaler=N
     Get the best hyperparameters for a model using grid search with (non-nested) cross-validation.
 get_best_model(results_dict, main_metric, secondary_metrics, bf_corr=True)
     Get the best model from a dictionary of model results.
-
-Attributes
-----------
-CLASSIFICATION_METRICS : dict
-    A dictionary mapping classification metric names to their corresponding functions.
-REGRESSION_METRICS : dict
-    A dictionary mapping regression metric names to their corresponding functions.
-MULTICLASS_METRICS : dict
-    A dictionary mapping multiclass classification metric names to their corresponding functions.
-KNOWN_METRICS : dict
-    A dictionary mapping all metric names to their corresponding functions.
-SCORING : dict
-    A dictionary mapping all metric names to their corresponding scoring functions.
-HIGHER_BETTER : list
-    A list of metrics for which higher scores are better.
-LOWER_BETTER : list
-    A list of metrics for which lower scores are better.
 """
 
 import pandas as pd
@@ -50,131 +27,18 @@ import pingouin as pg
 import warnings
 import os
 import scikit_posthocs as sp
-from scipy.stats import ranksums, kendalltau, pearsonr, spearmanr
+from scipy.stats import ranksums
 from sklearn.base import clone, BaseEstimator
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import (
-    f1_score,
-    cohen_kappa_score,
-    matthews_corrcoef,
-    r2_score,
-    mean_squared_error,
-    mean_absolute_error,
-    root_mean_squared_error,
-    roc_auc_score,
-    average_precision_score,
-    matthews_corrcoef,
-    precision_score,
-    make_scorer,
-)
 from .models.classification import non_probabilistic_models
-
-
-def get_kendalltau_score(y_true, y_pred):
-    """
-    Calculate the Kendall Tau correlation coefficient.
-
-    Parameters
-    ----------
-    y_true : list
-        True values.
-    y_pred : list
-        Predicted values.
-
-    Returns
-    -------
-    float
-        The Kendall Tau correlation coefficient.
-    """
-    return kendalltau(y_true, y_pred).statistic
-
-
-def get_pearsonr_score(y_true, y_pred):
-    """
-    Calculate the Pearson correlation coefficient.
-
-    Parameters
-    ----------
-    y_true : list
-        True values.
-    y_pred : list
-        Predicted values.
-
-    Returns
-    -------
-    float
-        The Pearson correlation coefficient.
-    """
-    return pearsonr(y_true, y_pred).statistic
-
-
-def get_spearmanr_score(y_true, y_pred):
-    """
-    Calculate the Spearman correlation coefficient.
-
-    Parameters
-    ----------
-    y_true : list
-        True values.
-    y_pred : list
-        Predicted values.
-
-    Returns
-    -------
-    float
-        The Spearman correlation
-    """
-    return spearmanr(y_true, y_pred).statistic
-
-
-# Evaluation metrics for ordinal classification:
-# Weighted Cohen Kappa Score, Ref.: https://aclanthology.org/2021.acl-long.214.pdf
-# RMSE and MSE, Ref.: https://link.springer.com/chapter/10.1007/978-3-642-01818-3_25
-CLASSIFICATION_METRICS = {
-    "F1": f1_score,
-    "PR_AUC": average_precision_score,
-    "ROC_AUC": roc_auc_score,
-    "MCC": matthews_corrcoef,
-    "Precision": precision_score,
-}
-REGRESSION_METRICS = {
-    "R2": r2_score,
-    "RMSE": root_mean_squared_error,
-    "MSE": mean_squared_error,
-    "MAE": mean_absolute_error,
-    "KendallTau": get_kendalltau_score,
-    "PearsonR": get_pearsonr_score,
-    "SpearmanR": get_spearmanr_score,
-}
-MULTICLASS_METRICS = {
-    "Cohen Kappa": cohen_kappa_score,
-    "RMSE": root_mean_squared_error,
-    "MSE": mean_squared_error,
-}
-KNOWN_METRICS = {**CLASSIFICATION_METRICS, **REGRESSION_METRICS, **MULTICLASS_METRICS}
-lin_kappa_score = make_scorer(cohen_kappa_score, weights="linear")
-kendalltau_score = make_scorer(get_kendalltau_score)
-pearsonr_score = make_scorer(get_pearsonr_score)
-spearmanr_score = make_scorer(get_spearmanr_score)
-SCORING = {
-    "F1": "f1",
-    "PR_AUC": "average_precision",
-    "ROC_AUC": "roc_auc",
-    "MCC": "matthews_corrcoef",
-    "Precision": "precision",
-    "R2": "r2",
-    "RMSE": "neg_root_mean_squared_error",
-    "MSE": "neg_mean_squared_error",
-    "MAE": "neg_mean_absolute_error",
-    "KendallTau": kendalltau_score,
-    "PearsonR": pearsonr_score,
-    "SpearmanR": spearmanr_score,
-    "Cohen Kappa": lin_kappa_score,
-}
-HIGHER_BETTER = ["F1", "PR_AUC", "ROC_AUC", "MCC", "Precision", "R2", "Cohen Kappa"]
-LOWER_BETTER = ["RMSE", "MSE", "MAE"]
+from .metrics import (
+    CLASSIFICATION_METRICS,
+    KNOWN_METRICS,
+    SCORING,
+    HIGHER_BETTER,
+)
 
 
 def find_n_best_models(
@@ -559,11 +423,11 @@ def get_cv_performance(
 
         for metric in metric_list:
             if (
-                metric in ["PR_AUC", "ROC_AUC"]
+                metric in ["pr_auc", "roc_auc"]
                 and model_class.__class__.__name__ not in non_probabilistic_models
             ):
                 metrics_dict[metric].append(KNOWN_METRICS[metric](y_test, y_prob))
-            elif metric == "Cohen Kappa":
+            elif metric == "cohen_kappa":
                 metrics_dict[metric].append(
                     KNOWN_METRICS[metric](y_test, y_pred, weights="linear")
                 )
@@ -720,11 +584,11 @@ def get_optimised_cv_performance(
 
         for metric in metric_list:
             if (
-                metric in ["PR_AUC", "ROC_AUC"]
+                metric in ["pr_auc", "roc_auc"]
                 and model_class.__class__.__name__ not in non_probabilistic_models
             ):
                 metrics_dict[metric].append(KNOWN_METRICS[metric](y_test, y_prob))
-            elif metric == "Cohen Kappa":
+            elif metric == "cohen_kappa":
                 metrics_dict[metric].append(
                     KNOWN_METRICS[metric](y_test, y_pred, weights="linear")
                 )
