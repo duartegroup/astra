@@ -6,12 +6,14 @@ from .model_selection import (
     perform_statistical_tests,
     check_best_model,
     get_best_model,
-    LOWER_BETTER,
 )
+from .metrics import LOWER_BETTER
 from .utils import get_scores
 
 
-def run(CV_results: list[str], main_metric: str, sec_metrics: list[str], n_folds: int) -> None:
+def run(
+    CV_results: list[str], main_metric: str, sec_metrics: list[str], n_folds: int
+) -> None:
     """
     Compare the results of different models using the CV results.
 
@@ -56,10 +58,10 @@ def run(CV_results: list[str], main_metric: str, sec_metrics: list[str], n_folds
     for CV_results_path in CV_results:
 
         for file in os.listdir(CV_results_path):
-    
+
             if file.endswith("_CV_results.csv"):
                 cv_results_df = pd.read_csv(CV_results_path + file)
-    
+
                 assert (
                     f"rank_test_{main_metric}" in cv_results_df.columns
                 ), f"{file} does not contain results for {main_metric}"
@@ -67,7 +69,7 @@ def run(CV_results: list[str], main_metric: str, sec_metrics: list[str], n_folds
                     assert (
                         f"rank_test_{metric}" in cv_results_df.columns
                     ), f"{file} does not contain results for {metric}"
-    
+
                 if all_in_one_dir:
                     # remove the "_CV_results.csv" part of the filename
                     model_name = file.split("_CV_results.csv")[0]
@@ -76,7 +78,7 @@ def run(CV_results: list[str], main_metric: str, sec_metrics: list[str], n_folds
                     model_name = CV_results_path.split("/")[-2]
 
                 all_results[model_name] = {}
-    
+
                 for metric in [main_metric] + sec_metrics:
                     test_score_columns = [
                         col
@@ -84,9 +86,9 @@ def run(CV_results: list[str], main_metric: str, sec_metrics: list[str], n_folds
                         if ("split" in col) and (f"_test_{metric}" in col)
                     ]
                     scores = [
-                        cv_results_df[cv_results_df[f"rank_test_{main_metric}"] == 1].iloc[
-                            0
-                        ][col]
+                        cv_results_df[
+                            cv_results_df[f"rank_test_{main_metric}"] == 1
+                        ].iloc[0][col]
                         for col in test_score_columns
                     ]
                     # for metrics where lower is better, we need to negate the scores
@@ -94,7 +96,7 @@ def run(CV_results: list[str], main_metric: str, sec_metrics: list[str], n_folds
                     if metric in LOWER_BETTER:
                         scores = [-score for score in scores]
                     all_results[model_name][metric] = scores
-    
+
     if len(all_results) == 0:
         raise ValueError("No CV results found")
 

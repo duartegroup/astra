@@ -3,6 +3,7 @@ from argparse import RawTextHelpFormatter
 from rich.console import Console
 from . import benchmark
 from . import compare
+from .utils import load_config
 
 
 def get_CLI_parser() -> argparse.ArgumentParser:
@@ -61,12 +62,18 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         help="Benchmark model performance",
         formatter_class=RawTextHelpFormatter,
     )
-    benchmark_parser.add_argument(
+    group = benchmark_parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "data",
+        nargs="?",
         type=str,
-        help="Path to the dataset to train and evaluate models on. This should be a\n"
-        "pickled pd.DataFrame. If the data is not prefeaturised and presplit, it should\n"
-        "contain a column called 'SMILES'.",
+        help="Path to the dataset to train and evaluate models on. If the data is not\n"
+        "prefeaturised and presplit, it should contain a column called 'SMILES'.",
+    )
+    group.add_argument(
+        "--config",
+        type=str,
+        help="Path to a YAML config file. Must at least contain a 'data' key.",
     )
     benchmark_parser.add_argument(
         "--name",
@@ -240,6 +247,27 @@ def main() -> int:
 
     parser = get_CLI_parser()
     args = parser.parse_args()
+    if args.config:
+        config = load_config(args.config)
+
+        # Override CLI arguments with config values
+        for key, value in config.items():
+            setattr(args, key, value)
+
+        if args.data is None:
+            raise ValueError("The config file must include a 'data' field.")
+
+        # Custom model settings
+        if "models" in config:
+            args.models = {}
+            for model in config["models"]:
+                model_name = model["name"]
+                model_params = model.get("params", None)
+                hparam_grid = model.get("hparam_grid", None)
+                args.models[model_name] = {
+                    "params": model_params,
+                    "hparam_grid": hparam_grid,
+                }
 
     # convert all args.main_metric and args.sec_metrics to lowercase
     args.main_metric = args.main_metric.lower()
@@ -260,6 +288,7 @@ def main() -> int:
             fingerprint=args.fingerprint,
             incl_RDKit_feats=args.incl_RDKit_feats,
             scaler=args.scaler,
+            custom_models=args.models if hasattr(args, "models") else None,
             n_jobs=args.n_jobs,
         )
     elif args.command == "compare":

@@ -9,11 +9,15 @@ get_estimator_name(estimator)
     Get the name of a scikit-learn estimator.
 get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
     Get means and standard deviations of the main and secondary metrics from the CV results.
+load_config(file_path)
+    Load configuration from a YAML file.
 """
+
 import numpy as np
 import pandas as pd
+import yaml
 from sklearn.base import BaseEstimator
-from .model_selection import LOWER_BETTER
+from .metrics import LOWER_BETTER
 
 
 def get_estimator_name(model: BaseEstimator) -> str:
@@ -36,7 +40,10 @@ def get_estimator_name(model: BaseEstimator) -> str:
         estimator = model
     return estimator.__class__.__name__
 
-def get_scores(cv_results_df: pd.DataFrame, main_metric: str, sec_metrics: list[str], n_folds: int) -> tuple[float, float, dict[str, tuple[float, float]]]:
+
+def get_scores(
+    cv_results_df: pd.DataFrame, main_metric: str, sec_metrics: list[str], n_folds: int
+) -> tuple[float, float, dict[str, tuple[float, float]]]:
     """
     Get means and standard deviations of the main and secondary metrics from the CV results.
 
@@ -56,12 +63,16 @@ def get_scores(cv_results_df: pd.DataFrame, main_metric: str, sec_metrics: list[
     tuple of floats and dict of str to tuple of floats
         Mean and standard deviation of the main metric, and means and standard deviations of the secondary metrics.
     """
-    required_columns = [f"rank_test_{metric}" for metric in [main_metric] + sec_metrics] + [
-        f"split{i}_test_{metric}" for metric in [main_metric] + sec_metrics for i in range(n_folds)
+    required_columns = [
+        f"rank_test_{metric}" for metric in [main_metric] + sec_metrics
+    ] + [
+        f"split{i}_test_{metric}"
+        for metric in [main_metric] + sec_metrics
+        for i in range(n_folds)
     ]
-    assert all([col in cv_results_df.columns for col in required_columns]), (
-        f"CV results do not contain all required columns: {required_columns}"
-    )
+    assert all(
+        [col in cv_results_df.columns for col in required_columns]
+    ), f"CV results do not contain all required columns: {required_columns}"
 
     all_main_scores = [
         cv_results_df[cv_results_df[f"rank_test_{main_metric}"] == 1].iloc[0][
@@ -70,7 +81,9 @@ def get_scores(cv_results_df: pd.DataFrame, main_metric: str, sec_metrics: list[
         for i in range(n_folds)
     ]
     mean_score_main = (
-        -np.mean(all_main_scores) if (main_metric in LOWER_BETTER) else np.mean(all_main_scores)
+        -np.mean(all_main_scores)
+        if (main_metric in LOWER_BETTER)
+        else np.mean(all_main_scores)
     )
     std_score_main = np.std(all_main_scores)
 
@@ -88,3 +101,23 @@ def get_scores(cv_results_df: pd.DataFrame, main_metric: str, sec_metrics: list[
         )
 
     return mean_score_main, std_score_main, sec_metrics_scores
+
+
+def load_config(file_path: str) -> tuple:
+    """
+    Load configuration from a YAML file.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the YAML configuration file.
+
+    Returns
+    -------
+    dict
+        Configuration loaded from the YAML file.
+    """
+    with open(file_path, "r") as f:
+        config = yaml.safe_load(f)
+
+    return config

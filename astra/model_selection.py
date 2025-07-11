@@ -342,6 +342,7 @@ def get_cv_performance(
     fold_col: str,
     metric_list: list[str],
     scaler: str | None = None,
+    custom_params: dict[str, list] | None = None,
 ) -> dict[str, list[float]]:
     """
     Get the cross-validated performance of a model.
@@ -362,6 +363,8 @@ def get_cv_performance(
         A list of metrics to use for evaluation.
     scaler : str or None, default=None
         The type of scaler to use. Valid choices are 'MinMax' and 'Standard'.
+    custom_params : dict[str, list] or None, default=None
+        A dictionary of custom parameters for the model. If None, default parameters are used.
 
     Returns
     -------
@@ -378,6 +381,9 @@ def get_cv_performance(
 
     n_folds = df[fold_col].nunique()
     all_folds = [df[df[fold_col] == i] for i in range(n_folds)]
+
+    if custom_params:
+        model_class.set_params(**custom_params)
 
     if scaler:
         if scaler == "MinMax":

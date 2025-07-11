@@ -44,6 +44,15 @@ Options:
 
 **Note**: Metrics are not case-sensitive. See [here](astra/metrics.py) for an overview of available metrics.
 
+Alternatively, you can specify some or all arguments using a configuration file:
+
+```bash
+astra benchmark --config <path to config file>
+```
+See [here](configs/example.yml) for an example. Arguments in the configuration file will override CLI arguments.
+
+By default, ASTRA will benchmark all implemented [classification](astra/models/classification.py) or [regression](astra/models/regression.py) models, and search over default hyperparameter grids. You can specify which models to consider, custom starting hyperparameters, and custom hyperparameter search spaces in the configuration file.
+
 The benchmark script will create the following files under `results/<name>`:
 - `default_CV.pkl`: A dictionary containing CV scores of the main and secondary metrics for all models using default hyperparameters.
 - `nested_CV.pkl`: A dictionary containing CV scores of the main and secondary metrics for all models with optimised hyperparameters using nested grid-search.

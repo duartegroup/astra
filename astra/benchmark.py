@@ -10,13 +10,15 @@ import ast
 # )  # TODO: Move away from deepchem (look at asap-challenge repo)
 from .featurisation.features import get_fingerprints, RDKit_descriptors
 from .model_selection import (
-    CLASSIFICATION_METRICS,
-    REGRESSION_METRICS,
     get_cv_performance,
     get_optimised_cv_performance,
     get_best_hparams,
     find_n_best_models,
     get_best_model,
+)
+from .metrics import (
+    CLASSIFICATION_METRICS,
+    REGRESSION_METRICS,
 )
 from .utils import get_estimator_name, get_scores
 
@@ -37,6 +39,10 @@ def run(
     fingerprint: str | None = None,
     incl_RDKit_feats: bool = False,
     scaler: str | None = None,
+    custom_models: (
+        dict[str, None | dict[str, dict] | tuple[dict[str, dict], dict[str, dict]]]
+        | None
+    ) = None,
     n_jobs: int = 1,
 ) -> None:
     """
@@ -82,6 +88,11 @@ def run(
     scaler : str or None, default=None
         Type of scaler to use, if the data is to be scaled first. Valid choices are
         'Standard' and 'MinMax'.
+    custom_models : dict[str, None | dict[str, dict] | tuple[dict[str, dict], dict[str, dict]]] or None, default=None
+        Dictionary of models to use for benchmarking. If None, default models will be used.
+        The keys should be the model names, and the values should be dictionaries of starting
+        hyperparameters for the model, and/or a dictionary of hyperparameter search grids.
+        Default models are defined in astra.models.classification and astra.models.regression.
     n_jobs : int, default=1
         Number of jobs to run in parallel for hyperparameter tuning.
 
@@ -142,7 +153,7 @@ def run(
         for metric in sec_metrics:
             assert (
                 metric in REGRESSION_METRICS
-            ), "Secondary metrics must be regression metrics too."
+            ), f"Secondary metric '{metric}' is not a regression metric."
 
         models = regressors
         params = regressor_params
@@ -225,6 +236,31 @@ def run(
 
     logging.info("Starting benchmarking.")
 
+    if custom_models is not None:
+        logging.info("Using provided models.")
+        for model in custom_models:
+            assert model in regressors or model in classifiers, (
+                f"Model '{model}' is not a valid model. "
+                "Please provide a valid model from astra.models."
+            )
+        models = {
+            model: models[model] for model in custom_models if model in custom_models
+        }
+        custom_params = {
+            model: custom_models[model]["params"]
+            for model in custom_models
+            if custom_models[model]["params"]
+        }
+        custom_hparams = {
+            model: custom_models[model]["hparam_grid"]
+            for model in custom_models
+            if custom_models[model]["hparam_grid"]
+        }
+        params = {
+            model: custom_hparams[model] if model in custom_hparams else params[model]
+            for model in models
+        }
+
     logging.info(
         f"Starting {n_folds}-fold CV for all models using default hyperparameters."
     )
@@ -253,6 +289,7 @@ def run(
                 fold_col=fold_col,
                 metric_list=[main_metric] + sec_metrics,
                 scaler=scaler,
+                custom_params=custom_params.get(model, None),
             )
             with open(f"cache/{name}_CV_ckpt.pkl", "wb") as f:
                 pickle.dump(results, f)

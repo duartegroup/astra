@@ -1,0 +1,93 @@
+data: astra/data/example_df.csv
+name: example_experiment
+features: Features
+target: Target
+run_nested_CV: false
+fold_col: Fold
+main_metric: MSE
+sec_metrics:
+  - R2
+  - MAE
+split: null
+n_folds: 5
+fingerprint: null
+incl_RDKit_feats: false
+scaler: null
+n_jobs: 4
+models:
+  - name: RandomForestRegressor
+    params:
+      n_estimators: 100
+      max_depth: 10
+      random_state: 42
+    hparam_grid:
+      n_estimators:
+        - 50
+        - 100
+        - 150
+      max_depth:
+        - 5
+        - 10
+        - 20
+      min_samples_split:
+        - 2
+        - 5
+        - 10
+      min_samples_leaf:
+        - 1
+        - 2
+        - 4
+      bootstrap:
+        - true
+        - false
+  - name: SVR
+    params:
+      C: 1.0
+      kernel: rbf
+      degree: 3
+      gamma: scale
+    hparam_grid:
+      C:
+        - 0.1
+        - 1.0
+        - 10.0
+      kernel:
+        - linear
+        - rbf
+        - poly
+      degree:
+        - 2
+        - 3
+        - 4
+      gamma:
+        - scale
+        - auto
+  - name: CatBoostRegressor
+    params:
+      iterations: 100
+      learning_rate: 0.1
+      depth: 6
+      l2_leaf_reg: 3
+      bootstrap_type: Bernoulli
+      random_state: 42
+      verbose: false
+    hparam_grid:
+      iterations:
+        - 100
+        - 200
+        - 300
+      learning_rate:
+        - 0.01
+        - 0.1
+        - 0.2
+      depth:
+        - 3
+        - 6
+        - 9
+      l2_leaf_reg:
+        - 1
+        - 3
+        - 5
+      bootstrap_type:
+        - Bernoulli
+        - MVS
