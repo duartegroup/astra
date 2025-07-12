@@ -20,7 +20,13 @@ from .metrics import (
     CLASSIFICATION_METRICS,
     REGRESSION_METRICS,
 )
-from .utils import get_estimator_name, get_scores
+from .utils import (
+    get_estimator_name,
+    get_scores,
+    print_performance,
+    print_file_console,
+    print_final_results,
+)
 
 # TODO: extract some of the code here and in compare.py into functions
 
@@ -195,15 +201,18 @@ def run(
             CLASSIFICATION_METRICS,
         )
 
+    logging.info(f"Main metric: {main_metric}")
+    logging.info(f"Secondary metrics: {sec_metrics}")
+
     if split is not None:
-        logging.info("Splitting data.")
+        logging.info(f"Splitting data using {split} split into {n_folds} folds.")
         assert "SMILES" in data.columns, "Data does not contain a 'SMILES' column."
         assert split in ["Scaffold", "Fingerprint"], "Invalid split type."
         data = get_splits(data, split, n_folds)
     n_folds = data[fold_col].nunique()
 
     if fingerprint is not None:
-        logging.info("Featurising data.")
+        logging.info(f"Featurising data using {fingerprint} fingerprints.")
         assert "SMILES" in data.columns, "Data does not contain a 'SMILES' column."
         assert fingerprint in [
             "Morgan",
@@ -223,6 +232,7 @@ def run(
         smiles_list = data["SMILES"].tolist()
         fingerprints = get_fingerprints(smiles_list, fingerprint, radius, fpsize)
         if incl_RDKit_feats:
+            logging.info("Including RDKit features.")
             rdkit_feats = RDKit_descriptors(smiles_list)
             fingerprints = np.concatenate([fingerprints, rdkit_feats], axis=1)
 
@@ -235,6 +245,9 @@ def run(
     assert fold_col in data.columns, f"Data does not contain a '{fold_col}' column."
 
     logging.info("Starting benchmarking.")
+    logging.info(f"Features column: {features}")
+    logging.info(f"Target column: {target}")
+    logging.info(f"Fold column: {fold_col}")
 
     if custom_models is not None:
         logging.info("Using provided models.")
@@ -264,6 +277,8 @@ def run(
     logging.info(
         f"Starting {n_folds}-fold CV for all models using default hyperparameters."
     )
+    if scaler is not None:
+        logging.info(f"Scaling data using {scaler} scaler.")
     if os.path.exists(f"results/{name}/default_CV.pkl"):
         logging.info("Loading existing results.")
         with open(f"results/{name}/default_CV.pkl", "br") as f:
@@ -291,6 +306,11 @@ def run(
                 scaler=scaler,
                 custom_params=custom_params.get(model, None),
             )
+            print_performance(
+                model_name=model,
+                results_dict=results[model],
+                file=logging.getLogger().handlers[0].stream.name,
+            )
             with open(f"cache/{name}_CV_ckpt.pkl", "wb") as f:
                 pickle.dump(results, f)
         with open(f"results/{name}/default_CV.pkl", "wb") as f:
@@ -311,6 +331,12 @@ def run(
             n_best_models = find_n_best_models(
                 results_dic=results, metric=main_metric, bf_corr=True
             )
+            logging.info(f"Best models based on {main_metric}:")
+            for model in n_best_models:
+                print_file_console(
+                    file=logging.getLogger().handlers[0].stream.name,
+                    message=" " * 20 + f"{model}",
+                )
 
             try:
                 with open(f"cache/{name}_nested_CV_ckpt.pkl", "br") as f:
@@ -336,6 +362,11 @@ def run(
                     parameters=params[model],
                     n_jobs=n_jobs,
                     scaler=scaler,
+                )
+                print_performance(
+                    model_name=model,
+                    results_dict=results[model],
+                    file=logging.getLogger().handlers[0].stream.name,
                 )
                 with open(f"cache/{name}_nested_CV_ckpt.pkl", "wb") as f:
                     pickle.dump(results, f)
@@ -376,7 +407,7 @@ def run(
         for key, value in final_hyperparameters.items()
     }
     cv_results_df = pd.DataFrame(model.cv_results_)
-    mean_score_main, std_score_main, sec_metrics_scores = get_scores(
+    mean_score_main, std_score_main, median_score_main, sec_metrics_scores = get_scores(
         cv_results_df, main_metric, sec_metrics, n_folds
     )
     with open(f"results/{name}/final_model.pkl", "wb") as f:
@@ -385,17 +416,13 @@ def run(
         pickle.dump(final_hyperparameters, f)
     cv_results_df.to_csv(f"results/{name}/final_CV_results.csv")
 
-    print("-" * 50)
-    print("Final results")
-    print("-" * 50)
-    print(f"Final model: {final_model_name}")
-    print("Hyperparameters:")
-    for f in final_hyperparameters:
-        print(f + ":", final_hyperparameters[f])
-    print(f"Mean {main_metric}:", f"{mean_score_main:.3f} ± {std_score_main:.3f}.")
-    for metric in sec_metrics_scores:
-        print(
-            f"Mean {metric}:",
-            f"{sec_metrics_scores[metric][0]:.3f} ± {sec_metrics_scores[metric][1]:.3f}.",
-        )
-    print("-" * 50)
+    print_final_results(
+        final_model_name=final_model_name,
+        final_hyperparameters=final_hyperparameters,
+        main_metric=main_metric,
+        mean_score_main=mean_score_main,
+        std_score_main=std_score_main,
+        median_score_main=median_score_main,
+        sec_metrics_scores=sec_metrics_scores,
+        file=logging.getLogger().handlers[0].stream.name,
+    )
