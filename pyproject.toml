@@ -34,8 +34,8 @@ dependencies = [
     "deepchem",
     "scikit-learn>1.7",
     "scikit-posthocs",
-    “rich”,
-    “pyyaml”,
+    "rich",
+    "pyyaml",
 ]
 
 # Update the urls once the hosting is set up.

@@ -156,11 +156,6 @@ def get_models(
         else:
             models = CLASSIFIERS
         params = CLASSIFIER_PARAMS
-
-        # drop MultinomialNB for standard scaler
-        if scaler == "Standard":
-            models.pop("MultinomialNB")
-            params.pop("MultinomialNB")
         logging.info("Benchmarking classification models.")
 
     else:
@@ -171,6 +166,11 @@ def get_models(
             CLASSIFICATION_METRICS,
         )
 
+    # drop MultinomialNB for standard scaler
+    if scaler == "Standard" and "MultinomialNB" in models and not custom_models:
+        models.pop("MultinomialNB")
+        params.pop("MultinomialNB")
+
     if custom_models is not None:
         logging.info("Using provided models.")
         for model in custom_models:
@@ -178,9 +178,20 @@ def get_models(
                 f"Model '{model}' is not a valid model. "
                 "Please provide a valid model from astra.models."
             )
-        models = {
-            model: models[model] for model in custom_models if model in custom_models
-        }
+        if (
+            main_metric in ["roc_auc", "pr_auc"]
+            or ("roc_auc" in sec_metrics)
+            or ("pr_auc" in sec_metrics)
+        ):
+            custom_models = {
+                model: custom_models[model]
+                for model in custom_models
+                if model not in NON_PROBABILISTIC_MODELS
+            }
+            logging.info(
+                "Removing non-probabilistic models as one of the metrics is ROC AUC or PR AUC."
+            )
+        models = {model: models[model] for model in custom_models}
         custom_params = {
             model: custom_models[model]["params"]
             for model in custom_models
