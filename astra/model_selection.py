@@ -32,7 +32,7 @@ from sklearn.base import clone, BaseEstimator
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import GridSearchCV
-from .models.classification import non_probabilistic_models
+from .models.classification import NON_PROBABILISTIC_MODELS
 from .metrics import (
     CLASSIFICATION_METRICS,
     KNOWN_METRICS,
@@ -422,7 +422,7 @@ def get_cv_performance(
             )  # Suppress UserWarnings for LightGBM
             y_pred = m.predict(X_test)
             if (
-                model_class.__class__.__name__ not in non_probabilistic_models
+                model_class.__class__.__name__ not in NON_PROBABILISTIC_MODELS
                 and classification
             ):
                 y_prob = m.predict_proba(X_test)[:, 1]
@@ -430,7 +430,7 @@ def get_cv_performance(
         for metric in metric_list:
             if (
                 metric in ["pr_auc", "roc_auc"]
-                and model_class.__class__.__name__ not in non_probabilistic_models
+                and model_class.__class__.__name__ not in NON_PROBABILISTIC_MODELS
             ):
                 metrics_dict[metric].append(KNOWN_METRICS[metric](y_test, y_prob))
             elif metric == "cohen_kappa":
@@ -583,7 +583,7 @@ def get_optimised_cv_performance(
             )  # Suppress UserWarnings for LightGBM
             y_pred = clf.predict(X_test)
             if (
-                model_class.__class__.__name__ not in non_probabilistic_models
+                model_class.__class__.__name__ not in NON_PROBABILISTIC_MODELS
                 and classification
             ):
                 y_prob = clf.predict_proba(X_test)[:, 1]
@@ -591,7 +591,7 @@ def get_optimised_cv_performance(
         for metric in metric_list:
             if (
                 metric in ["pr_auc", "roc_auc"]
-                and model_class.__class__.__name__ not in non_probabilistic_models
+                and model_class.__class__.__name__ not in NON_PROBABILISTIC_MODELS
             ):
                 metrics_dict[metric].append(KNOWN_METRICS[metric](y_test, y_prob))
             elif metric == "cohen_kappa":

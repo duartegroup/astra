@@ -25,7 +25,179 @@ import numpy as np
 import pandas as pd
 import yaml
 from sklearn.base import BaseEstimator
-from .metrics import LOWER_BETTER
+import logging
+import ast
+from .metrics import LOWER_BETTER, REGRESSION_METRICS, CLASSIFICATION_METRICS
+from .models.regression import REGRESSORS, REGRESSOR_PARAMS
+from .models.classification import (
+    CLASSIFIERS,
+    CLASSIFIER_PARAMS,
+    NON_PROBABILISTIC_MODELS,
+)
+
+
+def get_data(data: str, features: str | None = None) -> pd.DataFrame:
+    """
+    Load data from a file into a pandas DataFrame.
+
+    Parameters
+    ----------
+    data : str
+        Path to the data file. Supported formats: CSV, pickle, or parquet.
+    features : str or None, default None
+        Name of the column containing features, if applicable.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame containing the loaded data.
+
+    Raises
+    ------
+    ValueError
+        If the file format is unsupported.
+    """
+    if data.endswith(".csv"):
+        data_df = pd.read_csv(data)
+        # convert features column from string representation of list to list (if it exists)
+        if features in data_df.columns:
+            try:
+                data_df[features] = data_df[features].apply(
+                    lambda x: ast.literal_eval(x)
+                )
+            except (ValueError, SyntaxError):
+                try:
+                    data_df[features] = data_df[features].apply(
+                        lambda x: np.fromstring(x.strip("[]"), sep=" ")
+                    )
+                except ValueError:
+                    logging.warning(
+                        f"Could not convert {features} column to list. "
+                        "Using it as is, but this may cause issues."
+                    )
+    elif data.endswith(".pkl") or data.endswith(".pickle"):
+        data_df = pd.read_pickle(data)
+    elif data.endswith(".parquet"):
+        data_df = pd.read_parquet(data)
+    else:
+        raise ValueError("Unsupported file format. Use CSV, pickle, or parquet.")
+
+    return data_df
+
+
+def get_models(
+    main_metric: str,
+    sec_metrics: list[str],
+    scaler: str | None = None,
+    custom_models: (
+        dict[str, None | dict[str, dict] | tuple[dict[str, dict], dict[str, dict]]]
+        | None
+    ) = None,
+) -> tuple[
+    dict[str, BaseEstimator],
+    dict[str, dict[str, list]],
+    dict[str, dict[str, list]] | None,
+]:
+    """
+    Get models and their hyperparameters based on the main metric and secondary metrics.
+
+    Parameters
+    ----------
+    main_metric : str
+        The main metric to determine the type of models.
+    sec_metrics : list of str
+        List of secondary metrics to validate against the main metric.
+    scaler : str or None, default None
+        The type of scaler used. If 'Standard', some models are excluded.
+    custom_models : dict[str, None | dict[str, dict] | tuple[dict[str, dict], dict[str, dict]]] or None, default None
+        Dictionary of models to use for benchmarking. If None, default models will be used.
+        The keys should be the model names, and the values should be dictionaries of starting
+        hyperparameters for the model, and/or a dictionary of hyperparameter search grids.
+
+    Returns
+    -------
+    tuple of dicts
+        A tuple containing:
+        - A dictionary of models with their names as keys and scikit-learn estimators as values.
+        - A dictionary of hyperparameters for each model.
+        - A dictionary of custom hyperparameters if provided, otherwise None.
+
+    Raises
+    ------
+    ValueError
+        If the main metric or any secondary metric is not recognized.
+    """
+    if main_metric in REGRESSION_METRICS:
+        for metric in sec_metrics:
+            assert (
+                metric in REGRESSION_METRICS
+            ), f"Secondary metric '{metric}' is not a regression metric."
+
+        models = REGRESSORS
+        params = REGRESSOR_PARAMS
+        logging.info("Benchmarking regression models.")
+
+    elif main_metric in CLASSIFICATION_METRICS:
+        for metric in sec_metrics:
+            assert (
+                metric in CLASSIFICATION_METRICS
+            ), f"Secondary metric '{metric}' is not a classification metric."
+
+        if (
+            main_metric in ["roc_auc", "pr_auc"]
+            or ("roc_auc" in sec_metrics)
+            or ("pr_auc" in sec_metrics)
+        ):
+            models = {
+                c: CLASSIFIERS[c]
+                for c in CLASSIFIERS
+                if c not in NON_PROBABILISTIC_MODELS
+            }
+        else:
+            models = CLASSIFIERS
+        params = CLASSIFIER_PARAMS
+
+        # drop MultinomialNB for standard scaler
+        if scaler == "Standard":
+            models.pop("MultinomialNB")
+            params.pop("MultinomialNB")
+        logging.info("Benchmarking classification models.")
+
+    else:
+        raise ValueError(
+            "Invalid metrics specified. Known metrics are:",
+            REGRESSION_METRICS,
+            "and",
+            CLASSIFICATION_METRICS,
+        )
+
+    if custom_models is not None:
+        logging.info("Using provided models.")
+        for model in custom_models:
+            assert model in REGRESSORS or model in CLASSIFIERS, (
+                f"Model '{model}' is not a valid model. "
+                "Please provide a valid model from astra.models."
+            )
+        models = {
+            model: models[model] for model in custom_models if model in custom_models
+        }
+        custom_params = {
+            model: custom_models[model]["params"]
+            for model in custom_models
+            if custom_models[model]["params"]
+        }
+        custom_hparams = {
+            model: custom_models[model]["hparam_grid"]
+            for model in custom_models
+            if custom_models[model]["hparam_grid"]
+        }
+        params = {
+            model: custom_hparams[model] if model in custom_hparams else params[model]
+            for model in models
+        }
+        return models, params, custom_params
+    else:
+        return models, params, None
 
 
 def get_estimator_name(model: BaseEstimator) -> str:

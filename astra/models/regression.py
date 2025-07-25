@@ -5,9 +5,9 @@ This module contains variables for instantiating regressors and their hyperparam
 
 Attributes
 ----------
-regressors : dict[str, BaseEstimator]
+REGRESSORS : dict[str, BaseEstimator]
     A dictionary mapping model names to their corresponding scikit-learn regressor instances.
-regressor_params : dict[str, dict[str, list]]
+REGRESSOR_PARAMS : dict[str, dict[str, list]]
     A dictionary mapping model names to dictionaries of hyperparameters to search over.
 """
 
@@ -24,7 +24,7 @@ from sklearn.kernel_ridge import KernelRidge
 from lightgbm import LGBMRegressor
 from catboost import CatBoostRegressor
 
-regressors = {
+REGRESSORS = {
     "XGBRegressor": XGBRegressor(random_state=42),
     "RandomForestRegressor": RandomForestRegressor(random_state=42),
     "GradientBoostingRegressor": GradientBoostingRegressor(random_state=42),
@@ -38,7 +38,7 @@ regressors = {
     "CatBoostRegressor": CatBoostRegressor(random_state=42, verbose=False),
 }
 
-regressor_params = {
+REGRESSOR_PARAMS = {
     "XGBRegressor": dict(
         n_estimators=[10, 100, 200, 500],
         max_leaves=[10, 30, 50, 0],

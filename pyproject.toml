@@ -32,8 +32,10 @@ dependencies = [
     "torchvision",
     "catboost",
     "deepchem",
-    "scikit-learn",
+    "scikit-learn>1.7",
     "scikit-posthocs",
+    “rich”,
+    “pyyaml”,
 ]
 
 # Update the urls once the hosting is set up.

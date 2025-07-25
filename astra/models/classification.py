@@ -5,11 +5,11 @@ This module contains variables for instantiating classifiers and their hyperpara
 
 Attributes
 ----------
-classifiers : dict[str, BaseEstimator]
+CLASSIFIERS : dict[str, BaseEstimator]
     A dictionary mapping model names to their corresponding scikit-learn classifier instances.
-classifier_params : dict[str, dict[str, list]]
+CLASSIFIER_PARAMS : dict[str, dict[str, list]]
     A dictionary mapping model names to dictionaries of hyperparameters to search over.
-non_probabilistic_models : list[str]
+NON_PROBABILISTIC_MODELS : list[str]
     A list of model names that do not have a `predict_proba` method.
 """
 
@@ -45,7 +45,7 @@ from sklearn.gaussian_process.kernels import (
     WhiteKernel,
 )
 
-classifiers = {
+CLASSIFIERS = {
     "LogisticRegression": LogisticRegression(random_state=42, max_iter=100000),
     "GaussianProcessClassifier": GaussianProcessClassifier(random_state=42),
     "BernoulliNB": BernoulliNB(),
@@ -75,7 +75,7 @@ classifiers = {
     "XGBClassifier": XGBClassifier(random_state=42),
 }
 
-non_probabilistic_models = [
+NON_PROBABILISTIC_MODELS = [
     "NearestCentroid",
     "LinearSVC",
     "SVC",
@@ -84,7 +84,7 @@ non_probabilistic_models = [
     "PassiveAggressiveClassifier",
 ]
 
-classifier_params = {
+CLASSIFIER_PARAMS = {
     "LogisticRegression": dict(
         solver=["newton-cg", "lbfgs", "liblinear"],
         penalty=["l2"],

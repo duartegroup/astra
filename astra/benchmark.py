@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import pickle
 import logging
-import ast
 
 # from .data.splitting import (
 #     get_splits,
@@ -16,19 +15,15 @@ from .model_selection import (
     find_n_best_models,
     get_best_model,
 )
-from .metrics import (
-    CLASSIFICATION_METRICS,
-    REGRESSION_METRICS,
-)
 from .utils import (
+    get_data,
+    get_models,
     get_estimator_name,
     get_scores,
     print_performance,
     print_file_console,
     print_final_results,
 )
-
-# TODO: extract some of the code here and in compare.py into functions
 
 
 def run(
@@ -57,8 +52,8 @@ def run(
     Parameters
     ----------
     data : str
-        Path to the dataset to train and evaluate models on. This should be a pickled
-        pd.DataFrame. If the data is not prefeaturised and presplit, it should contain
+        Path to the dataset to train and evaluate models on. This should be a CSV, pickle,
+        or parquet file. If the data is not prefeaturised and presplit, it should contain
         a column called 'SMILES'.
     name : str or None, default=None
         Name of the experiment. Results will be saved in a folder with this name in the
@@ -130,90 +125,18 @@ def run(
     logging.info(f"Starting benchmark for {name}.")
 
     logging.info("Loading data.")
-    if data.endswith(".csv"):
-        data = pd.read_csv(data)
-        # convert features column from string representation of list to list (if it exists)
-        if features in data.columns:
-            try:
-                data[features] = data[features].apply(lambda x: ast.literal_eval(x))
-            except (ValueError, SyntaxError):
-                try:
-                    data[features] = data[features].apply(
-                        lambda x: np.fromstring(x.strip("[]"), sep=" ")
-                    )
-                except ValueError:
-                    logging.warning(
-                        f"Could not convert {features} column to list. "
-                        "Using it as is, but this may cause issues."
-                    )
-    elif data.endswith(".pkl") or data.endswith(".pickle"):
-        data = pd.read_pickle(data)
-    elif data.endswith(".parquet"):
-        data = pd.read_parquet(data)
-    else:
-        raise ValueError("Unsupported file format. Use CSV, pickle, or parquet.")
-
-    if main_metric in REGRESSION_METRICS:
-        from .models.regression import regressors, regressor_params
-
-        for metric in sec_metrics:
-            assert (
-                metric in REGRESSION_METRICS
-            ), f"Secondary metric '{metric}' is not a regression metric."
-
-        models = regressors
-        params = regressor_params
-        logging.info("Benchmarking regression models.")
-    elif main_metric in CLASSIFICATION_METRICS:
-        from .models.classification import (
-            classifiers,
-            classifier_params,
-            non_probabilistic_models,
-        )
-
-        for metric in sec_metrics:
-            assert (
-                metric in CLASSIFICATION_METRICS
-            ), f"Secondary metric '{metric}' is not a classification metric."
-
-        if (
-            main_metric in ["ROC_AUC", "PR_AUC"]
-            or ("ROC_AUC" in sec_metrics)
-            or ("PR_AUC" in sec_metrics)
-        ):
-            classifiers = {
-                c: classifiers[c]
-                for c in classifiers
-                if c not in non_probabilistic_models
-            }
-        models = classifiers
-        params = classifier_params
-        # drop MultinomialNB for standard scaler
-        if scaler == "Standard":
-            models.pop("MultinomialNB")
-            params.pop("MultinomialNB")
-        logging.info("Benchmarking classification models.")
-    else:
-        raise ValueError(
-            "Invalid metrics specified. Known metrics are:",
-            REGRESSION_METRICS,
-            "and",
-            CLASSIFICATION_METRICS,
-        )
-
-    logging.info(f"Main metric: {main_metric}")
-    logging.info(f"Secondary metrics: {sec_metrics}")
+    data_df = get_data(data, features=features)
 
     if split is not None:
         logging.info(f"Splitting data using {split} split into {n_folds} folds.")
-        assert "SMILES" in data.columns, "Data does not contain a 'SMILES' column."
+        assert "SMILES" in data_df.columns, "Data does not contain a 'SMILES' column."
         assert split in ["Scaffold", "Fingerprint"], "Invalid split type."
-        data = get_splits(data, split, n_folds)
-    n_folds = data[fold_col].nunique()
+        data_df = get_splits(data_df, split, n_folds)
+    n_folds = data_df[fold_col].nunique()
 
     if fingerprint is not None:
         logging.info(f"Featurising data using {fingerprint} fingerprints.")
-        assert "SMILES" in data.columns, "Data does not contain a 'SMILES' column."
+        assert "SMILES" in data_df.columns, "Data does not contain a 'SMILES' column."
         assert fingerprint in [
             "Morgan",
             "Avalon",
@@ -229,50 +152,35 @@ def run(
         else:
             radius, fpsize = None, None
 
-        smiles_list = data["SMILES"].tolist()
+        smiles_list = data_df["SMILES"].tolist()
         fingerprints = get_fingerprints(smiles_list, fingerprint, radius, fpsize)
         if incl_RDKit_feats:
             logging.info("Including RDKit features.")
             rdkit_feats = RDKit_descriptors(smiles_list)
             fingerprints = np.concatenate([fingerprints, rdkit_feats], axis=1)
 
-        data["Features"] = fingerprints
+        data_df["Features"] = fingerprints
         logging.info("Featurisation complete. Saving data.")
-        data.to_pickle("cache/featurised_data.pkl")
+        data_df.to_pickle("cache/featurised_data.pkl")
 
-    assert features in data.columns, f"Data does not contain a '{features}' column."
-    assert target in data.columns, f"Data does not contain a '{target}' column."
-    assert fold_col in data.columns, f"Data does not contain a '{fold_col}' column."
+    assert features in data_df.columns, f"Data does not contain a '{features}' column."
+    assert target in data_df.columns, f"Data does not contain a '{target}' column."
+    assert fold_col in data_df.columns, f"Data does not contain a '{fold_col}' column."
 
     logging.info("Starting benchmarking.")
     logging.info(f"Features column: {features}")
     logging.info(f"Target column: {target}")
     logging.info(f"Fold column: {fold_col}")
 
-    if custom_models is not None:
-        logging.info("Using provided models.")
-        for model in custom_models:
-            assert model in regressors or model in classifiers, (
-                f"Model '{model}' is not a valid model. "
-                "Please provide a valid model from astra.models."
-            )
-        models = {
-            model: models[model] for model in custom_models if model in custom_models
-        }
-        custom_params = {
-            model: custom_models[model]["params"]
-            for model in custom_models
-            if custom_models[model]["params"]
-        }
-        custom_hparams = {
-            model: custom_models[model]["hparam_grid"]
-            for model in custom_models
-            if custom_models[model]["hparam_grid"]
-        }
-        params = {
-            model: custom_hparams[model] if model in custom_hparams else params[model]
-            for model in models
-        }
+    logging.info("Getting models and parameters.")
+    models, params, custom_params = get_models(
+        main_metric=main_metric,
+        sec_metrics=sec_metrics,
+        scaler=scaler,
+        custom_models=custom_models,
+    )
+    logging.info(f"Main metric: {main_metric}")
+    logging.info(f"Secondary metrics: {sec_metrics}")
 
     logging.info(
         f"Starting {n_folds}-fold CV for all models using default hyperparameters."
@@ -298,13 +206,13 @@ def run(
                 continue
             results[model] = get_cv_performance(
                 model_class=models[model],
-                df=data,
+                df=data_df,
                 features_col=features,
                 target_col=target,
                 fold_col=fold_col,
                 metric_list=[main_metric] + sec_metrics,
                 scaler=scaler,
-                custom_params=custom_params.get(model, None),
+                custom_params=custom_params.get(model, None) if custom_params else None,
             )
             print_performance(
                 model_name=model,
@@ -353,7 +261,7 @@ def run(
                     continue
                 results[model] = get_optimised_cv_performance(
                     model_class=models[model],
-                    df=data,
+                    df=data_df,
                     features_col=features,
                     target_col=target,
                     fold_col=fold_col,
@@ -387,7 +295,7 @@ def run(
     logging.info("Starting final hyperparameter tuning.")
     model = get_best_hparams(
         model_class=models[best_model],
-        df=data,
+        df=data_df,
         features_col=features,
         target_col=target,
         fold_col=fold_col,

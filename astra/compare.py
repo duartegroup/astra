@@ -154,16 +154,19 @@ def run(
                             cv_results_df = pd.read_csv(CV_results_path + file)
                             break
                     break
-        mean_score_main, std_score_main, sec_metrics_scores = get_scores(
-            cv_results_df, main_metric, sec_metrics, n_folds
+        mean_score_main, std_score_main, median_score_main, sec_metrics_scores = (
+            get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
         )
         print("-" * 50)
         print("Results:")
         print("-" * 50)
         print(f"Mean {main_metric}:", f"{mean_score_main:.3f} ± {std_score_main:.3f}.")
+        print(f"Median {main_metric}:", f"{median_score_main:.3f}.")
         for metric in sec_metrics:
             print(
                 f"Mean {metric}:",
-                f"{sec_metrics_scores[metric][0]:.3f} ± {sec_metrics_scores[metric][1]:.3f}.",
+                f"{sec_metrics_scores[metric][0]:.3f} ± {sec_metrics_scores[metric][1]:.3f}.\n",
+                f"Median {metric}:",
+                f"{sec_metrics_scores[metric][2]:.3f}.",
             )
         print("-" * 50)
