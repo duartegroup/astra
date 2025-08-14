@@ -8,6 +8,7 @@ main_metric: MSE
 sec_metrics:
   - R2
   - MAE
+parametric: auto
 split: null
 n_folds: 5
 fingerprint: null

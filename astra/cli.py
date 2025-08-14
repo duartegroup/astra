@@ -20,7 +20,7 @@ def get_CLI_parser() -> argparse.ArgumentParser:
             results if they exist. Default: `data` file name without extension.
     - features: Name of the column containing the features. Default: Features.
     - target: Name of the column containing the target. Default: Target.
-    - run_nested_CV: Whether or not to run nested CV with hyperparameter tuning for the best
+    - run_nested_CV: Whether to run nested CV with hyperparameter tuning for the best
             models. Default: False.
     - fold_col: Name of the column containing the CV fold number. Default: fold.
     - main_metric: Main metric to use for model selection. This will be used to infer the
@@ -36,7 +36,7 @@ def get_CLI_parser() -> argparse.ArgumentParser:
             Results will be saved in a column called 'Features'. For Morgan fingerprints,
             specify the radius and fingerprint size as 'Morgan_{radius}_{fpsize}'.
             Default: None.
-    - incl_RDKit_feats: Whether or not to include RDKit features, if the data is to be featurised first.
+    - incl_RDKit_feats: Whether to include RDKit features, if the data is to be featurised first.
             If 'fingerprint' isn't specified, this argument is ignored.
     - scaler: Type of scaler to use, if the data is to be scaled first.
             Valid choices are 'Standard' and 'MinMax'. Default: None.
@@ -99,7 +99,7 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         "--run_nested_CV",
         action="store_true",
         default=False,
-        help="Whether or not to run nested CV with hyperparameter tuning for the best\n"
+        help="Whether to run nested CV with hyperparameter tuning for the best\n"
         "models. Default: False.",
     )
     benchmark_parser.add_argument(
@@ -121,6 +121,15 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         nargs="+",
         default=["MSE", "MAE"],
         help="Secondary metrics to use for model selection. Default: MSE MAE.",
+    )
+    benchmark_parser.add_argument(
+        "--parametric",
+        type=str,
+        choices=["True", "False", "auto"],
+        default="auto",
+        help="Whether to use parametric statistical tests for model comparison.\n"
+        "If 'auto' (default), the assumptions of parametric tests will be checked,\n"
+        "and parametric tests will be used if the assumptions are met.",
     )
     benchmark_parser.add_argument(
         "--split",
@@ -150,7 +159,7 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         "--incl_RDKit_feats",
         action="store_true",
         default=False,
-        help="Whether or not to include RDKit features, if the data is to be featurised first."
+        help="Whether to include RDKit features, if the data is to be featurised first."
         "If 'fingerprint' isn't specified, this argument is ignored.",
     )
     benchmark_parser.add_argument(
@@ -283,6 +292,7 @@ def main() -> int:
             fold_col=args.fold_col,
             main_metric=args.main_metric,
             sec_metrics=args.sec_metrics,
+            parametric=args.parametric,
             split=args.split,
             n_folds=args.n_folds,
             fingerprint=args.fingerprint,

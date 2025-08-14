@@ -9,6 +9,7 @@ import logging
 # )  # TODO: Move away from deepchem (look at asap-challenge repo)
 from .featurisation.features import get_fingerprints, RDKit_descriptors
 from .model_selection import (
+    check_assumptions,
     get_cv_performance,
     get_optimised_cv_performance,
     get_best_hparams,
@@ -35,6 +36,7 @@ def run(
     fold_col: str = "Fold",
     main_metric: str = "R2",
     sec_metrics: list[str] = ["MSE", "MAE"],
+    parametric: str | bool = "auto",
     split: str | None = None,
     n_folds: int = 5,
     fingerprint: str | None = None,
@@ -64,7 +66,7 @@ def run(
     target : str, default='Target'
         Name of the column containing the target. Default: Target.
     run_nested_CV : bool, default=False
-        Whether or not to run nested CV with hyperparameter tuning for the best models.
+        Whether to run nested CV with hyperparameter tuning for the best models.
     fold_col : str, default='Fold'
         Name of the column containing the CV fold number.
     main_metric : str, default='R2'
@@ -72,6 +74,9 @@ def run(
         prediction task (classification or regression).
     sec_metrics : list[str], default=['MSE', 'MAE']
         Secondary metrics to use for model selection.
+    parametric : str or bool, default='auto'
+        Whether to use parametric tests. If 'auto', the assumptions of parametric tests
+        will be checked, and parametric tests will be used if the assumptions are met.
     split : str or None, default=None
         Type of split to use, if the data is to be resplit first. Valid choices are
         'Scaffold' and 'Fingerprint'. Results (fold number) will be saved in a column
@@ -84,7 +89,7 @@ def run(
         Results will be saved in a column called 'Features'. For Morgan fingerprints,
         specify the radius and fingerprint size as 'Morgan_{radius}_{fpsize}'.
     incl_RDKit_feats : bool, default=False
-        Whether or not to include RDKit features, if the data is to be featurised first.
+        Whether to include RDKit features, if the data is to be featurised first.
         If 'fingerprint' isn't specified, this argument is ignored.
     scaler : str or None, default=None
         Type of scaler to use, if the data is to be scaled first. Valid choices are
@@ -172,6 +177,18 @@ def run(
     logging.info(f"Target column: {target}")
     logging.info(f"Fold column: {fold_col}")
 
+    if parametric == "auto":
+        logging.info("Will check assumptions for parametric tests and use them if met.")
+    elif parametric is True:
+        logging.info("Using parametric tests.")
+    elif parametric is False:
+        logging.info("Using non-parametric tests.")
+    else:
+        raise ValueError(
+            "`parametric` must be one of [True, False, 'auto']. "
+            f"Got {parametric} instead."
+        )
+
     logging.info("Getting models and parameters.")
     models, params, custom_params = get_models(
         main_metric=main_metric,
@@ -226,6 +243,14 @@ def run(
         os.remove(f"cache/{name}_CV_ckpt.pkl")
         logging.info("Done!")
 
+    if parametric == "auto":
+        logging.info("Checking assumptions for parametric tests.")
+        parametric = check_assumptions(results_dict=results, verbose=False)
+        logging.info(f"Assumptions of parametric tests met: {parametric}.")
+    elif parametric is True:
+        logging.info("Checking assumptions for parametric tests.")
+        _ = check_assumptions(results_dict=results, verbose=True)
+
     if run_nested_CV:
         logging.info(
             "Starting nested CV with hyperparameter tuning for the best models."
@@ -237,7 +262,10 @@ def run(
         else:
             logging.info("Selecting best models.")
             n_best_models = find_n_best_models(
-                results_dic=results, metric=main_metric, bf_corr=True
+                results_dic=results,
+                metric=main_metric,
+                parametric=parametric,
+                bf_corr=True,
             )
             logging.info(f"Best models based on {main_metric}:")
             for model in n_best_models:
@@ -288,9 +316,10 @@ def run(
         results_dict=results,
         main_metric=main_metric,
         secondary_metrics=sec_metrics,
+        parametric=parametric,
         bf_corr=True,
     )
-    logging.info(f"Best model: {best_model}. Reason: {reason}")
+    logging.info(f"Best model: {best_model}. Reason: {reason}.")
 
     logging.info("Starting final hyperparameter tuning.")
     model = get_best_hparams(

@@ -5,10 +5,14 @@ This module contains functions for model selection and evaluation.
 
 Functions
 ---------
-find_n_best_models(results_dic, metric, bf_corr=True)
-    Find the n best models that don't perform significantly differently with respect to a given metric as determined using the Friedman test.
-perform_statistical_tests(results_dic, metric)
-    Perform Conover post-hoc and rank-sum tests on the performance of models.
+check_assumptions(results_dict, verbose=True)
+    Check homogeneity of variances and normality assumed by parametric statistical tests.
+tukey_hsd(mse, residual_dof, score_means, n_folds)
+    Performs Tukey's HSD test using repeated measures ANOVA output.
+find_n_best_models(results_dic, metric, parametric=False, bf_corr=True)
+    Find the n best models that don't perform significantly differently with respect to a given metric as determined using repeated measures ANOVA (if parametric=True) or the Friedman test (if parametric=False).
+perform_statistical_tests(results_dic, metric, parametric=False)
+    Perform Tukey's HSD and paired t-test (if parametric=True) or Conover post-hoc and Wilcoxon signed-rank tests (if parametric=False) on the performance of models.
 check_best_model(results_dic, test_statistics, metric)
     Check if there is a model that is significantly better than the others.
 get_cv_performance(model_class, df, fold_col, metric_list, scaler=None)
@@ -17,7 +21,7 @@ get_optimised_cv_performance(model_class, df, fold_col, metric_list, main_metric
     Get the cross-validated performance of a model with optimised hyperparameters using grid search with nested cross-validation.
 get_best_hparams(model_class, df, fold_col, metric, parameters, n_jobs, scaler=None)
     Get the best hyperparameters for a model using grid search with (non-nested) cross-validation.
-get_best_model(results_dict, main_metric, secondary_metrics, bf_corr=True)
+get_best_model(results_dict, main_metric, secondary_metrics, parametric=False, bf_corr=True)
     Get the best model from a dictionary of model results.
 """
 
@@ -27,7 +31,8 @@ import pingouin as pg
 import warnings
 import os
 import scikit_posthocs as sp
-from scipy.stats import ranksums
+from scipy.stats import wilcoxon, levene, ttest_rel, kstest
+from statsmodels.stats.libqsturng import psturng
 from sklearn.base import clone, BaseEstimator
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.pipeline import make_pipeline
@@ -41,12 +46,163 @@ from .metrics import (
 )
 
 
+def check_assumptions(
+    results_dict: dict[str, dict[str, list[float]]], verbose: bool = True
+) -> bool:
+    """
+    Check homogeneity of variances and normality assumed by parametric statistical tests.
+
+    Parameters
+    ----------
+    results_dict : dict[str, dict[str, list[float]]]
+        A dictionary mapping model names to dictionaries of metric names and scores.
+    verbose : bool, default=True
+        Whether to print warnings if assumptions are violated.
+
+    Returns
+    -------
+    bool
+        True if all assumptions are met, False otherwise.
+    """
+    # Get metrics to check
+    metrics = []
+    for model in results_dict:
+        metrics.append(list(results_dict[model].keys()))
+    # assert that all models have the same metrics
+    if not all(metrics[0] == m for m in metrics):
+        raise ValueError("All models must have the same metrics.")
+    metrics = metrics[0]
+
+    # Run Levene's test for homogeneity of variances
+    pvals_levene = []
+    for metric in metrics:
+        groups = [results_dict[model][metric] for model in results_dict]
+        _, pvalue = levene(*groups)
+        pvals_levene.append(pvalue)
+        # Check if p-value is above 0.05
+        if pvalue < 0.05 and verbose:
+            print(
+                "Warning: Homogeneity of variances assumption violated for metric "
+                f"{metric}. Consider using non-parametric tests."
+            )
+    # Check if any p-values are above 0.05
+    homogeneity_of_variances = all(pval > 0.05 for pval in pvals_levene)
+
+    # If homogeneity of variances is met, we can assume that fold variances are also met
+    if not homogeneity_of_variances:
+        # Check max fold difference of variances
+        max_fold_differences = []
+        for metric in metrics:
+            variances_by_method = pd.Series(
+                [np.var(results_dict[model][metric]) for model in results_dict]
+            )
+            max_fold_diff = (
+                variances_by_method.max() / variances_by_method.min()
+                if variances_by_method.min() > 0
+                else np.inf
+            )
+            if max_fold_diff > 9 and verbose:
+                print(
+                    "Warning: Variances of folds differ too much for metric "
+                    f"{metric}. Consider using non-parametric tests."
+                )
+            max_fold_differences.append(max_fold_diff)
+        # Check if any max fold differences are above 9
+        fold_variances = all(
+            max_fold_diff <= 9 for max_fold_diff in max_fold_differences
+        )
+        if fold_variances:
+            homogeneity_of_variances = True
+            if verbose:
+                print("Info: All fold variances are within acceptable limits (< 9).")
+    else:
+        fold_variances = True
+
+    # Run Kolmogorov-Smirnov test for normality
+    pvals_ks = []
+    for metric in metrics:
+        for model in results_dict:
+            scores = results_dict[model][metric]
+            _, pvalue = kstest(
+                scores,
+                "norm",
+                args=(np.mean(scores), np.std(scores)),
+            )
+            if pvalue < 0.05 and verbose:
+                print(
+                    "Warning: Normality assumption violated for model "
+                    f"{model} and metric {metric}. Consider using non-parametric tests."
+                )
+            pvals_ks.append(pvalue)
+    # Check if any p-values are above 0.05
+    normality = all(pval > 0.05 for pval in pvals_ks)
+
+    # If any of the assumptions are violated, return False
+    if not (homogeneity_of_variances and fold_variances and normality):
+        return False
+    return True
+
+
+def tukey_hsd(
+    mse: float, residual_dof: int, score_means: pd.Series, n_folds: int
+) -> pd.DataFrame:
+    """
+    Performs Tukey's HSD test using repeated measures ANOVA output.
+
+    Parameters
+    ----------
+    mse : float
+        Mean squared error from ANOVA.
+    residual_dof : int
+        Residual degrees of freedom.
+    score_means : pd.Series
+        Mean scores.
+    n_folds: int
+        Total number of folds per model.
+
+    Returns
+    -------
+    pd.DataFrame
+        p-values for pairwise comparisons between models.
+    """
+    # Get models to compare
+    models = list(score_means.index)
+    # Get number of models to compare
+    n_models = len(models)
+    # Calculate Tukey standard error
+    tukey_se = np.sqrt(2 * mse / n_folds)
+
+    p_values = np.ones((n_models, n_models))
+    for i, model1 in enumerate(models):
+        for j, model2 in enumerate(models):
+            # Calculate the difference between the mean scores
+            mean_diff = score_means.loc[model1] - score_means.loc[model2]
+            # Calculate the studentised range
+            studentised_range = np.abs(mean_diff) / tukey_se
+            # Calculate the adjusted p-value
+            adjusted_p = psturng(studentised_range * np.sqrt(2), n_models, residual_dof)
+            # psturng sometimes returns an array containing a single float for unknown reasons
+            if isinstance(adjusted_p, np.ndarray):
+                adjusted_p = adjusted_p[0]
+            # Store results
+            p_values[i, j] = adjusted_p
+    np.fill_diagonal(p_values, 1.0)
+
+    return pd.DataFrame(p_values, columns=models, index=models)
+
+
 def find_n_best_models(
-    results_dic: dict[str, dict[str, list[float]]], metric: str, bf_corr: bool = True
+    results_dic: dict[str, dict[str, list[float]]],
+    metric: str,
+    parametric: bool = False,
+    bf_corr: bool = True,
 ) -> list[str]:
     """
     Find the n best models that don't perform significantly differently with respect to
-    a given metric as determined using the Friedman test.
+    a given metric as determined using repeated measures ANOVA (if parametric=True) or
+    the Friedman test (if parametric=False). The function iteratively removes the model
+    with the worst median score until no statistically significant difference is found or
+    only one model remains.
 
     Parameters
     ----------
@@ -54,6 +210,8 @@ def find_n_best_models(
         A dictionary mapping model names to dictionaries of metric names and scores.
     metric : str
         The metric to use for model comparison.
+    parametric : bool, default=False
+        Whether to use parametric tests instead of non-parametric tests.
     bf_corr : bool, default=True
         Whether to apply Bonferroni correction to the significance level.
 
@@ -76,8 +234,12 @@ def find_n_best_models(
 
     best_models = []
     for n_models in range(len(stat_for_test.columns), 1, -1):
-        # Perform Friedman test
-        friedman = pg.friedman(stat_for_test)["p-unc"].values[0]
+        if parametric:
+            # Perform repeated measures ANOVA
+            pvalue = pg.rm_anova(stat_for_test)["p-unc"].values[0]
+        else:
+            # Perform Friedman test
+            pvalue = pg.friedman(stat_for_test)["p-unc"].values[0]
 
         # Bonferroni correction of significance level
         if bf_corr:
@@ -86,7 +248,7 @@ def find_n_best_models(
             threshold = 0.05
 
         # Check if there is a statistically significant difference
-        if friedman < threshold:  # significant difference
+        if pvalue < threshold:  # significant difference
             # Remove model with the worst median score
             model_labels = stat_for_test.columns
             median_scores = stat_for_test.median()
@@ -102,10 +264,13 @@ def find_n_best_models(
 
 
 def perform_statistical_tests(
-    results_dic: dict[str, dict[str, list[float]]], metric: str
+    results_dic: dict[str, dict[str, list[float]]],
+    metric: str,
+    parametric: bool = False,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Perform Conover post-hoc and rank-sum tests on the performance of models.
+    Perform Tukey's HSD and paired t-test (if parametric=True) or Conover post-hoc and
+    Wilcoxon signed-rank tests (if parametric=False) on the performance of models.
 
     Parameters
     ----------
@@ -113,11 +278,13 @@ def perform_statistical_tests(
         A dictionary mapping model names to dictionaries of metric names and scores.
     metric : str
         The metric to use for model comparison.
+    parametric : bool, default=False
+        Whether to use parametric tests instead of non-parametric tests.
 
     Returns
     -------
     tuple[pd.DataFrame, pd.DataFrame]
-        A tuple containing the post-hoc and rank-sum test results.
+        A tuple containing the test results for the two statistical tests.
     """
     assert (
         metric in KNOWN_METRICS
@@ -130,24 +297,43 @@ def perform_statistical_tests(
     ).T
     stat_for_test = stat_df.dropna(axis=1)
 
-    # Perform post-hoc test
-    post_hoc_stats = sp.posthoc_conover_friedman(stat_for_test, p_adjust="holm")
+    if parametric:
+        # perform repeated measures ANOVA
+        anova = pg.rm_anova(data=stat_for_test, detailed=True)
+        # extract mean squared error and residual degrees of freedom
+        mse = float(anova.loc[1, "MS"])
+        residual_dof = int(anova.loc[1, "DF"])
+        # calculate mean scores per model
+        means = stat_for_test.mean(axis=0)
+        n_folds = stat_for_test.shape[0]
+        # perform Tukey's HSD test
+        post_hoc_stats = tukey_hsd(mse, residual_dof, means, n_folds)
+    else:
+        # perform Conover post-hoc test with Holm-Bonferroni adjustment
+        post_hoc_stats = sp.posthoc_conover_friedman(stat_for_test, p_adjust="holm")
 
-    # Perform rank-sum test
-    rank_sum_p_values = np.empty(
-        (len(stat_for_test.columns), len(stat_for_test.columns))
-    )
+    if parametric:
+        # Perform paired t-test
+        test = ttest_rel
+    else:
+        # Perform Wilcoxon signed-rank test
+        test = wilcoxon
+    naive_p_values = np.empty((len(stat_for_test.columns), len(stat_for_test.columns)))
     for n, col1 in enumerate(stat_for_test):
         for m, col2 in enumerate(stat_for_test):
-            rank_sum_p_values[n, m] = ranksums(
+            # Skip self-comparisons
+            if col1 == col2:
+                naive_p_values[n, m] = 1.0
+                continue
+            naive_p_values[n, m] = test(
                 stat_for_test[col1],
                 stat_for_test[col2],
             ).pvalue
-    rank_sum_stats = pd.DataFrame(
-        rank_sum_p_values, columns=stat_for_test.columns, index=stat_for_test.columns
+    naive_stats = pd.DataFrame(
+        naive_p_values, columns=stat_for_test.columns, index=stat_for_test.columns
     )
 
-    return post_hoc_stats, rank_sum_stats
+    return post_hoc_stats, naive_stats
 
 
 def check_best_model(
@@ -263,6 +449,7 @@ def get_best_model(
     results_dict: dict[str, dict[str, list[float]]],
     main_metric: str,
     secondary_metrics: list[str],
+    parametric: bool = False,
     bf_corr: bool = True,
 ) -> tuple[str, str]:
     """
@@ -276,6 +463,8 @@ def get_best_model(
         The main metric to use for model comparison.
     secondary_metrics : list[str]
         A list of secondary metrics to use for model comparison.
+    parametric : bool, default=False
+        Whether to use parametric tests instead of non-parametric tests.
     bf_corr : bool, default=True
         Whether to apply Bonferroni correction to the significance level.
 
@@ -284,36 +473,38 @@ def get_best_model(
     tuple[str, str]
         A tuple containing the name of the best model and the reason for its selection.
     """
-    # Perform Friedman test to find the n best models
-    n_best_models = find_n_best_models(results_dict, main_metric, bf_corr)
+    # Perform tests to find the n best models
+    n_best_models = find_n_best_models(results_dict, main_metric, parametric, bf_corr)
     results_dict_best = {model: results_dict[model] for model in n_best_models}
 
     # Perform statistical tests on the best models
-    post_hoc_stats, rank_sum_stats = perform_statistical_tests(
-        results_dict_best, main_metric
+    post_hoc_stats, naive_stats = perform_statistical_tests(
+        results_dict_best, main_metric, parametric
     )
 
-    # Check if the post-hoc test yields a best model
+    # Check if Tukey's HSD test/Conover post-hoc test yield a best model
     best_model = check_best_model(results_dict_best, post_hoc_stats, main_metric)
-    reason = "post-hoc test"
+    reason = "Tukey's HSD test" if parametric else "Conover post-hoc test"
 
-    # Fall back to rank-sum test
+    # Fall back to naive test
     if not best_model:
-        best_model = check_best_model(results_dict_best, rank_sum_stats, main_metric)
-        reason = "rank-sum test"
+        best_model = check_best_model(results_dict_best, naive_stats, main_metric)
+        reason = "paired t-test" if parametric else "Wilcoxon signed-rank test"
 
     # Fall back to secondary metrics if the main one doesn't yield a best model
     if not best_model:
         for metric in secondary_metrics:
-            post_hoc_stats, rank_sum_stats = perform_statistical_tests(
-                results_dict_best, metric
+            post_hoc_stats, naive_stats = perform_statistical_tests(
+                results_dict_best, metric, parametric
             )
             best_model = check_best_model(results_dict_best, post_hoc_stats, metric)
-            reason = f"post-hoc test using {metric}"
+            test_used = "Tukey's HSD test" if parametric else "Conover post-hoc test"
+            reason = f"{test_used} using {metric}"
             if best_model:
                 break
-            best_model = check_best_model(results_dict_best, rank_sum_stats, metric)
-            reason = f"rank-sum test using {metric}"
+            best_model = check_best_model(results_dict_best, naive_stats, metric)
+            test_used = "paired t-test" if parametric else "Wilcoxon signed-rank test"
+            reason = f"{test_used} using {metric}"
             if best_model:
                 break
 
