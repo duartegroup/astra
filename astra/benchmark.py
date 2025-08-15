@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import pickle
 import logging
-from .featurisation.features import get_fingerprints, RDKit_descriptors
 from .model_selection import (
     check_assumptions,
     get_cv_performance,
@@ -33,8 +32,6 @@ def run(
     main_metric: str = "R2",
     sec_metrics: list[str] = ["MSE", "MAE"],
     parametric: str | bool = "auto",
-    fingerprint: str | None = None,
-    incl_RDKit_feats: bool = False,
     scaler: str | None = None,
     custom_models: (
         dict[str, None | dict[str, dict] | tuple[dict[str, dict], dict[str, dict]]]
@@ -70,14 +67,6 @@ def run(
     parametric : str or bool, default='auto'
         Whether to use parametric tests. If 'auto', the assumptions of parametric tests
         will be checked, and parametric tests will be used if the assumptions are met.
-    fingerprint : str or None, default=None
-        Type of fingerprint to use, if the data is to be featurised first.
-        Valid choices are 'Morgan', 'Avalon', 'RDKit', 'MACCS', 'AtomPair', 'TopTorsion'.
-        Results will be saved in a column called 'Features'. For Morgan fingerprints,
-        specify the radius and fingerprint size as 'Morgan_{radius}_{fpsize}'.
-    incl_RDKit_feats : bool, default=False
-        Whether to include RDKit features, if the data is to be featurised first.
-        If 'fingerprint' isn't specified, this argument is ignored.
     scaler : str or None, default=None
         Type of scaler to use, if the data is to be scaled first. Valid choices are
         'Standard' and 'MinMax'.
@@ -119,35 +108,6 @@ def run(
     logging.info("Loading data.")
     data_df = get_data(data, features=features)
     n_folds = data_df[fold_col].nunique()
-
-    if fingerprint is not None:
-        logging.info(f"Featurising data using {fingerprint} fingerprints.")
-        assert "SMILES" in data_df.columns, "Data does not contain a 'SMILES' column."
-        assert fingerprint in [
-            "Morgan",
-            "Avalon",
-            "RDKit",
-            "MACCS",
-            "AtomPair",
-            "TopTorsion",
-        ], "Invalid fingerprint type."
-
-        if fingerprint.startswith("Morgan"):
-            radius, fpsize = map(int, fingerprint.split("_")[1:])
-            fingerprint = "Morgan"
-        else:
-            radius, fpsize = None, None
-
-        smiles_list = data_df["SMILES"].tolist()
-        fingerprints = get_fingerprints(smiles_list, fingerprint, radius, fpsize)
-        if incl_RDKit_feats:
-            logging.info("Including RDKit features.")
-            rdkit_feats = RDKit_descriptors(smiles_list)
-            fingerprints = np.concatenate([fingerprints, rdkit_feats], axis=1)
-
-        data_df["Features"] = fingerprints
-        logging.info("Featurisation complete. Saving data.")
-        data_df.to_pickle("cache/featurised_data.pkl")
 
     assert features in data_df.columns, f"Data does not contain a '{features}' column."
     assert target in data_df.columns, f"Data does not contain a '{target}' column."

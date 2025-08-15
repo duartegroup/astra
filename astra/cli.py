@@ -26,13 +26,6 @@ def get_CLI_parser() -> argparse.ArgumentParser:
             prediction task (classification or regression). Default: R2.
     - sec_metrics: Secondary metrics to use for model selection. Default: MSE MAE.
     - parametric: Whether to use parametric statistical tests for model comparison.
-    - fingerprint: Type of fingerprint to use, if the data is to be featurised first.
-            Valid choices are 'Morgan', 'Avalon', 'RDKit', 'MACCS', 'AtomPair', 'TopTorsion'.
-            Results will be saved in a column called 'Features'. For Morgan fingerprints,
-            specify the radius and fingerprint size as 'Morgan_{radius}_{fpsize}'.
-            Default: None.
-    - incl_RDKit_feats: Whether to include RDKit features, if the data is to be featurised first.
-            If 'fingerprint' isn't specified, this argument is ignored.
     - scaler: Type of scaler to use, if the data is to be scaled first.
             Valid choices are 'Standard' and 'MinMax'. Default: None.
     - n_jobs: Number of jobs to run in parallel for hyperparameter tuning. Default: 1.
@@ -124,22 +117,6 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         help="Whether to use parametric statistical tests for model comparison.\n"
         "If 'auto' (default), the assumptions of parametric tests will be checked,\n"
         "and parametric tests will be used if the assumptions are met.",
-    )
-    benchmark_parser.add_argument(
-        "--fingerprint",
-        type=str,
-        default=None,
-        help="Type of fingerprint to use, if the data is to be featurised first.\n"
-        "Valid choices are 'Morgan', 'Avalon', 'RDKit', 'MACCS', 'AtomPair', 'TopTorsion'.\n"
-        "Results will be saved in a column called 'Features'. For Morgan fingerprints,\n"
-        "specify the radius and fingerprint size as 'Morgan_{radius}_{fpsize}'. Default: None.",
-    )
-    benchmark_parser.add_argument(
-        "--incl_RDKit_feats",
-        action="store_true",
-        default=False,
-        help="Whether to include RDKit features, if the data is to be featurised first."
-        "If 'fingerprint' isn't specified, this argument is ignored.",
     )
     benchmark_parser.add_argument(
         "--scaler",
@@ -272,8 +249,6 @@ def main() -> int:
             main_metric=args.main_metric,
             sec_metrics=args.sec_metrics,
             parametric=args.parametric,
-            fingerprint=args.fingerprint,
-            incl_RDKit_feats=args.incl_RDKit_feats,
             scaler=args.scaler,
             custom_models=args.models if hasattr(args, "models") else None,
             n_jobs=args.n_jobs,

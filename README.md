@@ -25,7 +25,7 @@ Use `astra benchmark` to run performance benchmarks across different models usin
 ```bash
 astra benchmark <data>
 ```
-where `data` is the path to the dataset to train and evaluate models on. This should be a `pd.DataFrame`, saved in CSV, pickle, or parquet format (which will be inferred from the file ending, and needs to be `.csv`, `.pkl`, `.pickle`, or `.parquet`). See [here](astra/data/example_df.csv) for an example.
+where `data` is the path to the dataset to train and evaluate models on. This should be a `pd.DataFrame`, saved in CSV, pickle, or parquet format (which will be inferred from the file ending, and needs to be `.csv`, `.pkl`, `.pickle`, or `.parquet`), containing input features, the target variable, and a column indicating which fold a data point belongs to. See [here](astra/data/example_df.csv) for an example.
 
 Options:
 - `--name`: Name of the experiment. Results will be saved in a folder with this name in the 'results' directory. Will be used to load cached results if they exist. Default: `data` file name (without the extension).
@@ -36,8 +36,6 @@ Options:
 - `--main_metric`: Main metric to use for model selection. This will be used to infer the prediction task (classification or regression). Default: R2.
 - `--sec_metrics`: Secondary metrics to use for model selection. Default: MSE, MAE.
 - `--parametric`: Whether to use parametric statistical tests for model comparison. If 'auto' (default), the assumptions of parametric tests will be checked, and parametric tests will be used if the assumptions are met.
-- `--fingerprint`: Type of fingerprint to use, if the data is to be featurised first. Valid choices are 'Morgan', 'Avalon', 'RDKit', 'MACCS', 'AtomPair', 'TopTorsion'. Results will be saved in a column called 'Features'. For Morgan fingerprints, specify the radius and fingerprint size as 'Morgan_{radius}_{fpsize}'. Default: None.
-- `--incl_RDKit_feats`: Whether to include RDKit features, if the data is to be featurised first. If 'fingerprint' isn't specified, this argument is ignored.
 - `--scaler`: Type of scaler to use, if the data is to be scaled first. Valid choices are 'Standard' and 'MinMax'. Default: None.
 - `--n_jobs`: Number of jobs to run in parallel for hyperparameter tuning. Default: 1.
 
@@ -81,7 +79,6 @@ Options:
   - pingouin
   - xgboost
   - torch
-  - rdkit
   - torchaudio
   - torchvision
   - catboost

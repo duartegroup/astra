@@ -27,7 +27,6 @@ dependencies = [
     "pingouin",
     "xgboost>=2.1.4",
     "torch",
-    "rdkit",
     "torchaudio",
     "torchvision",
     "catboost",

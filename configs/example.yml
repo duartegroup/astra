@@ -9,8 +9,6 @@ sec_metrics:
   - R2
   - MAE
 parametric: auto
-fingerprint: null
-incl_RDKit_feats: false
 scaler: null
 n_jobs: 4
 models:

@@ -5,7 +5,7 @@ This module contains utility functions used in the package.
 
 Functions
 ---------
-get_data(data, features=None)
+get_data(data, features)
     Load data from a file into a pandas DataFrame.
 get_estimator_name(estimator)
     Get the name of a scikit-learn estimator.
@@ -38,7 +38,7 @@ from .models.classification import (
 )
 
 
-def get_data(data: str, features: str | None = None) -> pd.DataFrame:
+def get_data(data: str, features: str) -> pd.DataFrame:
     """
     Load data from a file into a pandas DataFrame.
 
@@ -46,8 +46,8 @@ def get_data(data: str, features: str | None = None) -> pd.DataFrame:
     ----------
     data : str
         Path to the data file. Supported formats: CSV, pickle, or parquet.
-    features : str or None, default None
-        Name of the column containing features, if applicable.
+    features : str
+        Name of the column containing features.
 
     Returns
     -------
