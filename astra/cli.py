@@ -26,6 +26,12 @@ def get_CLI_parser() -> argparse.ArgumentParser:
             prediction task (classification or regression). Default: R2.
     - sec_metrics: Secondary metrics to use for model selection. Default: MSE MAE.
     - parametric: Whether to use parametric statistical tests for model comparison.
+    - impute: Method to use for imputing missing values. If None, no imputation will be performed.
+            Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.
+    - remove_constant: If specified, features with variance below this threshold will be removed.
+            If None, no features are removed.
+    - remove_correlated: If specified, features with correlation above this threshold will be removed.
+            If None, no features are removed.
     - scaler: Type of scaler to use, if the data is to be scaled first.
             Valid choices are 'Standard' and 'MinMax'. Default: None.
     - n_jobs: Number of jobs to run in parallel for hyperparameter tuning. Default: 1.
@@ -117,6 +123,27 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         help="Whether to use parametric statistical tests for model comparison.\n"
         "If 'auto' (default), the assumptions of parametric tests will be checked,\n"
         "and parametric tests will be used if the assumptions are met.",
+    )
+    benchmark_parser.add_argument(
+        "--impute",
+        type=str,
+        default=None,
+        help="Method to use for imputing missing values. If None, no imputation will be performed.\n"
+        "Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.",
+    )
+    benchmark_parser.add_argument(
+        "--remove_constant",
+        type=float,
+        default=None,
+        help="If specified, features with variance below this threshold will be removed.\n"
+        "If None, no features are removed.",
+    )
+    benchmark_parser.add_argument(
+        "--remove_correlated",
+        type=float,
+        default=None,
+        help="If specified, features with correlation above this threshold will be removed.\n"
+        "If None, no features are removed.",
     )
     benchmark_parser.add_argument(
         "--scaler",
@@ -249,6 +276,9 @@ def main() -> int:
             main_metric=args.main_metric,
             sec_metrics=args.sec_metrics,
             parametric=args.parametric,
+            impute=args.impute,
+            remove_constant=args.remove_constant,
+            remove_correlated=args.remove_correlated,
             scaler=args.scaler,
             custom_models=args.models if hasattr(args, "models") else None,
             n_jobs=args.n_jobs,

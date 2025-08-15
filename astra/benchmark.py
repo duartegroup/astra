@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-import numpy as np
 import pickle
 import logging
 from .model_selection import (
@@ -32,6 +31,9 @@ def run(
     main_metric: str = "R2",
     sec_metrics: list[str] = ["MSE", "MAE"],
     parametric: str | bool = "auto",
+    impute: str | float | int | None = None,
+    remove_constant: float | None = None,
+    remove_correlated: float | None = None,
     scaler: str | None = None,
     custom_models: (
         dict[str, None | dict[str, dict] | tuple[dict[str, dict], dict[str, dict]]]
@@ -67,6 +69,15 @@ def run(
     parametric : str or bool, default='auto'
         Whether to use parametric tests. If 'auto', the assumptions of parametric tests
         will be checked, and parametric tests will be used if the assumptions are met.
+    impute : str or float or int or None, default=None
+        Method to use for imputing missing values. If None, no imputation will be performed.
+        Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.
+    remove_constant : float or None, default=None
+        If specified, features with variance below this threshold will be removed.
+        If None, no features are removed.
+    remove_correlated : float or None, default=None
+        If specified, features with correlation above this threshold will be removed.
+        If None, no features are removed.
     scaler : str or None, default=None
         Type of scaler to use, if the data is to be scaled first. Valid choices are
         'Standard' and 'MinMax'.
@@ -143,8 +154,37 @@ def run(
     logging.info(
         f"Starting {n_folds}-fold CV for all models using default hyperparameters."
     )
+
+    if impute is not None:
+        if isinstance(impute, str):
+            logging.info(f"Imputing missing values using {impute} strategy.")
+        elif isinstance(impute, (int, float)):
+            logging.info(f"Imputing missing values with constant value: {impute}.")
+        else:
+            raise ValueError(
+                "`impute` must be a string or a number. " f"Got {impute} instead."
+            )
+    if remove_constant is not None:
+        if not isinstance(remove_constant, float):
+            raise ValueError(
+                "`remove_constant` must be a float. " f"Got {remove_constant} instead."
+            )
+        logging.info(f"Removing features with variance below {remove_constant}.")
+    if remove_correlated is not None:
+        if not isinstance(remove_correlated, float):
+            raise ValueError(
+                "`remove_correlated` must be a float. "
+                f"Got {remove_correlated} instead."
+            )
+        logging.info(f"Removing features with correlation above {remove_correlated}.")
     if scaler is not None:
-        logging.info(f"Scaling data using {scaler} scaler.")
+        if scaler not in ["Standard", "MinMax"]:
+            raise ValueError(
+                "`scaler` must be one of ['Standard', 'MinMax']. "
+                f"Got {scaler} instead."
+            )
+        logging.info(f"Using {scaler.lower()} scaler.")
+
     if os.path.exists(f"results/{name}/default_CV.pkl"):
         logging.info("Loading existing results.")
         with open(f"results/{name}/default_CV.pkl", "br") as f:
@@ -169,6 +209,9 @@ def run(
                 target_col=target,
                 fold_col=fold_col,
                 metric_list=[main_metric] + sec_metrics,
+                impute=impute,
+                remove_constant=remove_constant,
+                remove_correlated=remove_correlated,
                 scaler=scaler,
                 custom_params=custom_params.get(model, None) if custom_params else None,
             )
@@ -238,6 +281,9 @@ def run(
                     main_metric=main_metric,
                     parameters=params[model],
                     n_jobs=n_jobs,
+                    impute=impute,
+                    remove_constant=remove_constant,
+                    remove_correlated=remove_correlated,
                     scaler=scaler,
                 )
                 print_performance(
@@ -273,6 +319,9 @@ def run(
         sec_metrics=sec_metrics,
         parameters=params[best_model],
         n_jobs=n_jobs,
+        impute=impute,
+        remove_constant=remove_constant,
+        remove_correlated=remove_correlated,
         scaler=scaler,
     )
     logging.info("Done!")

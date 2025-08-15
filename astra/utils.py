@@ -7,6 +7,10 @@ Functions
 ---------
 get_data(data, features)
     Load data from a file into a pandas DataFrame.
+get_models(main_metric, sec_metrics, scaler=None, custom_models=None)
+    Get models and their hyperparameters based on the main metric and secondary metrics.
+build_model(model_class, impute=None, remove_constant=None, remove_correlated=None, scaler=None)
+    Build a scikit-learn model with optional preprocessing steps.
 get_estimator_name(estimator)
     Get the name of a scikit-learn estimator.
 get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
@@ -27,6 +31,12 @@ import numpy as np
 import pandas as pd
 import yaml
 from sklearn.base import BaseEstimator
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.impute import SimpleImputer, KNNImputer
+from sklearn.feature_selection import VarianceThreshold
+from .data.processing import CorrelationFilter
+from sklearn.pipeline import make_pipeline
 import logging
 import ast
 from .metrics import LOWER_BETTER, REGRESSION_METRICS, CLASSIFICATION_METRICS
@@ -211,6 +221,92 @@ def get_models(
         return models, params, custom_params
     else:
         return models, params, None
+
+
+def build_model(
+    model_class: BaseEstimator,
+    impute: str | float | int | None = None,
+    remove_constant: float | None = None,
+    remove_correlated: float | None = None,
+    scaler: str | None = None,
+) -> BaseEstimator | Pipeline:
+    """
+    Build a scikit-learn model with optional preprocessing steps.
+
+    Parameters
+    ----------
+    model_class : BaseEstimator
+        A scikit-learn model class to be instantiated.
+    impute : str | float | int or None, default None
+        Imputation strategy to apply before the model. Valid options are 'mean', 'median',
+        'knn', or a numeric value for constant imputation. If None, no imputation is applied.
+    remove_constant : float or None, default None
+        Threshold for variance to remove constant features. If None, no features are removed.
+    remove_correlated : float or None, default None
+        Threshold for correlation to remove correlated features. If None, no features are removed.
+    scaler : str or None, default None
+        Type of scaler to apply before the model. Valid options are 'MinMax' or 'Standard'.
+        If None, no scaling is applied.
+
+    Returns
+    -------
+    BaseEstimator or Pipeline
+        A scikit-learn model or a Pipeline with the specified preprocessing steps.
+
+    Raises
+    ------
+    ValueError
+        If an unknown scaler or imputation strategy is provided, or if remove_constant or
+        remove_correlated are not numeric values.
+    """
+    pipeline_steps = []
+
+    if impute:
+        if isinstance(impute, str):
+            if impute == "mean":
+                imputer = SimpleImputer(strategy="mean")
+            elif impute == "median":
+                imputer = SimpleImputer(strategy="median")
+            elif impute == "knn":
+                imputer = KNNImputer()
+            else:
+                raise ValueError(
+                    "Unknown imputation strategy. Must be 'mean' or 'median'"
+                )
+        elif isinstance(impute, (int, float)):
+            imputer = SimpleImputer(strategy="constant", fill_value=impute)
+        else:
+            raise ValueError("Imputation strategy must be a string or a numeric value")
+        pipeline_steps.append(imputer)
+
+    if remove_constant:
+        if not isinstance(remove_constant, float):
+            raise ValueError(
+                "remove_constant must be a numeric value (a threshold for variance)."
+            )
+        selector = VarianceThreshold(threshold=remove_constant)
+        pipeline_steps.append(selector)
+
+    if remove_correlated:
+        if not isinstance(remove_correlated, float):
+            raise ValueError(
+                "remove_correlated must be a numeric value (a threshold for correlation)."
+            )
+        filter = CorrelationFilter(threshold=remove_correlated)
+        pipeline_steps.append(filter)
+
+    if scaler:
+        if scaler == "MinMax":
+            s = MinMaxScaler()
+        elif scaler == "Standard":
+            s = StandardScaler()
+        else:
+            raise ValueError("Unknown scaler. Must be either MinMax or Standard")
+        pipeline_steps.append(s)
+
+    return (
+        make_pipeline(*pipeline_steps, model_class) if pipeline_steps else model_class
+    )
 
 
 def get_estimator_name(model: BaseEstimator) -> str:

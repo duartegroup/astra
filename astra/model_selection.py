@@ -15,11 +15,11 @@ perform_statistical_tests(results_dic, metric, parametric=False)
     Perform Tukey's HSD and paired t-test (if parametric=True) or Conover post-hoc and Wilcoxon signed-rank tests (if parametric=False) on the performance of models.
 check_best_model(results_dic, test_statistics, metric)
     Check if there is a model that is significantly better than the others.
-get_cv_performance(model_class, df, fold_col, metric_list, scaler=None)
+get_cv_performance(model_class, df, fold_col, metric_list, impute=None, remove_constant=None, remove_correlated=None, scaler=None, custom_params=None)
     Get the cross-validated performance of a model.
-get_optimised_cv_performance(model_class, df, fold_col, metric_list, main_metric, parameters, n_jobs, scaler=None)
+get_optimised_cv_performance(model_class, df, fold_col, metric_list, main_metric, parameters, n_jobs, impute=None, remove_constant=None, remove_correlated=None, scaler=None)
     Get the cross-validated performance of a model with optimised hyperparameters using grid search with nested cross-validation.
-get_best_hparams(model_class, df, fold_col, metric, parameters, n_jobs, scaler=None)
+get_best_hparams(model_class, df, fold_col, metric, parameters, n_jobs, impute=None, remove_constant=None, remove_correlated=None, scaler=None)
     Get the best hyperparameters for a model using grid search with (non-nested) cross-validation.
 get_best_model(results_dict, main_metric, secondary_metrics, parametric=False, bf_corr=True)
     Get the best model from a dictionary of model results.
@@ -34,10 +34,9 @@ import scikit_posthocs as sp
 from scipy.stats import wilcoxon, levene, ttest_rel, kstest
 from statsmodels.stats.libqsturng import psturng
 from sklearn.base import clone, BaseEstimator
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import GridSearchCV
 from .models.classification import NON_PROBABILISTIC_MODELS
+from .utils import build_model
 from .metrics import (
     CLASSIFICATION_METRICS,
     KNOWN_METRICS,
@@ -532,6 +531,9 @@ def get_cv_performance(
     target_col: str,
     fold_col: str,
     metric_list: list[str],
+    impute: str | float | int | None = None,
+    remove_constant: float | None = None,
+    remove_correlated: float | None = None,
     scaler: str | None = None,
     custom_params: dict[str, list] | None = None,
 ) -> dict[str, list[float]]:
@@ -552,6 +554,15 @@ def get_cv_performance(
         The name of the column containing the fold indices.
     metric_list : list[str]
         A list of metrics to use for evaluation.
+    impute : str or float or int or None, default=None
+        The imputation strategy to use for missing values. If None, no imputation is performed.
+        Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.
+    remove_constant : float or None, default=None
+        If specified, features with variance below this threshold will be removed.
+        If None, no features are removed.
+    remove_correlated : float or None, default=None
+        If specified, features with correlation above this threshold will be removed.
+        If None, no features are removed.
     scaler : str or None, default=None
         The type of scaler to use. Valid choices are 'MinMax' and 'Standard'.
     custom_params : dict[str, list] or None, default=None
@@ -576,16 +587,7 @@ def get_cv_performance(
     if custom_params:
         model_class.set_params(**custom_params)
 
-    if scaler:
-        if scaler == "MinMax":
-            s = MinMaxScaler()
-        elif scaler == "Standard":
-            s = StandardScaler()
-        else:
-            raise ValueError("Unknown scaler. Must be either MinMax or Standard")
-        model = make_pipeline(s, model_class)
-    else:
-        model = model_class
+    model = build_model(model_class, impute, remove_constant, remove_correlated, scaler)
 
     for test_fold in range(n_folds):
         # train model
@@ -644,6 +646,9 @@ def get_optimised_cv_performance(
     main_metric: str,
     parameters: dict[str, list],
     n_jobs: int,
+    impute: str | float | int | None = None,
+    remove_constant: float | None = None,
+    remove_correlated: float | None = None,
     scaler: str | None = None,
 ) -> dict[str, list[float]]:
     """
@@ -670,6 +675,15 @@ def get_optimised_cv_performance(
         A dictionary of hyperparameters to search over.
     n_jobs : int
         The number of jobs to run in parallel during grid search.
+    impute : str or float or int or None, default=None
+        The imputation strategy to use for missing values. If None, no imputation is performed.
+        Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.
+    remove_constant : float or None, default=None
+        If specified, features with variance below this threshold will be removed.
+        If None, no features are removed.
+    remove_correlated : float or None, default=None
+        If specified, features with correlation above this threshold will be removed.
+        If None, no features are removed.
     scaler : str or None, default=None
         The type of scaler to use. Valid choices are 'MinMax' and 'Standard'.
 
@@ -694,20 +708,12 @@ def get_optimised_cv_performance(
     n_folds = df[fold_col].nunique()
     all_folds = [df[df[fold_col] == i] for i in range(n_folds)]
 
-    if scaler:
-        if scaler == "MinMax":
-            s = MinMaxScaler()
-        elif scaler == "Standard":
-            s = StandardScaler()
-        else:
-            raise ValueError("Unknown scaler. Must be either MinMax or Standard")
-        model = make_pipeline(s, model_class)
+    model = build_model(model_class, impute, remove_constant, remove_correlated, scaler)
+    if model.__class__.__name__ == "Pipeline":
         model_step_name = list(model.named_steps.keys())[-1]
         parameters = {
             f"{model_step_name}__{key}": value for key, value in parameters.items()
         }
-    else:
-        model = model_class
 
     # outer CV loop
     for test_fold in range(n_folds):
@@ -805,6 +811,9 @@ def get_best_hparams(
     sec_metrics: list[str],
     parameters: dict[str, list],
     n_jobs: int,
+    impute: str | float | int | None = None,
+    remove_constant: float | None = None,
+    remove_correlated: float | None = None,
     scaler: str | None = None,
 ) -> GridSearchCV:
     """
@@ -830,6 +839,15 @@ def get_best_hparams(
         A dictionary of hyperparameters to search over.
     n_jobs : int
         The number of jobs to run in parallel during grid search.
+    impute : str or float or int or None, default=None
+        The imputation strategy to use for missing values. If None, no imputation is performed.
+        Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.
+    remove_constant : float or None, default=None
+        If specified, features with variance below this threshold will be removed.
+        If None, no features are removed.
+    remove_correlated : float or None, default=None
+        If specified, features with correlation above this threshold will be removed.
+        If None, no features are removed.
     scaler : str or None, default=None
         The type of scaler to use. Valid choices are 'MinMax' and 'Standard'.
 
@@ -850,20 +868,12 @@ def get_best_hparams(
     n_folds = df[fold_col].nunique()
     all_folds = [df[df[fold_col] == i] for i in range(n_folds)]
 
-    if scaler:
-        if scaler == "MinMax":
-            s = MinMaxScaler()
-        elif scaler == "Standard":
-            s = StandardScaler()
-        else:
-            raise ValueError("Unknown scaler. Must be either MinMax or Standard")
-        model = make_pipeline(s, model_class)
+    model = build_model(model_class, impute, remove_constant, remove_correlated, scaler)
+    if model.__class__.__name__ == "Pipeline":
         model_step_name = list(model.named_steps.keys())[-1]
         parameters = {
             f"{model_step_name}__{key}": value for key, value in parameters.items()
         }
-    else:
-        model = model_class
 
     # for each cv iteration, get the indices of train and val data points
     train_val_idx = [f.index.to_list() for f in all_folds]

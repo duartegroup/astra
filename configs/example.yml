@@ -9,7 +9,10 @@ sec_metrics:
   - R2
   - MAE
 parametric: auto
-scaler: null
+impute: 0
+remove_constant: 0.01
+remove_correlated: 0.95
+scaler: Standard
 n_jobs: 4
 models:
   - name: RandomForestRegressor
