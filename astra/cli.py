@@ -13,9 +13,8 @@ def get_CLI_parser() -> argparse.ArgumentParser:
     - compare: Compare model performance
 
     Benchmark command arguments:
-    - data: Path to the dataset to train and evaluate models on. This should be a pickled
-            pd.DataFrame. If the data is not prefeaturised and presplit, it should contain
-            a column called 'SMILES'.
+    - data: Path to the dataset to train and evaluate models on. This should be a CSV, pickle,
+            or parquet file.
     - name: Name of the experiment to save the results to. Will be used to load cached
             results if they exist. Default: `data` file name without extension.
     - features: Name of the column containing the features. Default: Features.
@@ -26,11 +25,7 @@ def get_CLI_parser() -> argparse.ArgumentParser:
     - main_metric: Main metric to use for model selection. This will be used to infer the
             prediction task (classification or regression). Default: R2.
     - sec_metrics: Secondary metrics to use for model selection. Default: MSE MAE.
-    - split: Type of split to use, if the data is to be resplit first. Valid choices are
-            'Scaffold' and 'Fingerprint'. Results (fold number) will be saved in a column
-            called 'Fold'. Default: None.
-    - n_folds: Number of folds to split the data into, if the data is to be resplit first.
-            Default: 5.
+    - parametric: Whether to use parametric statistical tests for model comparison.
     - fingerprint: Type of fingerprint to use, if the data is to be featurised first.
             Valid choices are 'Morgan', 'Avalon', 'RDKit', 'MACCS', 'AtomPair', 'TopTorsion'.
             Results will be saved in a column called 'Features'. For Morgan fingerprints,
@@ -67,8 +62,7 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         "data",
         nargs="?",
         type=str,
-        help="Path to the dataset to train and evaluate models on. If the data is not\n"
-        "prefeaturised and presplit, it should contain a column called 'SMILES'.",
+        help="Path to the dataset to train and evaluate models on.",
     )
     group.add_argument(
         "--config",
@@ -130,21 +124,6 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         help="Whether to use parametric statistical tests for model comparison.\n"
         "If 'auto' (default), the assumptions of parametric tests will be checked,\n"
         "and parametric tests will be used if the assumptions are met.",
-    )
-    benchmark_parser.add_argument(
-        "--split",
-        type=str,
-        default=None,
-        help="Type of split to use, if the data is to be resplit first. Valid choices are\n"
-        "'Scaffold' and 'Fingerprint'. Results (fold number) will be saved in a column\n"
-        "called 'Fold'. Default: None.",
-    )
-    benchmark_parser.add_argument(
-        "--n_folds",
-        type=int,
-        default=5,
-        help="Number of folds to split the data into, if the data is to be resplit first. \n"
-        "Default: 5.",
     )
     benchmark_parser.add_argument(
         "--fingerprint",
@@ -293,8 +272,6 @@ def main() -> int:
             main_metric=args.main_metric,
             sec_metrics=args.sec_metrics,
             parametric=args.parametric,
-            split=args.split,
-            n_folds=args.n_folds,
             fingerprint=args.fingerprint,
             incl_RDKit_feats=args.incl_RDKit_feats,
             scaler=args.scaler,

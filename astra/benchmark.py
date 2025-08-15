@@ -3,10 +3,6 @@ import pandas as pd
 import numpy as np
 import pickle
 import logging
-
-# from .data.splitting import (
-#     get_splits,
-# )  # TODO: Move away from deepchem (look at asap-challenge repo)
 from .featurisation.features import get_fingerprints, RDKit_descriptors
 from .model_selection import (
     check_assumptions,
@@ -37,8 +33,6 @@ def run(
     main_metric: str = "R2",
     sec_metrics: list[str] = ["MSE", "MAE"],
     parametric: str | bool = "auto",
-    split: str | None = None,
-    n_folds: int = 5,
     fingerprint: str | None = None,
     incl_RDKit_feats: bool = False,
     scaler: str | None = None,
@@ -55,8 +49,7 @@ def run(
     ----------
     data : str
         Path to the dataset to train and evaluate models on. This should be a CSV, pickle,
-        or parquet file. If the data is not prefeaturised and presplit, it should contain
-        a column called 'SMILES'.
+        or parquet file.
     name : str or None, default=None
         Name of the experiment. Results will be saved in a folder with this name in the
         'results' directory. Will be used to load cached results if they exist. If None,
@@ -77,12 +70,6 @@ def run(
     parametric : str or bool, default='auto'
         Whether to use parametric tests. If 'auto', the assumptions of parametric tests
         will be checked, and parametric tests will be used if the assumptions are met.
-    split : str or None, default=None
-        Type of split to use, if the data is to be resplit first. Valid choices are
-        'Scaffold' and 'Fingerprint'. Results (fold number) will be saved in a column
-        called 'Fold'.
-    n_folds : int, default=5
-        Number of folds to split the data into, if the data is to be resplit first.
     fingerprint : str or None, default=None
         Type of fingerprint to use, if the data is to be featurised first.
         Valid choices are 'Morgan', 'Avalon', 'RDKit', 'MACCS', 'AtomPair', 'TopTorsion'.
@@ -131,12 +118,6 @@ def run(
 
     logging.info("Loading data.")
     data_df = get_data(data, features=features)
-
-    if split is not None:
-        logging.info(f"Splitting data using {split} split into {n_folds} folds.")
-        assert "SMILES" in data_df.columns, "Data does not contain a 'SMILES' column."
-        assert split in ["Scaffold", "Fingerprint"], "Invalid split type."
-        data_df = get_splits(data_df, split, n_folds)
     n_folds = data_df[fold_col].nunique()
 
     if fingerprint is not None:

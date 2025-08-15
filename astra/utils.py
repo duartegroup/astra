@@ -5,6 +5,8 @@ This module contains utility functions used in the package.
 
 Functions
 ---------
+get_data(data, features=None)
+    Load data from a file into a pandas DataFrame.
 get_estimator_name(estimator)
     Get the name of a scikit-learn estimator.
 get_scores(cv_results_df, main_metric, sec_metrics, n_folds)

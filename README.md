@@ -25,7 +25,7 @@ Use `astra benchmark` to run performance benchmarks across different models usin
 ```bash
 astra benchmark <data>
 ```
-where `data` is the path to the dataset to train and evaluate models on. This should be a `pd.DataFrame`, saved in CSV, pickle, or parquet format (which will be inferred from the file ending, and needs to be `.csv`, `.pkl`, `.pickle`, or `.parquet`). If the data is not prefeaturised and presplit, it should contain a column called 'SMILES'. See [here](astra/data/example_df.csv) for an example.
+where `data` is the path to the dataset to train and evaluate models on. This should be a `pd.DataFrame`, saved in CSV, pickle, or parquet format (which will be inferred from the file ending, and needs to be `.csv`, `.pkl`, `.pickle`, or `.parquet`). See [here](astra/data/example_df.csv) for an example.
 
 Options:
 - `--name`: Name of the experiment. Results will be saved in a folder with this name in the 'results' directory. Will be used to load cached results if they exist. Default: `data` file name (without the extension).
@@ -36,8 +36,6 @@ Options:
 - `--main_metric`: Main metric to use for model selection. This will be used to infer the prediction task (classification or regression). Default: R2.
 - `--sec_metrics`: Secondary metrics to use for model selection. Default: MSE, MAE.
 - `--parametric`: Whether to use parametric statistical tests for model comparison. If 'auto' (default), the assumptions of parametric tests will be checked, and parametric tests will be used if the assumptions are met.
-- `--split`: Type of split to use, if the data is to be resplit first. Valid choices are 'Scaffold' and 'Fingerprint'. Results (fold number) will be saved in a column called 'Fold'. Default: None (i.e., don't resplit).
-- `--n_folds`: Number of folds to split the data into, if the data is to be resplit first. Default: 5.
 - `--fingerprint`: Type of fingerprint to use, if the data is to be featurised first. Valid choices are 'Morgan', 'Avalon', 'RDKit', 'MACCS', 'AtomPair', 'TopTorsion'. Results will be saved in a column called 'Features'. For Morgan fingerprints, specify the radius and fingerprint size as 'Morgan_{radius}_{fpsize}'. Default: None.
 - `--incl_RDKit_feats`: Whether to include RDKit features, if the data is to be featurised first. If 'fingerprint' isn't specified, this argument is ignored.
 - `--scaler`: Type of scaler to use, if the data is to be scaled first. Valid choices are 'Standard' and 'MinMax'. Default: None.
@@ -87,7 +85,6 @@ Options:
   - torchaudio
   - torchvision
   - catboost
-  - deepchem
   - scikit-learn
   - scikit-posthocs
 
