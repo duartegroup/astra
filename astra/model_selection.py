@@ -874,6 +874,8 @@ def get_best_hparams(
         ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
     scoring = {metric: SCORING[metric] for metric in [main_metric] + sec_metrics}
 
+    df = df.copy().reset_index()
+
     n_folds = df[fold_col].nunique()
     all_folds = [df[df[fold_col] == i] for i in range(n_folds)]
 
