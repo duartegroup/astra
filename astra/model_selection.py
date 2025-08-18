@@ -232,7 +232,10 @@ def find_n_best_models(
     stat_for_test = stat_df.dropna(axis=1)
 
     best_models = []
-    for n_models in range(len(stat_for_test.columns), 1, -1):
+    for n_models in range(len(stat_for_test.columns), 0, -1):
+        if n_models == 1:  # only one model left, no need to test
+            best_models = list(stat_for_test.columns)
+            break
         if parametric:
             # Perform repeated measures ANOVA
             pvalue = pg.rm_anova(stat_for_test)["p-unc"].values[0]
@@ -475,6 +478,12 @@ def get_best_model(
     # Perform tests to find the n best models
     n_best_models = find_n_best_models(results_dict, main_metric, parametric, bf_corr)
     results_dict_best = {model: results_dict[model] for model in n_best_models}
+
+    if len(results_dict_best) == 1:
+        # If only one model is left, return it as the best model
+        return list(results_dict_best.keys())[0], (
+            "Repeated measure ANOVA" if parametric else "Friedman test"
+        )
 
     # Perform statistical tests on the best models
     post_hoc_stats, naive_stats = perform_statistical_tests(

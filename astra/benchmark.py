@@ -165,7 +165,7 @@ def run(
                 "`impute` must be a string or a number. " f"Got {impute} instead."
             )
     if remove_constant is not None:
-        if not isinstance(remove_constant, float):
+        if not isinstance(remove_constant, float) and not remove_constant == 0:
             raise ValueError(
                 "`remove_constant` must be a float. " f"Got {remove_constant} instead."
             )

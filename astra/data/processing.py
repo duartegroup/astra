@@ -7,6 +7,7 @@ with each other based on a specified threshold.
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils.validation import check_array, check_is_fitted
 
 
 class CorrelationFilter(BaseEstimator, TransformerMixin):
@@ -31,6 +32,8 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
         Transform the input data by removing the features identified during fitting.
     fit_transform(X: np.ndarray, y: None = None) -> np.ndarray
         Fit the transformer and transform the input data in one step.
+    get_feature_names_out(input_features: list[str]) -> list[str]
+        Get the names of the features that are retained after transformation.
 
     Notes
     -----
@@ -63,7 +66,6 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
             The correlation threshold above which features will be considered highly correlated and removed.
         """
         self.threshold = threshold
-        self.to_drop = None
 
     def fit(self, X: np.ndarray, y: None = None) -> "CorrelationFilter":
         """
@@ -83,16 +85,15 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
         """
         if not isinstance(X, np.ndarray):
             X = np.array(X)
+        X = check_array(X)
         # Get the correlation matrix
-        corr_matrix = np.corrcoef(X, rowvar=False)
+        with np.errstate(invalid="ignore"):
+            corr_matrix = np.corrcoef(X, rowvar=False)
         # Get the indices of the upper triangle of the correlation matrix
         upper_triangle = np.triu_indices_from(corr_matrix, k=1)
         # Identify features to drop based on the correlation threshold
         self.to_drop = set()
         for i, j in zip(*upper_triangle):
-            # Skip if the indices are the same (diagonal elements)
-            if i == j:
-                continue
             if abs(corr_matrix[i, j]) > self.threshold:
                 self.to_drop.add(j)
         return self
@@ -111,12 +112,10 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
         np.ndarray
             The transformed data with highly correlated features removed.
         """
+        check_is_fitted(self, attributes=["to_drop"])
         if not isinstance(X, np.ndarray):
             X = np.array(X)
-        if self.to_drop is None:
-            raise RuntimeError(
-                "The transformer has not been fitted yet. Call 'fit' before 'transform'."
-            )
+        X = check_array(X)
         # Drop the features identified during fitting
         return np.delete(X, list(self.to_drop), axis=1)
 
@@ -138,3 +137,20 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
         """
         self.fit(X, y)
         return self.transform(X)
+
+    def get_feature_names_out(self, input_features: list[str]) -> list[str]:
+        """
+        Get the names of the features that are retained after transformation.
+
+        Parameters
+        ----------
+        input_features : list of str
+            The names of the input features.
+
+        Returns
+        -------
+        list of str
+            The names of the features that are retained after transformation.
+        """
+        check_is_fitted(self, attributes=["to_drop"])
+        return [f for i, f in enumerate(input_features) if i not in self.to_drop]
