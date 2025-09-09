@@ -45,6 +45,11 @@ dependencies = [
 test = [
   "pytest>=6.1.2",
 ]
+dev = [
+  "black",
+  "ruff",
+  "sphinx",
+]
 
 [tool.setuptools]
 # This subkey is a beta stage development and keys may change in the future, see https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html for more details
@@ -97,3 +102,9 @@ file = "astra/_version.py"
 
 [project.scripts]
 astra = "astra.cli:main"
+
+[tool.black]
+line-length = 88
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

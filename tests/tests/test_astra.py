@@ -1,12 +1,5 @@
-"""
-Unit and regression test for the astra package.
-"""
-
-# Import package, test suite, and other packages as needed
-import sys
-
 import pytest
-
+import sys
 import astra
 
 
