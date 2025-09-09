@@ -62,13 +62,13 @@ def run(
             if file.endswith("_CV_results.csv"):
                 cv_results_df = pd.read_csv(CV_results_path + file)
 
-                assert f"rank_test_{main_metric}" in cv_results_df.columns, (
-                    f"{file} does not contain results for {main_metric}"
-                )
+                assert (
+                    f"rank_test_{main_metric}" in cv_results_df.columns
+                ), f"{file} does not contain results for {main_metric}"
                 for metric in sec_metrics:
-                    assert f"rank_test_{metric}" in cv_results_df.columns, (
-                        f"{file} does not contain results for {metric}"
-                    )
+                    assert (
+                        f"rank_test_{metric}" in cv_results_df.columns
+                    ), f"{file} does not contain results for {metric}"
 
                 if all_in_one_dir:
                     # remove the "_CV_results.csv" part of the filename
