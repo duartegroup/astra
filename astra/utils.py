@@ -1,30 +1,5 @@
 """
-Description
------------
 This module contains utility functions used in the package.
-
-Functions
----------
-get_data(data, features)
-    Load data from a file into a pandas DataFrame.
-get_models(main_metric, sec_metrics, scaler=None, custom_models=None)
-    Get models and their hyperparameters based on the main metric and secondary metrics.
-build_model(model_class, impute=None, remove_constant=None, remove_correlated=None, scaler=None)
-    Build a scikit-learn model with optional preprocessing steps.
-get_estimator_name(estimator)
-    Get the name of a scikit-learn estimator.
-get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
-    Get means and standard deviations of the main and secondary metrics from the CV results.
-load_config(file_path)
-    Load configuration from a YAML file.
-print_performance(model_name, results_dict, file=None)
-    Print the performance of a model based on the results dictionary.
-print_file_console(file, message, mode='a', end='\n')
-    Print a message to a file and the console.
-print_final_results(final_model_name, final_hyperparameters, main_metric,
-                    mean_score_main, std_score_main, median_score_main,
-                    sec_metrics_scores, file=None)
-    Print final results of the model training and evaluation.
 """
 
 import ast
@@ -142,9 +117,9 @@ def get_models(
     """
     if main_metric in REGRESSION_METRICS:
         for metric in sec_metrics:
-            assert (
-                metric in REGRESSION_METRICS
-            ), f"Secondary metric '{metric}' is not a regression metric."
+            assert metric in REGRESSION_METRICS, (
+                f"Secondary metric '{metric}' is not a regression metric."
+            )
 
         models = REGRESSORS
         params = REGRESSOR_PARAMS
@@ -152,9 +127,9 @@ def get_models(
 
     elif main_metric in CLASSIFICATION_METRICS:
         for metric in sec_metrics:
-            assert (
-                metric in CLASSIFICATION_METRICS
-            ), f"Secondary metric '{metric}' is not a classification metric."
+            assert metric in CLASSIFICATION_METRICS, (
+                f"Secondary metric '{metric}' is not a classification metric."
+            )
 
         if (
             main_metric in ["roc_auc", "pr_auc"]
@@ -361,9 +336,9 @@ def get_scores(
         for metric in [main_metric] + sec_metrics
         for i in range(n_folds)
     ]
-    assert all(
-        [col in cv_results_df.columns for col in required_columns]
-    ), f"CV results do not contain all required columns: {required_columns}"
+    assert all([col in cv_results_df.columns for col in required_columns]), (
+        f"CV results do not contain all required columns: {required_columns}"
+    )
 
     all_main_scores = [
         cv_results_df[cv_results_df[f"rank_test_{main_metric}"] == 1].iloc[0][
@@ -472,7 +447,7 @@ def print_file_console(file: str, message: str, mode: str = "a", end: str = "\n"
         The message to print.
     mode : str, default 'a'
         File mode for writing. Default is append mode.
-    end : str, default '\n'
+    end : str, default '\\n'
         String appended after the message. Default is newline.
 
     Returns

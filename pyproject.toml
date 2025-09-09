@@ -41,11 +41,15 @@ dependencies = [
 [project.optional-dependencies]
 test = [
   "pytest>=6.1.2",
+  "pytest-cov",
 ]
 dev = [
   "black",
   "ruff",
   "sphinx",
+  "pydata-sphinx-theme",
+  "sphinx-design",
+  "sphinx-copybutton",
 ]
 
 [tool.setuptools]

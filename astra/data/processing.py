@@ -1,6 +1,4 @@
 """
-Description
------------
 This module contains the `CorrelationFilter` class, which is used to filter out features that are highly correlated
 with each other based on a specified threshold.
 """

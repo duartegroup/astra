@@ -1,30 +1,5 @@
 """
-Description
------------
 This module contains functions for model selection and evaluation.
-
-Functions
----------
-check_assumptions(results_dict, verbose=True)
-    Check homogeneity of variances and normality assumed by parametric statistical tests.
-tukey_hsd(mse, residual_dof, score_means, n_folds)
-    Performs Tukey's HSD test using repeated measures ANOVA output.
-find_n_best_models(results_dic, metric, parametric=False, bf_corr=True)
-    Find the n best models that don't perform significantly differently with respect to a given metric as determined using repeated measures ANOVA (if parametric=True) or the Friedman test (if parametric=False).
-perform_statistical_tests(results_dic, metric, parametric=False)
-    Perform Tukey's HSD and paired t-test (if parametric=True) or Conover post-hoc and Wilcoxon signed-rank tests (if parametric=False) on the performance of models.
-check_best_model(results_dic, test_statistics, metric)
-    Check if there is a model that is significantly better than the others.
-get_cv_performance(model_class, df, fold_col, metric_list, impute=None, remove_constant=None, remove_correlated=None, scaler=None, custom_params=None)
-    Get the cross-validated performance of a model.
-run_CV(name, data_df, features, target, fold_col, models, metric_list, impute=None, remove_constant=None, remove_correlated=None, scaler=None, custom_params=None, repeated=False)
-    Run cross-validation for multiple models and save the results.
-get_optimised_cv_performance(model_class, df, fold_col, metric_list, main_metric, parameters, n_jobs, impute=None, remove_constant=None, remove_correlated=None, scaler=None)
-    Get the cross-validated performance of a model with optimised hyperparameters using grid search with nested cross-validation.
-get_best_hparams(model_class, df, fold_col, metric, parameters, n_jobs, impute=None, remove_constant=None, remove_correlated=None, scaler=None)
-    Get the best hyperparameters for a model using grid search with (non-nested) cross-validation.
-get_best_model(results_dict, main_metric, secondary_metrics, parametric=False, bf_corr=True)
-    Get the best model from a dictionary of model results.
 """
 
 import logging
@@ -225,9 +200,9 @@ def find_n_best_models(
     list[str]
         A list of the n best models.
     """
-    assert (
-        metric in KNOWN_METRICS
-    ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
+    assert metric in KNOWN_METRICS, (
+        f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
+    )
     maximise = True if metric in HIGHER_BETTER else False
 
     # Create a dataframe from the results dictionary
@@ -294,9 +269,9 @@ def perform_statistical_tests(
     tuple[pd.DataFrame, pd.DataFrame]
         A tuple containing the test results for the two statistical tests.
     """
-    assert (
-        metric in KNOWN_METRICS
-    ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
+    assert metric in KNOWN_METRICS, (
+        f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
+    )
 
     # Create a dataframe from the results dictionary
     results_df = pd.DataFrame.from_dict(results_dic)
@@ -366,9 +341,9 @@ def check_best_model(
     str or None
         The name of the best model, or None if no model is significantly better.
     """
-    assert (
-        metric in KNOWN_METRICS
-    ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
+    assert metric in KNOWN_METRICS, (
+        f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
+    )
 
     # get model ranking according to median score
     scores = [np.median(results_dic[model][metric]) for model in results_dic]
@@ -589,9 +564,9 @@ def get_cv_performance(
         A dictionary mapping metrics to lists of scores.
     """
     for metric in metric_list:
-        assert (
-            metric in KNOWN_METRICS.keys()
-        ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+        assert metric in KNOWN_METRICS.keys(), (
+            f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+        )
     metrics_dict = {metric: [] for metric in metric_list}
 
     classification = True if metric_list[0] in CLASSIFICATION_METRICS else False
@@ -707,7 +682,6 @@ def run_CV(
             results = pickle.load(f)
 
     else:
-
         try:
             with open(f"cache/{ckpt_name}.pkl", "br") as f:
                 results = pickle.load(f)
@@ -809,14 +783,14 @@ def get_optimised_cv_performance(
         A dictionary mapping metrics to lists of scores.
     """
     for metric in metric_list:
-        assert (
-            metric in KNOWN_METRICS.keys()
-        ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+        assert metric in KNOWN_METRICS.keys(), (
+            f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+        )
     metrics_dict = {metric: [] for metric in metric_list}
 
-    assert (
-        main_metric in KNOWN_METRICS.keys()
-    ), f"Unknown main metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+    assert main_metric in KNOWN_METRICS.keys(), (
+        f"Unknown main metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+    )
     scoring = SCORING[main_metric]
 
     classification = True if metric_list[0] in CLASSIFICATION_METRICS else False
@@ -958,13 +932,13 @@ def get_best_hparams(
     GridSearchCV
         A GridSearchCV object containing the best hyperparameters.
     """
-    assert (
-        main_metric in KNOWN_METRICS.keys()
-    ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+    assert main_metric in KNOWN_METRICS.keys(), (
+        f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+    )
     for metric in sec_metrics:
-        assert (
-            metric in KNOWN_METRICS.keys()
-        ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+        assert metric in KNOWN_METRICS.keys(), (
+            f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+        )
     scoring = {metric: SCORING[metric] for metric in [main_metric] + sec_metrics}
 
     df = df.copy().reset_index()

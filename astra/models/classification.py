@@ -1,6 +1,4 @@
 """
-Description
------------
 This module contains variables for instantiating classifiers and their hyperparameter search grids.
 
 Attributes

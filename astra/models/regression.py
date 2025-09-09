@@ -1,6 +1,4 @@
 """
-Description
------------
 This module contains variables for instantiating regressors and their hyperparameter search grids.
 
 Attributes

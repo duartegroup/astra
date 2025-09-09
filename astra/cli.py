@@ -10,38 +10,29 @@ from .utils import load_config
 def get_CLI_parser() -> argparse.ArgumentParser:
     """
     Get the argument parser for the CLI. There are two commands available:
+
     - benchmark: Benchmark model performance
     - compare: Compare model performance
 
     Benchmark command arguments:
-    - data: Path to the dataset to train and evaluate models on. This should be a CSV, pickle,
-            or parquet file.
-    - name: Name of the experiment to save the results to. Will be used to load cached
-            results if they exist. Default: `data` file name without extension.
+
+    - data: Path to the dataset to train and evaluate models on. This should be a CSV, pickle, or parquet file.
+    - name: Name of the experiment to save the results to. Will be used to load cached results if they exist. Default: `data` file name without extension.
     - features: Name of the column containing the features. Default: Features.
     - target: Name of the column containing the target. Default: Target.
-    - run_nested_CV: Whether to run nested CV with hyperparameter tuning for the best
-            models. Default: False.
-    - fold_col: Name(s) of the column(s) containing the CV fold number(s). If a list is provided,
-            models will be benchmarked in an nxk-fold CV, where n is the number of repeats
-            and k is the number of folds. If a single string is provided, it will be treated
-            as a single fold column. nxk-fold CV does not currently support nested CV and
-            final hyperparameter tuning. Default: Fold.
-    - main_metric: Main metric to use for model selection. This will be used to infer the
-            prediction task (classification or regression). Default: R2.
+    - run_nested_CV: Whether to run nested CV with hyperparameter tuning for the best models. Default: False.
+    - fold_col: Name(s) of the column(s) containing the CV fold number(s). If a list is provided, models will be benchmarked in an nxk-fold CV, where n is the number of repeats and k is the number of folds. If a single string is provided, it will be treated as a single fold column. nxk-fold CV does not currently support nested CV and final hyperparameter tuning. Default: Fold.
+    - main_metric: Main metric to use for model selection. This will be used to infer the prediction task (classification or regression). Default: R2.
     - sec_metrics: Secondary metrics to use for model selection. Default: MSE MAE.
     - parametric: Whether to use parametric statistical tests for model comparison.
-    - impute: Method to use for imputing missing values. If None, no imputation will be performed.
-            Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.
-    - remove_constant: If specified, features with variance below this threshold will be removed.
-            If None, no features are removed.
-    - remove_correlated: If specified, features with correlation above this threshold will be removed.
-            If None, no features are removed.
-    - scaler: Type of scaler to use, if the data is to be scaled first.
-            Valid choices are 'Standard' and 'MinMax'. Default: None.
+    - impute: Method to use for imputing missing values. If None, no imputation will be performed. Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.
+    - remove_constant: If specified, features with variance below this threshold will be removed. If None, no features are removed.
+    - remove_correlated: If specified, features with correlation above this threshold will be removed. If None, no features are removed.
+    - scaler: Type of scaler to use, if the data is to be scaled first. Valid choices are 'Standard' and 'MinMax'. Default: None.
     - n_jobs: Number of jobs to run in parallel for hyperparameter tuning. Default: 1.
 
     Compare command arguments:
+
     - CV_results_path: Path to the directory containing the CV results
     - main_metric: The main metric to use for comparison
     - sec_metrics: Secondary metrics to use for comparison

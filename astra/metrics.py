@@ -1,16 +1,5 @@
 """
-Description
------------
 This module contains functions for model selection and evaluation.
-
-Functions
----------
-get_kendalltau_score(y_true, y_pred)
-    Calculate the Kendall Tau correlation coefficient.
-get_pearsonr_score(y_true, y_pred)
-    Calculate the Pearson correlation coefficient.
-get_spearmanr_score(y_true, y_pred)
-    Calculate the Spearman correlation coefficient.
 
 Attributes
 ----------
