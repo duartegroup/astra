@@ -1,0 +1,13 @@
+﻿astra.cli
+=========
+
+.. automodule:: astra.cli
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      get_CLI_parser
+      main
+   

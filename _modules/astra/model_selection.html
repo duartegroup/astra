@@ -1,0 +1,1419 @@
+
+<!DOCTYPE html>
+
+
+<html lang="English" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>astra.model_selection &#8212; ASTRA  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=4b3d11ce"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/astra/model_selection';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="English"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">ASTRA  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api.html">
+    API Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide.html">
+    Developer Guide
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api.html">
+    API Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide.html">
+    Developer Guide
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">astra.model_selection</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for astra.model_selection</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains functions for model selection and evaluation.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pingouin</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pg</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scikit_posthocs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">kstest</span><span class="p">,</span> <span class="n">levene</span><span class="p">,</span> <span class="n">ttest_rel</span><span class="p">,</span> <span class="n">wilcoxon</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">clone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridSearchCV</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.stats.libqsturng</span><span class="w"> </span><span class="kn">import</span> <span class="n">psturng</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CLASSIFICATION_METRICS</span><span class="p">,</span>
+    <span class="n">HIGHER_BETTER</span><span class="p">,</span>
+    <span class="n">KNOWN_METRICS</span><span class="p">,</span>
+    <span class="n">SCORING</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.models.classification</span><span class="w"> </span><span class="kn">import</span> <span class="n">NON_PROBABILISTIC_MODELS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_model</span><span class="p">,</span> <span class="n">print_performance</span>
+
+
+<div class="viewcode-block" id="check_assumptions">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection.check_assumptions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_assumptions</span><span class="p">(</span>
+    <span class="n">results_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check homogeneity of variances and normality assumed by parametric statistical tests.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results_dict : dict[str, dict[str, list[float]]]</span>
+<span class="sd">        A dictionary mapping model names to dictionaries of metric names and scores.</span>
+<span class="sd">    verbose : bool, default=True</span>
+<span class="sd">        Whether to print warnings if assumptions are violated.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if all assumptions are met, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get metrics to check</span>
+    <span class="n">metrics</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dict</span><span class="p">:</span>
+        <span class="n">metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">results_dict</span><span class="p">[</span><span class="n">model</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+    <span class="c1"># assert that all models have the same metrics</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All models must have the same metrics.&quot;</span><span class="p">)</span>
+    <span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Run Levene&#39;s test for homogeneity of variances</span>
+    <span class="n">pvals_levene</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="n">results_dict</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">metric</span><span class="p">]</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dict</span><span class="p">]</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">pvalue</span> <span class="o">=</span> <span class="n">levene</span><span class="p">(</span><span class="o">*</span><span class="n">groups</span><span class="p">)</span>
+        <span class="n">pvals_levene</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pvalue</span><span class="p">)</span>
+        <span class="c1"># Check if p-value is above 0.05</span>
+        <span class="k">if</span> <span class="n">pvalue</span> <span class="o">&lt;</span> <span class="mf">0.05</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;Warning: Homogeneity of variances assumption violated for metric &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">. Consider using non-parametric tests.&quot;</span>
+            <span class="p">)</span>
+    <span class="c1"># Check if any p-values are above 0.05</span>
+    <span class="n">homogeneity_of_variances</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">pval</span> <span class="o">&gt;</span> <span class="mf">0.05</span> <span class="k">for</span> <span class="n">pval</span> <span class="ow">in</span> <span class="n">pvals_levene</span><span class="p">)</span>
+
+    <span class="c1"># If homogeneity of variances is met, we can assume that fold variances are also met</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">homogeneity_of_variances</span><span class="p">:</span>
+        <span class="c1"># Check max fold difference of variances</span>
+        <span class="n">max_fold_differences</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
+            <span class="n">variances_by_method</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">results_dict</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dict</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">max_fold_diff</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">variances_by_method</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">variances_by_method</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">variances_by_method</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">max_fold_diff</span> <span class="o">&gt;</span> <span class="mi">9</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;Warning: Variances of folds differ too much for metric &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">. Consider using non-parametric tests.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">max_fold_differences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">max_fold_diff</span><span class="p">)</span>
+        <span class="c1"># Check if any max fold differences are above 9</span>
+        <span class="n">fold_variances</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="n">max_fold_diff</span> <span class="o">&lt;=</span> <span class="mi">9</span> <span class="k">for</span> <span class="n">max_fold_diff</span> <span class="ow">in</span> <span class="n">max_fold_differences</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">fold_variances</span><span class="p">:</span>
+            <span class="n">homogeneity_of_variances</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Info: All fold variances are within acceptable limits (&lt; 9).&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fold_variances</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Run Kolmogorov-Smirnov test for normality</span>
+    <span class="n">pvals_ks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dict</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">results_dict</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">metric</span><span class="p">]</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">pvalue</span> <span class="o">=</span> <span class="n">kstest</span><span class="p">(</span>
+                <span class="n">scores</span><span class="p">,</span>
+                <span class="s2">&quot;norm&quot;</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">scores</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">scores</span><span class="p">)),</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">pvalue</span> <span class="o">&lt;</span> <span class="mf">0.05</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;Warning: Normality assumption violated for model &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2"> and metric </span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">. Consider using non-parametric tests.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">pvals_ks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pvalue</span><span class="p">)</span>
+    <span class="c1"># Check if any p-values are above 0.05</span>
+    <span class="n">normality</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">pval</span> <span class="o">&gt;</span> <span class="mf">0.05</span> <span class="k">for</span> <span class="n">pval</span> <span class="ow">in</span> <span class="n">pvals_ks</span><span class="p">)</span>
+
+    <span class="c1"># If any of the assumptions are violated, return False</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">homogeneity_of_variances</span> <span class="ow">and</span> <span class="n">fold_variances</span> <span class="ow">and</span> <span class="n">normality</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="tukey_hsd">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection.tukey_hsd">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">tukey_hsd</span><span class="p">(</span>
+    <span class="n">mse</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">residual_dof</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">score_means</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">n_folds</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs Tukey&#39;s HSD test using repeated measures ANOVA output.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mse : float</span>
+<span class="sd">        Mean squared error from ANOVA.</span>
+<span class="sd">    residual_dof : int</span>
+<span class="sd">        Residual degrees of freedom.</span>
+<span class="sd">    score_means : pd.Series</span>
+<span class="sd">        Mean scores.</span>
+<span class="sd">    n_folds: int</span>
+<span class="sd">        Total number of folds per model.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame</span>
+<span class="sd">        p-values for pairwise comparisons between models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get models to compare</span>
+    <span class="n">models</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">score_means</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="c1"># Get number of models to compare</span>
+    <span class="n">n_models</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">models</span><span class="p">)</span>
+    <span class="c1"># Calculate Tukey standard error</span>
+    <span class="n">tukey_se</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mse</span> <span class="o">/</span> <span class="n">n_folds</span><span class="p">)</span>
+
+    <span class="n">p_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">n_models</span><span class="p">,</span> <span class="n">n_models</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">model1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">models</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">model2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">models</span><span class="p">):</span>
+            <span class="c1"># Calculate the difference between the mean scores</span>
+            <span class="n">mean_diff</span> <span class="o">=</span> <span class="n">score_means</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">model1</span><span class="p">]</span> <span class="o">-</span> <span class="n">score_means</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">model2</span><span class="p">]</span>
+            <span class="c1"># Calculate the studentised range</span>
+            <span class="n">studentised_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mean_diff</span><span class="p">)</span> <span class="o">/</span> <span class="n">tukey_se</span>
+            <span class="c1"># Calculate the adjusted p-value</span>
+            <span class="n">adjusted_p</span> <span class="o">=</span> <span class="n">psturng</span><span class="p">(</span><span class="n">studentised_range</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">n_models</span><span class="p">,</span> <span class="n">residual_dof</span><span class="p">)</span>
+            <span class="c1"># psturng sometimes returns an array containing a single float for unknown reasons</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">adjusted_p</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">adjusted_p</span> <span class="o">=</span> <span class="n">adjusted_p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># Store results</span>
+            <span class="n">p_values</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">adjusted_p</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">p_values</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">p_values</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">models</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">models</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="find_n_best_models">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection.find_n_best_models">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_n_best_models</span><span class="p">(</span>
+    <span class="n">results_dic</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span>
+    <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">parametric</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">bf_corr</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the n best models that don&#39;t perform significantly differently with respect to</span>
+<span class="sd">    a given metric as determined using repeated measures ANOVA (if parametric=True) or</span>
+<span class="sd">    the Friedman test (if parametric=False). The function iteratively removes the model</span>
+<span class="sd">    with the worst median score until no statistically significant difference is found or</span>
+<span class="sd">    only one model remains.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results_dic : dict[str, dict[str, list[float]]]</span>
+<span class="sd">        A dictionary mapping model names to dictionaries of metric names and scores.</span>
+<span class="sd">    metric : str</span>
+<span class="sd">        The metric to use for model comparison.</span>
+<span class="sd">    parametric : bool, default=False</span>
+<span class="sd">        Whether to use parametric tests instead of non-parametric tests.</span>
+<span class="sd">    bf_corr : bool, default=True</span>
+<span class="sd">        Whether to apply Bonferroni correction to the significance level.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[str]</span>
+<span class="sd">        A list of the n best models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">KNOWN_METRICS</span><span class="p">,</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Unknown metric. Known metrics are: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">KNOWN_METRICS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="n">maximise</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">HIGHER_BETTER</span> <span class="k">else</span> <span class="kc">False</span>
+
+    <span class="c1"># Create a dataframe from the results dictionary</span>
+    <span class="n">results_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">results_dic</span><span class="p">)</span>
+    <span class="n">stat_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="n">results_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">index</span><span class="o">=</span><span class="n">results_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">stat_for_test</span> <span class="o">=</span> <span class="n">stat_df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">best_models</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n_models</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n_models</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># only one model left, no need to test</span>
+            <span class="n">best_models</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            <span class="k">break</span>
+        <span class="k">if</span> <span class="n">parametric</span><span class="p">:</span>
+            <span class="c1"># Perform repeated measures ANOVA</span>
+            <span class="n">pvalue</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">rm_anova</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">)[</span><span class="s2">&quot;p-unc&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Perform Friedman test</span>
+            <span class="n">pvalue</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">friedman</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">)[</span><span class="s2">&quot;p-unc&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Bonferroni correction of significance level</span>
+        <span class="k">if</span> <span class="n">bf_corr</span><span class="p">:</span>
+            <span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.05</span> <span class="o">/</span> <span class="n">n_models</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.05</span>
+
+        <span class="c1"># Check if there is a statistically significant difference</span>
+        <span class="k">if</span> <span class="n">pvalue</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">:</span>  <span class="c1"># significant difference</span>
+            <span class="c1"># Remove model with the worst median score</span>
+            <span class="n">model_labels</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span>
+            <span class="n">median_scores</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="o">.</span><span class="n">median</span><span class="p">()</span>
+            <span class="n">combined</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">median_scores</span><span class="p">,</span> <span class="n">model_labels</span><span class="p">))</span>
+            <span class="n">sorted_scores</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="n">maximise</span><span class="p">)</span>
+            <span class="n">worst_model</span> <span class="o">=</span> <span class="n">sorted_scores</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">stat_for_test</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">worst_model</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># no significant difference</span>
+            <span class="n">best_models</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">best_models</span></div>
+
+
+
+<div class="viewcode-block" id="perform_statistical_tests">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection.perform_statistical_tests">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">perform_statistical_tests</span><span class="p">(</span>
+    <span class="n">results_dic</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span>
+    <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">parametric</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform Tukey&#39;s HSD and paired t-test (if parametric=True) or Conover post-hoc and</span>
+<span class="sd">    Wilcoxon signed-rank tests (if parametric=False) on the performance of models.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results_dic : dict[str, dict[str, list[float]]]</span>
+<span class="sd">        A dictionary mapping model names to dictionaries of metric names and scores.</span>
+<span class="sd">    metric : str</span>
+<span class="sd">        The metric to use for model comparison.</span>
+<span class="sd">    parametric : bool, default=False</span>
+<span class="sd">        Whether to use parametric tests instead of non-parametric tests.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[pd.DataFrame, pd.DataFrame]</span>
+<span class="sd">        A tuple containing the test results for the two statistical tests.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">KNOWN_METRICS</span><span class="p">,</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Unknown metric. Known metrics are: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">KNOWN_METRICS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Create a dataframe from the results dictionary</span>
+    <span class="n">results_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">results_dic</span><span class="p">)</span>
+    <span class="n">stat_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="n">results_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">index</span><span class="o">=</span><span class="n">results_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">stat_for_test</span> <span class="o">=</span> <span class="n">stat_df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">parametric</span><span class="p">:</span>
+        <span class="c1"># perform repeated measures ANOVA</span>
+        <span class="n">anova</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">rm_anova</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">stat_for_test</span><span class="p">,</span> <span class="n">detailed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># extract mean squared error and residual degrees of freedom</span>
+        <span class="n">mse</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">anova</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;MS&quot;</span><span class="p">])</span>
+        <span class="n">residual_dof</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">anova</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;DF&quot;</span><span class="p">])</span>
+        <span class="c1"># calculate mean scores per model</span>
+        <span class="n">means</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">n_folds</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># perform Tukey&#39;s HSD test</span>
+        <span class="n">post_hoc_stats</span> <span class="o">=</span> <span class="n">tukey_hsd</span><span class="p">(</span><span class="n">mse</span><span class="p">,</span> <span class="n">residual_dof</span><span class="p">,</span> <span class="n">means</span><span class="p">,</span> <span class="n">n_folds</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># perform Conover post-hoc test with Holm-Bonferroni adjustment</span>
+        <span class="n">post_hoc_stats</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">posthoc_conover_friedman</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">,</span> <span class="n">p_adjust</span><span class="o">=</span><span class="s2">&quot;holm&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">parametric</span><span class="p">:</span>
+        <span class="c1"># Perform paired t-test</span>
+        <span class="n">test</span> <span class="o">=</span> <span class="n">ttest_rel</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Perform Wilcoxon signed-rank test</span>
+        <span class="n">test</span> <span class="o">=</span> <span class="n">wilcoxon</span>
+    <span class="n">naive_p_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">col1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">col2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">):</span>
+            <span class="c1"># Skip self-comparisons</span>
+            <span class="k">if</span> <span class="n">col1</span> <span class="o">==</span> <span class="n">col2</span><span class="p">:</span>
+                <span class="n">naive_p_values</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+                <span class="k">continue</span>
+            <span class="n">naive_p_values</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">test</span><span class="p">(</span>
+                <span class="n">stat_for_test</span><span class="p">[</span><span class="n">col1</span><span class="p">],</span>
+                <span class="n">stat_for_test</span><span class="p">[</span><span class="n">col2</span><span class="p">],</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">pvalue</span>
+    <span class="n">naive_stats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="n">naive_p_values</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">post_hoc_stats</span><span class="p">,</span> <span class="n">naive_stats</span></div>
+
+
+
+<div class="viewcode-block" id="check_best_model">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection.check_best_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_best_model</span><span class="p">(</span>
+    <span class="n">results_dic</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span>
+    <span class="n">test_statistics</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if there is a model that is significantly better than the others.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results_dic : dict[str, dict[str, list[float]]]</span>
+<span class="sd">        A dictionary mapping model names to dictionaries of metric names and scores.</span>
+<span class="sd">    test_statistics : pd.DataFrame</span>
+<span class="sd">        A dataframe containing the results of the statistical test.</span>
+<span class="sd">    metric : str</span>
+<span class="sd">        The metric to use for model comparison.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or None</span>
+<span class="sd">        The name of the best model, or None if no model is significantly better.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">KNOWN_METRICS</span><span class="p">,</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Unknown metric. Known metrics are: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">KNOWN_METRICS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># get model ranking according to median score</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dic</span><span class="p">]</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dic</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">HIGHER_BETTER</span><span class="p">:</span>
+        <span class="n">best_models</span> <span class="o">=</span> <span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">scores</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">best_models</span> <span class="o">=</span> <span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">scores</span><span class="p">)]</span>
+
+    <span class="c1"># get dictionary of models that are significantly different from the others,</span>
+    <span class="c1"># sorted according to how many models perform significantly different</span>
+    <span class="n">sig_diff_models</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">test_statistics</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">test_statistics</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">count</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="c1"># if no models are significantly different, return None</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sig_diff_models</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># loop over these models, and check if they are particularly</span>
+    <span class="c1"># good (top half) or bad</span>
+    <span class="n">final_models</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">models</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sig_diff_models</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="n">best_models</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rank</span> <span class="o">&lt;</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+            <span class="n">final_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+            <span class="c1"># handle case if more than one model is significantly</span>
+            <span class="c1"># better than the same number of models</span>
+            <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">for</span> <span class="n">other_model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]:</span>
+                <span class="k">if</span> <span class="n">sig_diff_models</span><span class="p">[</span><span class="n">other_model</span><span class="p">]</span> <span class="o">==</span> <span class="n">sig_diff_models</span><span class="p">[</span><span class="n">model</span><span class="p">]:</span>
+                    <span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">done</span><span class="p">:</span>
+                <span class="k">break</span>
+
+    <span class="c1"># if more than one model is significantly better than the others,</span>
+    <span class="c1"># choose the one with the lowest sum of p-values.</span>
+    <span class="c1"># This is likely better than choosing the model with the best</span>
+    <span class="c1"># median score, because it takes the distribution of scores into account.</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">final_models</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">model_pvalues</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">test_statistics</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">test_statistics</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;list&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">pvalue_scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">model_pvalues</span><span class="p">[</span><span class="n">model</span><span class="p">])</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">final_models</span><span class="p">]</span>
+        <span class="n">smallest_pvalue</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">pvalue_scores</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pvalue_scores</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">smallest_pvalue</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">final_model</span> <span class="o">=</span> <span class="n">final_models</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">pvalue_scores</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If there is more than one model with the same sum of p-values,</span>
+            <span class="c1"># choose the one with the best median score.</span>
+            <span class="n">best_model_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pvalue_scores</span><span class="p">)</span> <span class="o">==</span> <span class="n">smallest_pvalue</span><span class="p">)[</span>
+                <span class="mi">0</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">best_model_scores</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">final_models</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">best_model_idxs</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">HIGHER_BETTER</span><span class="p">:</span>
+                <span class="n">final_model_idx</span> <span class="o">=</span> <span class="n">best_model_idxs</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">best_model_scores</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">final_model_idx</span> <span class="o">=</span> <span class="n">best_model_idxs</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">best_model_scores</span><span class="p">)]</span>
+            <span class="n">final_model</span> <span class="o">=</span> <span class="n">final_models</span><span class="p">[</span><span class="n">final_model_idx</span><span class="p">]</span>
+
+    <span class="c1"># if none of the models are in top half, return None</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">final_models</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">final_model</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># if only one model is significantly better than the others, return that model</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">final_model</span> <span class="o">=</span> <span class="n">final_models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">final_model</span></div>
+
+
+
+<div class="viewcode-block" id="get_best_model">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection.get_best_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_best_model</span><span class="p">(</span>
+    <span class="n">results_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span>
+    <span class="n">main_metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">secondary_metrics</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">parametric</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">bf_corr</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the best model from a dictionary of model results.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results_dict : dict[str, dict[str, list[float]]]</span>
+<span class="sd">        A dictionary mapping model names to dictionaries of metric names and scores.</span>
+<span class="sd">    main_metric : str</span>
+<span class="sd">        The main metric to use for model comparison.</span>
+<span class="sd">    secondary_metrics : list[str]</span>
+<span class="sd">        A list of secondary metrics to use for model comparison.</span>
+<span class="sd">    parametric : bool, default=False</span>
+<span class="sd">        Whether to use parametric tests instead of non-parametric tests.</span>
+<span class="sd">    bf_corr : bool, default=True</span>
+<span class="sd">        Whether to apply Bonferroni correction to the significance level.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[str, str]</span>
+<span class="sd">        A tuple containing the name of the best model and the reason for its selection.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Perform tests to find the n best models</span>
+    <span class="n">n_best_models</span> <span class="o">=</span> <span class="n">find_n_best_models</span><span class="p">(</span><span class="n">results_dict</span><span class="p">,</span> <span class="n">main_metric</span><span class="p">,</span> <span class="n">parametric</span><span class="p">,</span> <span class="n">bf_corr</span><span class="p">)</span>
+    <span class="n">results_dict_best</span> <span class="o">=</span> <span class="p">{</span><span class="n">model</span><span class="p">:</span> <span class="n">results_dict</span><span class="p">[</span><span class="n">model</span><span class="p">]</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">n_best_models</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">results_dict_best</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># If only one model is left, return it as the best model</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">results_dict_best</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span>
+            <span class="s2">&quot;Repeated measure ANOVA&quot;</span> <span class="k">if</span> <span class="n">parametric</span> <span class="k">else</span> <span class="s2">&quot;Friedman test&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Perform statistical tests on the best models</span>
+    <span class="n">post_hoc_stats</span><span class="p">,</span> <span class="n">naive_stats</span> <span class="o">=</span> <span class="n">perform_statistical_tests</span><span class="p">(</span>
+        <span class="n">results_dict_best</span><span class="p">,</span> <span class="n">main_metric</span><span class="p">,</span> <span class="n">parametric</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Check if Tukey&#39;s HSD test/Conover post-hoc test yield a best model</span>
+    <span class="n">best_model</span> <span class="o">=</span> <span class="n">check_best_model</span><span class="p">(</span><span class="n">results_dict_best</span><span class="p">,</span> <span class="n">post_hoc_stats</span><span class="p">,</span> <span class="n">main_metric</span><span class="p">)</span>
+    <span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Tukey&#39;s HSD test&quot;</span> <span class="k">if</span> <span class="n">parametric</span> <span class="k">else</span> <span class="s2">&quot;Conover post-hoc test&quot;</span>
+
+    <span class="c1"># Fall back to naive test</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">best_model</span><span class="p">:</span>
+        <span class="n">best_model</span> <span class="o">=</span> <span class="n">check_best_model</span><span class="p">(</span><span class="n">results_dict_best</span><span class="p">,</span> <span class="n">naive_stats</span><span class="p">,</span> <span class="n">main_metric</span><span class="p">)</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;paired t-test&quot;</span> <span class="k">if</span> <span class="n">parametric</span> <span class="k">else</span> <span class="s2">&quot;Wilcoxon signed-rank test&quot;</span>
+
+    <span class="c1"># Fall back to secondary metrics if the main one doesn&#39;t yield a best model</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">best_model</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">secondary_metrics</span><span class="p">:</span>
+            <span class="n">post_hoc_stats</span><span class="p">,</span> <span class="n">naive_stats</span> <span class="o">=</span> <span class="n">perform_statistical_tests</span><span class="p">(</span>
+                <span class="n">results_dict_best</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">parametric</span>
+            <span class="p">)</span>
+            <span class="n">best_model</span> <span class="o">=</span> <span class="n">check_best_model</span><span class="p">(</span><span class="n">results_dict_best</span><span class="p">,</span> <span class="n">post_hoc_stats</span><span class="p">,</span> <span class="n">metric</span><span class="p">)</span>
+            <span class="n">test_used</span> <span class="o">=</span> <span class="s2">&quot;Tukey&#39;s HSD test&quot;</span> <span class="k">if</span> <span class="n">parametric</span> <span class="k">else</span> <span class="s2">&quot;Conover post-hoc test&quot;</span>
+            <span class="n">reason</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">test_used</span><span class="si">}</span><span class="s2"> using </span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">best_model</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">best_model</span> <span class="o">=</span> <span class="n">check_best_model</span><span class="p">(</span><span class="n">results_dict_best</span><span class="p">,</span> <span class="n">naive_stats</span><span class="p">,</span> <span class="n">metric</span><span class="p">)</span>
+            <span class="n">test_used</span> <span class="o">=</span> <span class="s2">&quot;paired t-test&quot;</span> <span class="k">if</span> <span class="n">parametric</span> <span class="k">else</span> <span class="s2">&quot;Wilcoxon signed-rank test&quot;</span>
+            <span class="n">reason</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">test_used</span><span class="si">}</span><span class="s2"> using </span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">best_model</span><span class="p">:</span>
+                <span class="k">break</span>
+
+    <span class="c1"># If there are no statistically significant differences between the models using any of the metrics,</span>
+    <span class="c1"># select the model with the best median score.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">best_model</span><span class="p">:</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">results_dict_best</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">main_metric</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dict_best</span>
+        <span class="p">]</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dict_best</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">main_metric</span> <span class="ow">in</span> <span class="n">HIGHER_BETTER</span><span class="p">:</span>
+            <span class="n">best_model</span> <span class="o">=</span> <span class="n">names</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">scores</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">best_model</span> <span class="o">=</span> <span class="n">names</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">scores</span><span class="p">)]</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;median score&quot;</span>
+
+    <span class="k">return</span> <span class="n">best_model</span><span class="p">,</span> <span class="n">reason</span></div>
+
+
+
+<div class="viewcode-block" id="get_cv_performance">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection.get_cv_performance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_cv_performance</span><span class="p">(</span>
+    <span class="n">model_class</span><span class="p">:</span> <span class="n">BaseEstimator</span><span class="p">,</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">features_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">fold_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">metric_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">impute</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">remove_constant</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">remove_correlated</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">scaler</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">custom_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the cross-validated performance of a model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model_class : BaseEstimator</span>
+<span class="sd">        A scikit-learn model.</span>
+<span class="sd">    df : pd.DataFrame</span>
+<span class="sd">        A dataframe containing the features and target values.</span>
+<span class="sd">    features_col : str</span>
+<span class="sd">        The name of the column containing the features.</span>
+<span class="sd">    target_col : str</span>
+<span class="sd">        The name of the column containing the target values.</span>
+<span class="sd">    fold_col : str</span>
+<span class="sd">        The name of the column containing the fold indices.</span>
+<span class="sd">    metric_list : list[str]</span>
+<span class="sd">        A list of metrics to use for evaluation.</span>
+<span class="sd">    impute : str or float or int or None, default=None</span>
+<span class="sd">        The imputation strategy to use for missing values. If None, no imputation is performed.</span>
+<span class="sd">        Valid choices are &#39;mean&#39;, &#39;median&#39;, &#39;knn&#39;, or a float or int value for constant imputation.</span>
+<span class="sd">    remove_constant : float or None, default=None</span>
+<span class="sd">        If specified, features with variance below this threshold will be removed.</span>
+<span class="sd">        If None, no features are removed.</span>
+<span class="sd">    remove_correlated : float or None, default=None</span>
+<span class="sd">        If specified, features with correlation above this threshold will be removed.</span>
+<span class="sd">        If None, no features are removed.</span>
+<span class="sd">    scaler : str or None, default=None</span>
+<span class="sd">        The type of scaler to use. Valid choices are &#39;MinMax&#39; and &#39;Standard&#39;.</span>
+<span class="sd">    custom_params : dict[str, list] or None, default=None</span>
+<span class="sd">        A dictionary of custom parameters for the model. If None, default parameters are used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict[str, list[float]]</span>
+<span class="sd">        A dictionary mapping metrics to lists of scores.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">KNOWN_METRICS</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unknown metric. Known metrics are: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">KNOWN_METRICS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="n">metrics_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">metric</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">}</span>
+
+    <span class="n">classification</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">metric_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">CLASSIFICATION_METRICS</span> <span class="k">else</span> <span class="kc">False</span>
+
+    <span class="n">n_folds</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">fold_col</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
+    <span class="n">all_folds</span> <span class="o">=</span> <span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">fold_col</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_folds</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="n">custom_params</span><span class="p">:</span>
+        <span class="n">model_class</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">custom_params</span><span class="p">)</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">build_model</span><span class="p">(</span><span class="n">model_class</span><span class="p">,</span> <span class="n">impute</span><span class="p">,</span> <span class="n">remove_constant</span><span class="p">,</span> <span class="n">remove_correlated</span><span class="p">,</span> <span class="n">scaler</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">test_fold</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_folds</span><span class="p">):</span>
+        <span class="c1"># train model</span>
+        <span class="n">train_folds</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">all_folds</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">test_fold</span><span class="p">]]</span>
+        <span class="n">train_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">train_folds</span><span class="p">])</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">train_data</span><span class="p">[</span><span class="n">features_col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">train_data</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">clone</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># evaluate model</span>
+        <span class="n">test_data</span> <span class="o">=</span> <span class="n">all_folds</span><span class="p">[</span><span class="n">test_fold</span><span class="p">]</span>
+        <span class="n">X_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">test_data</span><span class="p">[</span><span class="n">features_col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span>
+        <span class="n">y_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">test_data</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span>
+                <span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">UserWarning</span>
+            <span class="p">)</span>  <span class="c1"># Suppress UserWarnings for LightGBM</span>
+            <span class="n">y_pred</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">model_class</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">NON_PROBABILISTIC_MODELS</span>
+                <span class="ow">and</span> <span class="n">classification</span>
+            <span class="p">):</span>
+                <span class="n">y_prob</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_test</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">metric</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;pr_auc&quot;</span><span class="p">,</span> <span class="s2">&quot;roc_auc&quot;</span><span class="p">]</span>
+                <span class="ow">and</span> <span class="n">model_class</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">NON_PROBABILISTIC_MODELS</span>
+            <span class="p">):</span>
+                <span class="n">metrics_dict</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">KNOWN_METRICS</span><span class="p">[</span><span class="n">metric</span><span class="p">](</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_prob</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;cohen_kappa&quot;</span><span class="p">:</span>
+                <span class="n">metrics_dict</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">KNOWN_METRICS</span><span class="p">[</span><span class="n">metric</span><span class="p">](</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">metrics_dict</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">KNOWN_METRICS</span><span class="p">[</span><span class="n">metric</span><span class="p">](</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">metrics_dict</span></div>
+
+
+
+<div class="viewcode-block" id="run_CV">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection.run_CV">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_CV</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">data_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">features</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">fold_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">models</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">],</span>
+    <span class="n">metric_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">impute</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">remove_constant</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">remove_correlated</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">scaler</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">custom_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">repeated</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run cross-validation for multiple models and save the results.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Name for the results directory and the experiment.</span>
+<span class="sd">    data_df : pd.DataFrame</span>
+<span class="sd">        DataFrame containing the data for cross-validation.</span>
+<span class="sd">    features : str</span>
+<span class="sd">        Name of the column containing features.</span>
+<span class="sd">    target : str</span>
+<span class="sd">        Name of the column containing the target variable.</span>
+<span class="sd">    fold_col : str</span>
+<span class="sd">        Name of the column containing fold assignments.</span>
+<span class="sd">    models : dict[str, BaseEstimator]</span>
+<span class="sd">        Dictionary of models to evaluate, with model names as keys and scikit-learn-like estimators as values.</span>
+<span class="sd">    metric_list : list of str</span>
+<span class="sd">        List of metrics to evaluate during cross-validation.</span>
+<span class="sd">    impute : str | float | int or None, default None</span>
+<span class="sd">        Imputation strategy to apply before the model. Valid options are &#39;mean&#39;, &#39;median&#39;,</span>
+<span class="sd">        &#39;knn&#39;, or a numeric value for constant imputation. If None, no imputation is applied.</span>
+<span class="sd">    remove_constant : float or None, default None</span>
+<span class="sd">        Threshold for variance to remove constant features. If None, no features are removed.</span>
+<span class="sd">    remove_correlated : float or None, default None</span>
+<span class="sd">        Threshold for correlation to remove correlated features. If None, no features are removed.</span>
+<span class="sd">    scaler : str or None, default None</span>
+<span class="sd">        Type of scaler to apply before the model. Valid options are &#39;MinMax&#39; or &#39;Standard&#39;.</span>
+<span class="sd">        If None, no scaling is applied.</span>
+<span class="sd">    custom_params : dict[str, dict[str, list]] or None, default None</span>
+<span class="sd">        Dictionary of custom hyperparameter grids for each model. If None, default grids will be used.</span>
+<span class="sd">    repeated : bool, default False</span>
+<span class="sd">        Whether the cross-validation is repeated. If True, results are saved with the fold column name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing cross-validation results for each model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">results_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;default_CV_</span><span class="si">{</span><span class="n">fold_col</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">repeated</span> <span class="k">else</span> <span class="s2">&quot;default_CV&quot;</span>
+    <span class="n">ckpt_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_CV_</span><span class="si">{</span><span class="n">fold_col</span><span class="si">}</span><span class="s2">_ckpt&quot;</span> <span class="k">if</span> <span class="n">repeated</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_CV_ckpt&quot;</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;results/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">results_name</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading existing results.&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;results/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">results_name</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;br&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cache/</span><span class="si">{</span><span class="n">ckpt_name</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;br&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loaded checkpoint.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running CV.&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Found existing results. Skipping.&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">results</span><span class="p">[</span><span class="n">model</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_cv_performance</span><span class="p">(</span>
+                <span class="n">model_class</span><span class="o">=</span><span class="n">models</span><span class="p">[</span><span class="n">model</span><span class="p">],</span>
+                <span class="n">df</span><span class="o">=</span><span class="n">data_df</span><span class="p">,</span>
+                <span class="n">features_col</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+                <span class="n">target_col</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+                <span class="n">fold_col</span><span class="o">=</span><span class="n">fold_col</span><span class="p">,</span>
+                <span class="n">metric_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span>
+                <span class="n">impute</span><span class="o">=</span><span class="n">impute</span><span class="p">,</span>
+                <span class="n">remove_constant</span><span class="o">=</span><span class="n">remove_constant</span><span class="p">,</span>
+                <span class="n">remove_correlated</span><span class="o">=</span><span class="n">remove_correlated</span><span class="p">,</span>
+                <span class="n">scaler</span><span class="o">=</span><span class="n">scaler</span><span class="p">,</span>
+                <span class="n">custom_params</span><span class="o">=</span><span class="n">custom_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">custom_params</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">print_performance</span><span class="p">(</span>
+                <span class="n">model_name</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">results_dict</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="n">model</span><span class="p">],</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">handlers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cache/</span><span class="si">{</span><span class="n">ckpt_name</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;results/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">results_name</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cache/</span><span class="si">{</span><span class="n">ckpt_name</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<div class="viewcode-block" id="get_optimised_cv_performance">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection.get_optimised_cv_performance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_optimised_cv_performance</span><span class="p">(</span>
+    <span class="n">model_class</span><span class="p">:</span> <span class="n">BaseEstimator</span><span class="p">,</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">features_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">fold_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">metric_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">main_metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">],</span>
+    <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">impute</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">remove_constant</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">remove_correlated</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">scaler</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the cross-validated performance of a model with optimised hyperparameters. The</span>
+<span class="sd">    hyperparameters are optimised using grid search with nested cross-validation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model_class : BaseEstimator</span>
+<span class="sd">        A scikit-learn model.</span>
+<span class="sd">    df : pd.DataFrame</span>
+<span class="sd">        A dataframe containing the features and target values.</span>
+<span class="sd">    features_col : str</span>
+<span class="sd">        The name of the column containing the features.</span>
+<span class="sd">    target_col : str</span>
+<span class="sd">        The name of the column containing the target values.</span>
+<span class="sd">    fold_col : str</span>
+<span class="sd">        The name of the column containing the fold indices.</span>
+<span class="sd">    metric_list : list[str]</span>
+<span class="sd">        A list of metrics to use for evaluation.</span>
+<span class="sd">    main_metric : str</span>
+<span class="sd">        The main metric to optimise hyperparameters for.</span>
+<span class="sd">    parameters : dict[str, list]</span>
+<span class="sd">        A dictionary of hyperparameters to search over.</span>
+<span class="sd">    n_jobs : int</span>
+<span class="sd">        The number of jobs to run in parallel during grid search.</span>
+<span class="sd">    impute : str or float or int or None, default=None</span>
+<span class="sd">        The imputation strategy to use for missing values. If None, no imputation is performed.</span>
+<span class="sd">        Valid choices are &#39;mean&#39;, &#39;median&#39;, &#39;knn&#39;, or a float or int value for constant imputation.</span>
+<span class="sd">    remove_constant : float or None, default=None</span>
+<span class="sd">        If specified, features with variance below this threshold will be removed.</span>
+<span class="sd">        If None, no features are removed.</span>
+<span class="sd">    remove_correlated : float or None, default=None</span>
+<span class="sd">        If specified, features with correlation above this threshold will be removed.</span>
+<span class="sd">        If None, no features are removed.</span>
+<span class="sd">    scaler : str or None, default=None</span>
+<span class="sd">        The type of scaler to use. Valid choices are &#39;MinMax&#39; and &#39;Standard&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict[str, list[float]]</span>
+<span class="sd">        A dictionary mapping metrics to lists of scores.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">KNOWN_METRICS</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unknown metric. Known metrics are: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">KNOWN_METRICS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="n">metrics_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">metric</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">}</span>
+
+    <span class="k">assert</span> <span class="n">main_metric</span> <span class="ow">in</span> <span class="n">KNOWN_METRICS</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Unknown main metric. Known metrics are: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">KNOWN_METRICS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="n">scoring</span> <span class="o">=</span> <span class="n">SCORING</span><span class="p">[</span><span class="n">main_metric</span><span class="p">]</span>
+
+    <span class="n">classification</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">metric_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">CLASSIFICATION_METRICS</span> <span class="k">else</span> <span class="kc">False</span>
+
+    <span class="n">n_folds</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">fold_col</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
+    <span class="n">all_folds</span> <span class="o">=</span> <span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">fold_col</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_folds</span><span class="p">)]</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">build_model</span><span class="p">(</span><span class="n">model_class</span><span class="p">,</span> <span class="n">impute</span><span class="p">,</span> <span class="n">remove_constant</span><span class="p">,</span> <span class="n">remove_correlated</span><span class="p">,</span> <span class="n">scaler</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;Pipeline&quot;</span><span class="p">:</span>
+        <span class="n">model_step_name</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">named_steps</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_step_name</span><span class="si">}</span><span class="s2">__</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+    <span class="c1"># outer CV loop</span>
+    <span class="k">for</span> <span class="n">test_fold</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_folds</span><span class="p">):</span>
+        <span class="c1"># get data for inner CV loop</span>
+        <span class="n">cv_folds</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">all_folds</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">test_fold</span><span class="p">]]</span>
+        <span class="n">cv_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df</span> <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">cv_folds</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+        <span class="c1"># for each cv iteration, get the indices of train and val data points</span>
+        <span class="n">train_val_idx</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="n">cv_data</span><span class="p">[</span><span class="n">cv_data</span><span class="p">[</span><span class="n">fold_col</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_folds</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">test_fold</span>
+            <span class="p">]</span>
+        <span class="p">]</span>
+        <span class="n">cv</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">val_fold</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_folds</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">train_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">train_val_idx</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">val_fold</span><span class="p">]]</span>
+            <span class="n">train_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">idx</span> <span class="k">for</span> <span class="n">idxs</span> <span class="ow">in</span> <span class="n">train_idx</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">]</span>
+            <span class="n">val_idx</span> <span class="o">=</span> <span class="n">train_val_idx</span><span class="p">[</span><span class="n">val_fold</span><span class="p">]</span>
+            <span class="n">curr_idx</span> <span class="o">=</span> <span class="n">train_idx</span><span class="p">,</span> <span class="n">val_idx</span>
+            <span class="n">cv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_idx</span><span class="p">)</span>
+
+        <span class="c1"># perform hyperparameter search</span>
+        <span class="n">clf</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span>
+            <span class="n">estimator</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">param_grid</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+            <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">,</span>
+            <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+            <span class="n">refit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span>
+            <span class="n">pre_dispatch</span><span class="o">=</span><span class="s2">&quot;n_jobs&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">cv_data</span><span class="p">[</span><span class="n">features_col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">cv_data</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="c1"># Suppress warnings for LGBM, needs to be done using os.environ, as GridSearchCV uses</span>
+        <span class="c1"># parallel processing, which means that warnings.filterwarnings does not work</span>
+        <span class="k">if</span> <span class="n">model_class</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;LGBM&quot;</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYTHONWARNINGS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ignore&quot;</span>
+        <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># evaluate model</span>
+        <span class="n">test_data</span> <span class="o">=</span> <span class="n">all_folds</span><span class="p">[</span><span class="n">test_fold</span><span class="p">]</span>
+        <span class="n">X_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">test_data</span><span class="p">[</span><span class="n">features_col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span>
+        <span class="n">y_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">test_data</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span>
+                <span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">UserWarning</span>
+            <span class="p">)</span>  <span class="c1"># Suppress UserWarnings for LightGBM</span>
+            <span class="n">y_pred</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">model_class</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">NON_PROBABILISTIC_MODELS</span>
+                <span class="ow">and</span> <span class="n">classification</span>
+            <span class="p">):</span>
+                <span class="n">y_prob</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_test</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">metric</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;pr_auc&quot;</span><span class="p">,</span> <span class="s2">&quot;roc_auc&quot;</span><span class="p">]</span>
+                <span class="ow">and</span> <span class="n">model_class</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">NON_PROBABILISTIC_MODELS</span>
+            <span class="p">):</span>
+                <span class="n">metrics_dict</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">KNOWN_METRICS</span><span class="p">[</span><span class="n">metric</span><span class="p">](</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_prob</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;cohen_kappa&quot;</span><span class="p">:</span>
+                <span class="n">metrics_dict</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">KNOWN_METRICS</span><span class="p">[</span><span class="n">metric</span><span class="p">](</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">metrics_dict</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">KNOWN_METRICS</span><span class="p">[</span><span class="n">metric</span><span class="p">](</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">metrics_dict</span></div>
+
+
+
+<div class="viewcode-block" id="get_best_hparams">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection.get_best_hparams">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_best_hparams</span><span class="p">(</span>
+    <span class="n">model_class</span><span class="p">:</span> <span class="n">BaseEstimator</span><span class="p">,</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">features_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">fold_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">main_metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">sec_metrics</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">],</span>
+    <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">impute</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">remove_constant</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">remove_correlated</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">scaler</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GridSearchCV</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the best hyperparameters for a model using grid search with (non-nested) cross-validation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model_class : BaseEstimator</span>
+<span class="sd">        A scikit-learn model.</span>
+<span class="sd">    df : pd.DataFrame</span>
+<span class="sd">        A dataframe containing the features and target values.</span>
+<span class="sd">    features_col : str</span>
+<span class="sd">        The name of the column containing the features.</span>
+<span class="sd">    target_col : str</span>
+<span class="sd">        The name of the column containing the target values.</span>
+<span class="sd">    fold_col : str</span>
+<span class="sd">        The name of the column containing the fold indices.</span>
+<span class="sd">    main_metric : str</span>
+<span class="sd">        The metric to optimise hyperparameters for.</span>
+<span class="sd">    sec_metrics : list[str]</span>
+<span class="sd">        A list of secondary metrics to track during hyperparameter search.</span>
+<span class="sd">    parameters : dict[str, list]</span>
+<span class="sd">        A dictionary of hyperparameters to search over.</span>
+<span class="sd">    n_jobs : int</span>
+<span class="sd">        The number of jobs to run in parallel during grid search.</span>
+<span class="sd">    impute : str or float or int or None, default=None</span>
+<span class="sd">        The imputation strategy to use for missing values. If None, no imputation is performed.</span>
+<span class="sd">        Valid choices are &#39;mean&#39;, &#39;median&#39;, &#39;knn&#39;, or a float or int value for constant imputation.</span>
+<span class="sd">    remove_constant : float or None, default=None</span>
+<span class="sd">        If specified, features with variance below this threshold will be removed.</span>
+<span class="sd">        If None, no features are removed.</span>
+<span class="sd">    remove_correlated : float or None, default=None</span>
+<span class="sd">        If specified, features with correlation above this threshold will be removed.</span>
+<span class="sd">        If None, no features are removed.</span>
+<span class="sd">    scaler : str or None, default=None</span>
+<span class="sd">        The type of scaler to use. Valid choices are &#39;MinMax&#39; and &#39;Standard&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    GridSearchCV</span>
+<span class="sd">        A GridSearchCV object containing the best hyperparameters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">main_metric</span> <span class="ow">in</span> <span class="n">KNOWN_METRICS</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Unknown metric. Known metrics are: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">KNOWN_METRICS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">sec_metrics</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">KNOWN_METRICS</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unknown metric. Known metrics are: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">KNOWN_METRICS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="n">scoring</span> <span class="o">=</span> <span class="p">{</span><span class="n">metric</span><span class="p">:</span> <span class="n">SCORING</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="p">[</span><span class="n">main_metric</span><span class="p">]</span> <span class="o">+</span> <span class="n">sec_metrics</span><span class="p">}</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+    <span class="n">n_folds</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">fold_col</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
+    <span class="n">all_folds</span> <span class="o">=</span> <span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">fold_col</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_folds</span><span class="p">)]</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">build_model</span><span class="p">(</span><span class="n">model_class</span><span class="p">,</span> <span class="n">impute</span><span class="p">,</span> <span class="n">remove_constant</span><span class="p">,</span> <span class="n">remove_correlated</span><span class="p">,</span> <span class="n">scaler</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;Pipeline&quot;</span><span class="p">:</span>
+        <span class="n">model_step_name</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">named_steps</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_step_name</span><span class="si">}</span><span class="s2">__</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+    <span class="c1"># for each cv iteration, get the indices of train and val data points</span>
+    <span class="n">train_val_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">all_folds</span><span class="p">]</span>
+    <span class="n">cv</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">val_fold</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_folds</span><span class="p">):</span>
+        <span class="n">train_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">train_val_idx</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">val_fold</span><span class="p">]]</span>
+        <span class="n">train_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">idx</span> <span class="k">for</span> <span class="n">idxs</span> <span class="ow">in</span> <span class="n">train_idx</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">]</span>
+        <span class="n">val_idx</span> <span class="o">=</span> <span class="n">train_val_idx</span><span class="p">[</span><span class="n">val_fold</span><span class="p">]</span>
+        <span class="n">curr_idx</span> <span class="o">=</span> <span class="n">train_idx</span><span class="p">,</span> <span class="n">val_idx</span>
+        <span class="n">cv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_idx</span><span class="p">)</span>
+
+    <span class="c1"># perform hyperparameter search</span>
+    <span class="n">clf</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span>
+        <span class="n">estimator</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">param_grid</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+        <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">,</span>
+        <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+        <span class="n">refit</span><span class="o">=</span><span class="n">main_metric</span><span class="p">,</span>
+        <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span>
+        <span class="n">pre_dispatch</span><span class="o">=</span><span class="s2">&quot;n_jobs&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">features_col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="c1"># Suppress warnings for LGBM, needs to be done using os.environ, as GridSearchCV uses</span>
+    <span class="c1"># parallel processing, which means that warnings.filterwarnings does not work</span>
+    <span class="k">if</span> <span class="n">model_class</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;LGBM&quot;</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYTHONWARNINGS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ignore&quot;</span>
+    <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">clf</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, Wojtek Treyde. Project structure based on the Computational Molecular Science Python Cookiecutter version 1.10.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,12 @@
+﻿astra.compare
+=============
+
+.. automodule:: astra.compare
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      run
+   

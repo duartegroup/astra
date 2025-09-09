@@ -1,0 +1,12 @@
+﻿astra.data.processing
+=====================
+
+.. automodule:: astra.data.processing
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CorrelationFilter
+   

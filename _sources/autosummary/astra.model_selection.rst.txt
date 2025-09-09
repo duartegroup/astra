@@ -1,0 +1,21 @@
+﻿astra.model\_selection
+======================
+
+.. automodule:: astra.model_selection
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      check_assumptions
+      check_best_model
+      find_n_best_models
+      get_best_hparams
+      get_best_model
+      get_cv_performance
+      get_optimised_cv_performance
+      perform_statistical_tests
+      run_CV
+      tukey_hsd
+   

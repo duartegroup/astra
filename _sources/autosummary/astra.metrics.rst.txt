@@ -1,0 +1,14 @@
+﻿astra.metrics
+=============
+
+.. automodule:: astra.metrics
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      get_kendalltau_score
+      get_pearsonr_score
+      get_spearmanr_score
+   

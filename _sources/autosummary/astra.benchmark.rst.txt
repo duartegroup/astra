@@ -1,0 +1,12 @@
+﻿astra.benchmark
+===============
+
+.. automodule:: astra.benchmark
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      run
+   

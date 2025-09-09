@@ -1,0 +1,717 @@
+
+<!DOCTYPE html>
+
+
+<html lang="English" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>astra.cli &#8212; ASTRA  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=4b3d11ce"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/astra/cli';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="English"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">ASTRA  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api.html">
+    API Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide.html">
+    Developer Guide
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api.html">
+    API Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide.html">
+    Developer Guide
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">astra.cli</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for astra.cli</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">argparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">RawTextHelpFormatter</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">rich.console</span><span class="w"> </span><span class="kn">import</span> <span class="n">Console</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">benchmark</span><span class="p">,</span> <span class="n">compare</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span>
+
+
+<div class="viewcode-block" id="get_CLI_parser">
+<a class="viewcode-back" href="../../autosummary/astra.cli.html#astra.cli.get_CLI_parser">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_CLI_parser</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the argument parser for the CLI. There are two commands available:</span>
+
+<span class="sd">    - benchmark: Benchmark model performance</span>
+<span class="sd">    - compare: Compare model performance</span>
+
+<span class="sd">    Benchmark command arguments:</span>
+
+<span class="sd">    - data: Path to the dataset to train and evaluate models on. This should be a CSV, pickle, or parquet file.</span>
+<span class="sd">    - name: Name of the experiment to save the results to. Will be used to load cached results if they exist. Default: `data` file name without extension.</span>
+<span class="sd">    - features: Name of the column containing the features. Default: Features.</span>
+<span class="sd">    - target: Name of the column containing the target. Default: Target.</span>
+<span class="sd">    - run_nested_CV: Whether to run nested CV with hyperparameter tuning for the best models. Default: False.</span>
+<span class="sd">    - fold_col: Name(s) of the column(s) containing the CV fold number(s). If a list is provided, models will be benchmarked in an nxk-fold CV, where n is the number of repeats and k is the number of folds. If a single string is provided, it will be treated as a single fold column. nxk-fold CV does not currently support nested CV and final hyperparameter tuning. Default: Fold.</span>
+<span class="sd">    - main_metric: Main metric to use for model selection. This will be used to infer the prediction task (classification or regression). Default: R2.</span>
+<span class="sd">    - sec_metrics: Secondary metrics to use for model selection. Default: MSE MAE.</span>
+<span class="sd">    - parametric: Whether to use parametric statistical tests for model comparison.</span>
+<span class="sd">    - impute: Method to use for imputing missing values. If None, no imputation will be performed. Valid choices are &#39;mean&#39;, &#39;median&#39;, &#39;knn&#39;, or a float or int value for constant imputation.</span>
+<span class="sd">    - remove_constant: If specified, features with variance below this threshold will be removed. If None, no features are removed.</span>
+<span class="sd">    - remove_correlated: If specified, features with correlation above this threshold will be removed. If None, no features are removed.</span>
+<span class="sd">    - scaler: Type of scaler to use, if the data is to be scaled first. Valid choices are &#39;Standard&#39; and &#39;MinMax&#39;. Default: None.</span>
+<span class="sd">    - n_jobs: Number of jobs to run in parallel for hyperparameter tuning. Default: 1.</span>
+
+<span class="sd">    Compare command arguments:</span>
+
+<span class="sd">    - CV_results_path: Path to the directory containing the CV results</span>
+<span class="sd">    - main_metric: The main metric to use for comparison</span>
+<span class="sd">    - sec_metrics: Secondary metrics to use for comparison</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    argparse.ArgumentParser</span>
+<span class="sd">        Argument parser for the CLI.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;ASTRA - Automated model selection using statistical testing&quot;</span>
+    <span class="p">)</span>
+    <span class="n">subparsers</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Available commands&quot;</span><span class="p">)</span>
+
+    <span class="n">benchmark_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s2">&quot;benchmark&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Benchmark model performance&quot;</span><span class="p">,</span>
+        <span class="n">formatter_class</span><span class="o">=</span><span class="n">RawTextHelpFormatter</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;data&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;?&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the dataset to train and evaluate models on.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--config&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to a YAML config file. Must at least contain a &#39;data&#39; key.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--name&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the experiment. Results will be saved in a folder with this name</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;in the &#39;results&#39; directory. Will be used to load cached results if they exist. </span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;Default: `data` file name without extension.&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--features&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;Features&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the column containing the features. Default: Features.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--target&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;Target&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the column containing the target. Default: Target.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--run_nested_CV&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Whether to run nested CV with hyperparameter tuning for the best</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;models. Default: False.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--fold_col&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;Fold&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name(s) of the column(s) containing the CV fold number(s).</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;If a list is provided, models will be benchmarked in an nxk-fold CV,</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;where n is the number of repeats and k is the number of folds.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;If a single string is provided, it will be treated as a single fold column.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;Default: Fold.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--main_metric&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;R2&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Main metric to use for model selection. This will be used to infer the</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;prediction task (classification or regression). Default: R2.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--sec_metrics&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;MSE&quot;</span><span class="p">,</span> <span class="s2">&quot;MAE&quot;</span><span class="p">],</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Secondary metrics to use for model selection. Default: MSE MAE.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--parametric&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;True&quot;</span><span class="p">,</span> <span class="s2">&quot;False&quot;</span><span class="p">,</span> <span class="s2">&quot;auto&quot;</span><span class="p">],</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Whether to use parametric statistical tests for model comparison.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;If &#39;auto&#39; (default), the assumptions of parametric tests will be checked,</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;and parametric tests will be used if the assumptions are met.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--impute&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Method to use for imputing missing values. If None, no imputation will be performed.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;Valid choices are &#39;mean&#39;, &#39;median&#39;, &#39;knn&#39;, or a float or int value for constant imputation.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--remove_constant&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If specified, features with variance below this threshold will be removed.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;If None, no features are removed.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--remove_correlated&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If specified, features with correlation above this threshold will be removed.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;If None, no features are removed.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--scaler&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Type of scaler to use, if the data is to be scaled first.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;Valid choices are &#39;Standard&#39; and &#39;MinMax&#39;. Default: None.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--n_jobs&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of jobs to run in parallel for hyperparameter tuning. Default: 1.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">compare_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s2">&quot;compare&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Compare model performance&quot;</span><span class="p">)</span>
+    <span class="n">compare_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;CV_results&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to a single directory containing CV results, or a list of directories</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;containing CV results, as returned by scikit-learn&#39;s BaseSearchCV.cv_results_.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;If a single directory is provided, CV results for the different models should be</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;saved in a file ending with &#39;_CV_results.csv&#39;, and this ending will be removed to</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;get the model name.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;If multiple directories are provided, each should contain the CV results for a</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;different model saved in a file ending with &#39;_CV_results.csv&#39;, and the parent</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;directory will be used as the model name.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">compare_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--main_metric&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The main metric to use for comparison&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">compare_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--sec_metrics&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Secondary metrics to use for comparison&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">compare_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--n_folds&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of CV folds. Default: 5.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">parser</span></div>
+
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../autosummary/astra.cli.html#astra.cli.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main function for the CLI. Parses the arguments and runs the appropriate command.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Exit code. 0 if successful, 1 if an error occurred.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">console</span> <span class="o">=</span> <span class="n">Console</span><span class="p">()</span>
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[bold blue]:wave: Welcome to ASTRA - Automated model selection using statistical testing[/bold blue]&quot;</span><span class="p">,</span>
+        <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">astra_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    ----------------------------------------------</span>
+<span class="s2">    _</span>
+<span class="s2">      __ _  ___ | |_  _ __   __ _</span>
+<span class="s2">     / _` |/ __|| __|| &#39;__| / _` |</span>
+<span class="s2">    | (_| |\__ \| |_ | |   | (_| |</span>
+<span class="s2">     \__,_||___/ \__||_|    \__,_|</span>
+
+<span class="s2">    ----------------------------------------------</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
+        <span class="n">astra_string</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="s2">&quot;bold blue&quot;</span><span class="p">,</span>
+        <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
+        <span class="s2">&quot;[bold cyan]:thinking_face: For help, run: astra --help[/bold cyan]&quot;</span><span class="p">,</span>
+        <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
+        <span class="s2">&quot;[bold cyan]:test_tube: To benchmark models, run: astra benchmark --help[/bold cyan]&quot;</span><span class="p">,</span>
+        <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
+        <span class="s2">&quot;[bold cyan]:trophy: To compare models, run: astra compare --help[/bold cyan]&quot;</span><span class="p">,</span>
+        <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">get_CLI_parser</span><span class="p">()</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">fold_col</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">fold_col</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">fold_col</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">fold_col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="c1"># Override CLI arguments with config values</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The config file must include a &#39;data&#39; field.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Custom model settings</span>
+        <span class="k">if</span> <span class="s2">&quot;models&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;models&quot;</span><span class="p">]:</span>
+                <span class="n">model_name</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+                <span class="n">model_params</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;params&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">hparam_grid</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hparam_grid&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="n">model_params</span><span class="p">,</span>
+                    <span class="s2">&quot;hparam_grid&quot;</span><span class="p">:</span> <span class="n">hparam_grid</span><span class="p">,</span>
+                <span class="p">}</span>
+
+    <span class="c1"># convert all args.main_metric and args.sec_metrics to lowercase</span>
+    <span class="n">args</span><span class="o">.</span><span class="n">main_metric</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">main_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">args</span><span class="o">.</span><span class="n">sec_metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">sec_metrics</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;benchmark&quot;</span><span class="p">:</span>
+        <span class="n">benchmark</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">features</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">features</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">run_nested_CV</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">run_nested_CV</span><span class="p">,</span>
+            <span class="n">fold_col</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">fold_col</span><span class="p">,</span>
+            <span class="n">main_metric</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">main_metric</span><span class="p">,</span>
+            <span class="n">sec_metrics</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">sec_metrics</span><span class="p">,</span>
+            <span class="n">parametric</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">parametric</span><span class="p">,</span>
+            <span class="n">impute</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">impute</span><span class="p">,</span>
+            <span class="n">remove_constant</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">remove_constant</span><span class="p">,</span>
+            <span class="n">remove_correlated</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">remove_correlated</span><span class="p">,</span>
+            <span class="n">scaler</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">scaler</span><span class="p">,</span>
+            <span class="n">custom_models</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">models</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">&quot;models&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">n_jobs</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;compare&quot;</span><span class="p">:</span>
+        <span class="n">compare</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="n">CV_results</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">CV_results</span><span class="p">,</span>
+            <span class="n">main_metric</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">main_metric</span><span class="p">,</span>
+            <span class="n">sec_metrics</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">sec_metrics</span><span class="p">,</span>
+            <span class="n">n_folds</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_folds</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="mi">0</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">exit</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, Wojtek Treyde. Project structure based on the Computational Molecular Science Python Cookiecutter version 1.10.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

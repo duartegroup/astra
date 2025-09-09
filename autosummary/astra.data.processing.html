@@ -1,0 +1,995 @@
+
+<!DOCTYPE html>
+
+
+<html lang="English" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>astra.data.processing &#8212; ASTRA  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=4b3d11ce"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autosummary/astra.data.processing';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="astra.metrics" href="astra.metrics.html" />
+    <link rel="prev" title="astra.compare" href="astra.compare.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="English"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">ASTRA  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../api.html">
+    API Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer_guide.html">
+    Developer Guide
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../api.html">
+    API Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer_guide.html">
+    Developer Guide
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="astra.benchmark.html">astra.benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="astra.cli.html">astra.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="astra.compare.html">astra.compare</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">astra.data.processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="astra.metrics.html">astra.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="astra.model_selection.html">astra.model_selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="astra.models.classification.html">astra.models.classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="astra.models.regression.html">astra.models.regression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="astra.utils.html">astra.utils</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../api.html" class="nav-link">API Documentation</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">astra.data.processing</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-astra.data.processing">
+<span id="astra-data-processing"></span><h1>astra.data.processing<a class="headerlink" href="#module-astra.data.processing" title="Link to this heading">#</a></h1>
+<p>This module contains the <cite>CorrelationFilter</cite> class, which is used to filter out features that are highly correlated
+with each other based on a specified threshold.</p>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#astra.data.processing.CorrelationFilter" title="astra.data.processing.CorrelationFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CorrelationFilter</span></code></a>([threshold])</p></td>
+<td><p>A transformer that removes features from a dataset that are highly correlated with each other.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">astra.data.processing.</span></span><span class="sig-name descname"><span class="pre">CorrelationFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/astra/data/processing.html#CorrelationFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#astra.data.processing.CorrelationFilter" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></p>
+<p>A transformer that removes features from a dataset that are highly correlated with each other.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>threshold</strong> (<em>float, default=0.95</em>) -- The correlation threshold above which features will be considered highly correlated and removed.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.to_drop">
+<span class="sig-name descname"><span class="pre">to_drop</span></span><a class="headerlink" href="#astra.data.processing.CorrelationFilter.to_drop" title="Link to this definition">#</a></dt>
+<dd><p>A set of indices of features to be dropped from the dataset after fitting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>set</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">np.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#astra.data.processing.CorrelationFilter" title="astra.data.processing.CorrelationFilter"><span class="pre">CorrelationFilter</span></a></span></span><a class="reference internal" href="../_modules/astra/data/processing.html#CorrelationFilter.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#astra.data.processing.CorrelationFilter.fit" title="Link to this definition">#</a></dt>
+<dd><p>Fit the transformer to the data by calculating the correlation matrix and identifying features to drop.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">np.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">np.ndarray</span></span></span><a class="reference internal" href="../_modules/astra/data/processing.html#CorrelationFilter.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#astra.data.processing.CorrelationFilter.transform" title="Link to this definition">#</a></dt>
+<dd><p>Transform the input data by removing the features identified during fitting.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.fit_transform">
+<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">np.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">np.ndarray</span></span></span><a class="reference internal" href="../_modules/astra/data/processing.html#CorrelationFilter.fit_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#astra.data.processing.CorrelationFilter.fit_transform" title="Link to this definition">#</a></dt>
+<dd><p>Fit the transformer and transform the input data in one step.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.get_feature_names_out">
+<span class="sig-name descname"><span class="pre">get_feature_names_out</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/astra/data/processing.html#CorrelationFilter.get_feature_names_out"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#astra.data.processing.CorrelationFilter.get_feature_names_out" title="Link to this definition">#</a></dt>
+<dd><p>Get the names of the features that are retained after transformation.</p>
+</dd></dl>
+
+<p class="rubric">Notes</p>
+<p>This transformer is compatible with the scikit-learn API, allowing it to be used
+seamlessly with other transformers and estimators.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">astra.data.processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorrelationFilter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+<span class="gp">... </span>              <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+<span class="gp">... </span>              <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span>
+<span class="gp">... </span>              <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span> <span class="o">=</span> <span class="n">CorrelationFilter</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="go">array([[1],</span>
+<span class="go">       [4],</span>
+<span class="go">       [7],</span>
+<span class="go">       [1]])</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.__dict__">
+<span class="sig-name descname"><span class="pre">__dict__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">mappingproxy({'__module__':</span> <span class="pre">'astra.data.processing',</span> <span class="pre">'__doc__':</span> <span class="pre">'\n</span>&#160;&#160;&#160; <span class="pre">A</span> <span class="pre">transformer</span> <span class="pre">that</span> <span class="pre">removes</span> <span class="pre">features</span> <span class="pre">from</span> <span class="pre">a</span> <span class="pre">dataset</span> <span class="pre">that</span> <span class="pre">are</span> <span class="pre">highly</span> <span class="pre">correlated</span> <span class="pre">with</span> <span class="pre">each</span> <span class="pre">other.\n\n</span>&#160;&#160;&#160; <span class="pre">Parameters\n</span>&#160;&#160;&#160; <span class="pre">----------\n</span>&#160;&#160;&#160; <span class="pre">threshold</span> <span class="pre">:</span> <span class="pre">float,</span> <span class="pre">default=0.95\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">The</span> <span class="pre">correlation</span> <span class="pre">threshold</span> <span class="pre">above</span> <span class="pre">which</span> <span class="pre">features</span> <span class="pre">will</span> <span class="pre">be</span> <span class="pre">considered</span> <span class="pre">highly</span> <span class="pre">correlated</span> <span class="pre">and</span> <span class="pre">removed.\n\n</span>&#160;&#160;&#160; <span class="pre">Attributes\n</span>&#160;&#160;&#160; <span class="pre">----------\n</span>&#160;&#160;&#160; <span class="pre">to_drop</span> <span class="pre">:</span> <span class="pre">set\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">A</span> <span class="pre">set</span> <span class="pre">of</span> <span class="pre">indices</span> <span class="pre">of</span> <span class="pre">features</span> <span class="pre">to</span> <span class="pre">be</span> <span class="pre">dropped</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">dataset</span> <span class="pre">after</span> <span class="pre">fitting.\n\n</span>&#160;&#160;&#160; <span class="pre">Methods\n</span>&#160;&#160;&#160; <span class="pre">-------\n</span>&#160;&#160;&#160; <span class="pre">fit(X:</span> <span class="pre">np.ndarray,</span> <span class="pre">y:</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None)</span> <span class="pre">-&gt;</span> <span class="pre">CorrelationFilter\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Fit</span> <span class="pre">the</span> <span class="pre">transformer</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">data</span> <span class="pre">by</span> <span class="pre">calculating</span> <span class="pre">the</span> <span class="pre">correlation</span> <span class="pre">matrix</span> <span class="pre">and</span> <span class="pre">identifying</span> <span class="pre">features</span> <span class="pre">to</span> <span class="pre">drop.\n</span>&#160;&#160;&#160; <span class="pre">transform(X:</span> <span class="pre">np.ndarray)</span> <span class="pre">-&gt;</span> <span class="pre">np.ndarray\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Transform</span> <span class="pre">the</span> <span class="pre">input</span> <span class="pre">data</span> <span class="pre">by</span> <span class="pre">removing</span> <span class="pre">the</span> <span class="pre">features</span> <span class="pre">identified</span> <span class="pre">during</span> <span class="pre">fitting.\n</span>&#160;&#160;&#160; <span class="pre">fit_transform(X:</span> <span class="pre">np.ndarray,</span> <span class="pre">y:</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None)</span> <span class="pre">-&gt;</span> <span class="pre">np.ndarray\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Fit</span> <span class="pre">the</span> <span class="pre">transformer</span> <span class="pre">and</span> <span class="pre">transform</span> <span class="pre">the</span> <span class="pre">input</span> <span class="pre">data</span> <span class="pre">in</span> <span class="pre">one</span> <span class="pre">step.\n</span>&#160;&#160;&#160; <span class="pre">get_feature_names_out(input_features:</span> <span class="pre">list[str])</span> <span class="pre">-&gt;</span> <span class="pre">list[str]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Get</span> <span class="pre">the</span> <span class="pre">names</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">features</span> <span class="pre">that</span> <span class="pre">are</span> <span class="pre">retained</span> <span class="pre">after</span> <span class="pre">transformation.\n\n</span>&#160;&#160;&#160; <span class="pre">Notes\n</span>&#160;&#160;&#160; <span class="pre">-----\n</span>&#160;&#160;&#160; <span class="pre">This</span> <span class="pre">transformer</span> <span class="pre">is</span> <span class="pre">compatible</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">scikit-learn</span> <span class="pre">API,</span> <span class="pre">allowing</span> <span class="pre">it</span> <span class="pre">to</span> <span class="pre">be</span> <span class="pre">used\n</span>&#160;&#160;&#160; <span class="pre">seamlessly</span> <span class="pre">with</span> <span class="pre">other</span> <span class="pre">transformers</span> <span class="pre">and</span> <span class="pre">estimators.\n\n</span>&#160;&#160;&#160; <span class="pre">Examples\n</span>&#160;&#160;&#160; <span class="pre">--------\n</span>&#160;&#160;&#160; <span class="pre">&gt;&gt;&gt;</span> <span class="pre">from</span> <span class="pre">astra.data.processing</span> <span class="pre">import</span> <span class="pre">CorrelationFilter\n</span>&#160;&#160;&#160; <span class="pre">&gt;&gt;&gt;</span> <span class="pre">import</span> <span class="pre">numpy</span> <span class="pre">as</span> <span class="pre">np\n</span>&#160;&#160;&#160; <span class="pre">&gt;&gt;&gt;</span> <span class="pre">X</span> <span class="pre">=</span> <span class="pre">np.array([[1,</span> <span class="pre">2,</span> <span class="pre">3],\n</span>&#160;&#160;&#160; <span class="pre">...</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[4,</span> <span class="pre">5,</span> <span class="pre">6],\n</span>&#160;&#160;&#160; <span class="pre">...</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[7,</span> <span class="pre">8,</span> <span class="pre">9],\n</span>&#160;&#160;&#160; <span class="pre">...</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">3]])\n</span>&#160;&#160;&#160; <span class="pre">&gt;&gt;&gt;</span> <span class="pre">cf</span> <span class="pre">=</span> <span class="pre">CorrelationFilter(threshold=0.9)\n</span>&#160;&#160;&#160; <span class="pre">&gt;&gt;&gt;</span> <span class="pre">cf.fit_transform(X)\n</span>&#160;&#160;&#160; <span class="pre">array([[1],\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[4],\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[7],\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[1]])\n</span>&#160;&#160;&#160; <span class="pre">',</span> <span class="pre">'__init__':</span> <span class="pre">&lt;function</span> <span class="pre">CorrelationFilter.__init__&gt;,</span> <span class="pre">'fit':</span> <span class="pre">&lt;function</span> <span class="pre">CorrelationFilter.fit&gt;,</span> <span class="pre">'transform':</span> <span class="pre">&lt;function</span> <span class="pre">CorrelationFilter.transform&gt;,</span> <span class="pre">'fit_transform':</span> <span class="pre">&lt;function</span> <span class="pre">CorrelationFilter.fit_transform&gt;,</span> <span class="pre">'get_feature_names_out':</span> <span class="pre">&lt;function</span> <span class="pre">CorrelationFilter.get_feature_names_out&gt;,</span> <span class="pre">'_sklearn_auto_wrap_output_keys':</span> <span class="pre">{'transform'},</span> <span class="pre">'__annotations__':</span> <span class="pre">{}})</span></em><a class="headerlink" href="#astra.data.processing.CorrelationFilter.__dict__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.__getstate__">
+<span class="sig-name descname"><span class="pre">__getstate__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter.__getstate__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/astra/data/processing.html#CorrelationFilter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#astra.data.processing.CorrelationFilter.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initialize the CorrelationFilter with a correlation threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>threshold</strong> (<em>float, default=0.95</em>) -- The correlation threshold above which features will be considered highly correlated and removed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.__init_subclass__">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__init_subclass__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter.__init_subclass__" title="Link to this definition">#</a></dt>
+<dd><p>Set the <code class="docutils literal notranslate"><span class="pre">set_{method}_request</span></code> methods.</p>
+<p>This uses PEP-487 <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> to set the <code class="docutils literal notranslate"><span class="pre">set_{method}_request</span></code> methods. It
+looks for the information available in the set default values which are
+set using <code class="docutils literal notranslate"><span class="pre">__metadata_request__*</span></code> class attributes, or inferred
+from method signatures.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">__metadata_request__*</span></code> class attributes are used when a method
+does not explicitly accept a metadata through its arguments or if the
+developer would like to specify a request value for those metadata
+which are different from the default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://www.python.org/dev/peps/pep-0487">https://www.python.org/dev/peps/pep-0487</a></p>
+</aside>
+</aside>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.__module__">
+<span class="sig-name descname"><span class="pre">__module__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'astra.data.processing'</span></em><a class="headerlink" href="#astra.data.processing.CorrelationFilter.__module__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N_CHAR_MAX</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">700</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter.__repr__" title="Link to this definition">#</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.__setstate__">
+<span class="sig-name descname"><span class="pre">__setstate__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter.__setstate__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.__sklearn_clone__">
+<span class="sig-name descname"><span class="pre">__sklearn_clone__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter.__sklearn_clone__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.__sklearn_tags__">
+<span class="sig-name descname"><span class="pre">__sklearn_tags__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter.__sklearn_tags__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.__weakref__">
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#astra.data.processing.CorrelationFilter.__weakref__" title="Link to this definition">#</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._build_request_for_signature">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_build_request_for_signature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">router</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter._build_request_for_signature" title="Link to this definition">#</a></dt>
+<dd><p>Build the <cite>MethodMetadataRequest</cite> for a method using its signature.</p>
+<p>This method takes all arguments from the method signature and uses
+<code class="docutils literal notranslate"><span class="pre">None</span></code> as their default request value, except <code class="docutils literal notranslate"><span class="pre">X</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">Y</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Xt</span></code>, <code class="docutils literal notranslate"><span class="pre">yt</span></code>, <code class="docutils literal notranslate"><span class="pre">*args</span></code>, and <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>router</strong> (<em>MetadataRequest</em>) -- The parent object for the created <cite>MethodMetadataRequest</cite>.</p></li>
+<li><p><strong>method</strong> (<em>str</em>) -- The name of the method.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>method_request</strong> -- The prepared request using the method's signature.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>MethodMetadataRequest</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._doc_link_module">
+<span class="sig-name descname"><span class="pre">_doc_link_module</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sklearn'</span></em><a class="headerlink" href="#astra.data.processing.CorrelationFilter._doc_link_module" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._doc_link_template">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_doc_link_template</span></span><a class="headerlink" href="#astra.data.processing.CorrelationFilter._doc_link_template" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._doc_link_url_param_generator">
+<span class="sig-name descname"><span class="pre">_doc_link_url_param_generator</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#astra.data.processing.CorrelationFilter._doc_link_url_param_generator" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._get_default_requests">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_get_default_requests</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter._get_default_requests" title="Link to this definition">#</a></dt>
+<dd><p>Collect default request values.</p>
+<p>This method combines the information present in <code class="docutils literal notranslate"><span class="pre">__metadata_request__*</span></code>
+class attributes, as well as determining request keys from method
+signatures.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._get_doc_link">
+<span class="sig-name descname"><span class="pre">_get_doc_link</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter._get_doc_link" title="Link to this definition">#</a></dt>
+<dd><p>Generates a link to the API documentation for a given estimator.</p>
+<p>This method generates the link to the estimator's documentation page
+by using the template defined by the attribute <cite>_doc_link_template</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>url</strong> -- The URL to the API documentation for this estimator. If the estimator does
+not belong to module <cite>_doc_link_module</cite>, the empty string (i.e. <cite>&quot;&quot;</cite>) is
+returned.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._get_metadata_request">
+<span class="sig-name descname"><span class="pre">_get_metadata_request</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter._get_metadata_request" title="Link to this definition">#</a></dt>
+<dd><p>Get requested metadata for the instance.</p>
+<p>Please check <span class="xref std std-ref">User Guide</span> on how the routing
+mechanism works.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> -- A <code class="xref py py-class docutils literal notranslate"><span class="pre">MetadataRequest</span></code> instance.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>MetadataRequest</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._get_param_names">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_get_param_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter._get_param_names" title="Link to this definition">#</a></dt>
+<dd><p>Get parameter names for the estimator</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._get_params_html">
+<span class="sig-name descname"><span class="pre">_get_params_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter._get_params_html" title="Link to this definition">#</a></dt>
+<dd><p>Get parameters for this estimator with a specific HTML representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>deep</strong> (<em>bool, default=True</em>) -- If True, will return the parameters for this estimator and
+contained subobjects that are estimators.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>params</strong> -- Parameter names mapped to their values. We return a <cite>ParamsDict</cite>
+dictionary, which renders a specific HTML representation in table
+form.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ParamsDict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._html_repr">
+<span class="sig-name descname"><span class="pre">_html_repr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter._html_repr" title="Link to this definition">#</a></dt>
+<dd><p>Build a HTML representation of an estimator.</p>
+<p>Read more in the <span class="xref std std-ref">User Guide</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>estimator</strong> (<em>estimator object</em>) -- The estimator to visualize.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>html</strong> -- HTML representation of estimator.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.utils._repr_html.estimator</span><span class="w"> </span><span class="kn">import</span> <span class="n">estimator_html_repr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">estimator_html_repr</span><span class="p">(</span><span class="n">LogisticRegression</span><span class="p">())</span>
+<span class="go">&#39;&lt;style&gt;#sk-container-id...&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._repr_html_">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_repr_html_</span></span><a class="headerlink" href="#astra.data.processing.CorrelationFilter._repr_html_" title="Link to this definition">#</a></dt>
+<dd><p>HTML representation of estimator.
+This is redundant with the logic of <cite>_repr_mimebundle_</cite>. The latter
+should be favored in the long term, <cite>_repr_html_</cite> is only
+implemented for consumers who do not interpret <cite>_repr_mimbundle_</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._repr_html_inner">
+<span class="sig-name descname"><span class="pre">_repr_html_inner</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter._repr_html_inner" title="Link to this definition">#</a></dt>
+<dd><p>This function is returned by the &#64;property <cite>_repr_html_</cite> to make
+<cite>hasattr(estimator, &quot;_repr_html_&quot;) return `True</cite> or <cite>False</cite> depending
+on <cite>get_config()[&quot;display&quot;]</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._repr_mimebundle_">
+<span class="sig-name descname"><span class="pre">_repr_mimebundle_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter._repr_mimebundle_" title="Link to this definition">#</a></dt>
+<dd><p>Mime bundle used by jupyter kernels to display estimator</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._sklearn_auto_wrap_output_keys">
+<span class="sig-name descname"><span class="pre">_sklearn_auto_wrap_output_keys</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'transform'}</span></em><a class="headerlink" href="#astra.data.processing.CorrelationFilter._sklearn_auto_wrap_output_keys" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter._validate_params" title="Link to this definition">#</a></dt>
+<dd><p>Validate types and values of constructor parameters</p>
+<p>The expected type and values must be defined in the <cite>_parameter_constraints</cite>
+class attribute, which is a dictionary <cite>param_name: list of constraints</cite>. See
+the docstring of <cite>validate_parameter_constraints</cite> for a description of the
+accepted constraints.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#astra.data.processing.CorrelationFilter" title="astra.data.processing.CorrelationFilter"><span class="pre">CorrelationFilter</span></a></span></span><a class="reference internal" href="../_modules/astra/data/processing.html#CorrelationFilter.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
+<dd><p>Fit the transformer to the data by calculating the correlation matrix and identifying features to drop.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like, shape (n_samples, n_features)</em>) -- The input data to fit the transformer on.</p></li>
+<li><p><strong>y</strong> (<em>None, default=None</em>) -- Ignored, exists for compatibility with the scikit-learn API.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> -- Returns the instance itself.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#astra.data.processing.CorrelationFilter" title="astra.data.processing.CorrelationFilter">CorrelationFilter</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/astra/data/processing.html#CorrelationFilter.fit_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition">#</a></dt>
+<dd><p>Fit the transformer and transform the input data in one step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like, shape (n_samples, n_features)</em>) -- The input data to fit and transform.</p></li>
+<li><p><strong>y</strong> (<em>None, default=None</em>) -- Ignored, exists for compatibility with the scikit-learn API.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The transformed data with highly correlated features removed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">get_feature_names_out</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/astra/data/processing.html#CorrelationFilter.get_feature_names_out"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id4" title="Link to this definition">#</a></dt>
+<dd><p>Get the names of the features that are retained after transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_features</strong> (<em>list of str</em>) -- The names of the input features.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The names of the features that are retained after transformation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list of str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.get_metadata_routing">
+<span class="sig-name descname"><span class="pre">get_metadata_routing</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter.get_metadata_routing" title="Link to this definition">#</a></dt>
+<dd><p>Get metadata routing of this object.</p>
+<p>Please check <span class="xref std std-ref">User Guide</span> on how the routing
+mechanism works.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>routing</strong> -- A <code class="xref py py-class docutils literal notranslate"><span class="pre">MetadataRequest</span></code> encapsulating
+routing information.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>MetadataRequest</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.get_params">
+<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter.get_params" title="Link to this definition">#</a></dt>
+<dd><p>Get parameters for this estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>deep</strong> (<em>bool, default=True</em>) -- If True, will return the parameters for this estimator and
+contained subobjects that are estimators.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>params</strong> -- Parameter names mapped to their values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.set_output">
+<span class="sig-name descname"><span class="pre">set_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter.set_output" title="Link to this definition">#</a></dt>
+<dd><p>Set output container.</p>
+<p>See <span class="xref std std-ref">sphx_glr_auto_examples_miscellaneous_plot_set_output.py</span>
+for an example on how to use the API.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>transform</strong> (<em>{&quot;default&quot;, &quot;pandas&quot;, &quot;polars&quot;}, default=None</em>) -- Configure output of <cite>transform</cite> and <cite>fit_transform</cite>.</p>
+<ul class="simple">
+<li><p><cite>&quot;default&quot;</cite>: Default output format of a transformer</p></li>
+<li><p><cite>&quot;pandas&quot;</cite>: DataFrame output</p></li>
+<li><p><cite>&quot;polars&quot;</cite>: Polars output</p></li>
+<li><p><cite>None</cite>: Transform configuration is unchanged</p></li>
+</ul>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.4: </span><cite>&quot;polars&quot;</cite> option was added.</p>
+</div>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> -- Estimator instance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>estimator instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="astra.data.processing.CorrelationFilter.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#astra.data.processing.CorrelationFilter.set_params" title="Link to this definition">#</a></dt>
+<dd><p>Set the parameters of this estimator.</p>
+<p>The method works on simple estimators as well as on nested objects
+(such as <code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code>). The latter have
+parameters of the form <code class="docutils literal notranslate"><span class="pre">&lt;component&gt;__&lt;parameter&gt;</span></code> so that it's
+possible to update each component of a nested object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**params</strong> (<em>dict</em>) -- Estimator parameters.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> -- Estimator instance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>estimator instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/astra/data/processing.html#CorrelationFilter.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id5" title="Link to this definition">#</a></dt>
+<dd><p>Transform the input data by removing the features identified during fitting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like, shape (n_samples, n_features)</em>) -- The input data to transform.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The transformed data with highly correlated features removed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="astra.compare.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">astra.compare</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="astra.metrics.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">astra.metrics</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.to_drop"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.to_drop</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.fit"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.fit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.transform"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.transform()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.fit_transform"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.fit_transform()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.get_feature_names_out"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.get_feature_names_out()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.__dict__"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.__dict__</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.__getstate__"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.__getstate__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.__init__"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.__init_subclass__"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.__init_subclass__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.__module__"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.__module__</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.__repr__"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.__repr__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.__setstate__"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.__setstate__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.__sklearn_clone__"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.__sklearn_clone__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.__sklearn_tags__"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.__sklearn_tags__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.__weakref__"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.__weakref__</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._build_request_for_signature"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._build_request_for_signature()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._doc_link_module"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._doc_link_module</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._doc_link_template"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._doc_link_template</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._doc_link_url_param_generator"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._doc_link_url_param_generator</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._get_default_requests"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._get_default_requests()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._get_doc_link"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._get_doc_link()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._get_metadata_request"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._get_metadata_request()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._get_param_names"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._get_param_names()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._get_params_html"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._get_params_html()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._html_repr"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._html_repr()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._repr_html_"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._repr_html_</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._repr_html_inner"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._repr_html_inner()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._repr_mimebundle_"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._repr_mimebundle_()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._sklearn_auto_wrap_output_keys"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._sklearn_auto_wrap_output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter._validate_params"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter._validate_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.fit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.fit_transform()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.get_feature_names_out()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.get_metadata_routing"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.get_metadata_routing()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.get_params"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.get_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.set_output"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.set_output()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#astra.data.processing.CorrelationFilter.set_params"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.set_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5"><code class="docutils literal notranslate"><span class="pre">CorrelationFilter.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/autosummary/astra.data.processing.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, Wojtek Treyde. Project structure based on the Computational Molecular Science Python Cookiecutter version 1.10.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
