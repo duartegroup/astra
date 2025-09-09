@@ -51,7 +51,14 @@ jobs:
           pip install -e .[dev,test]
 
       - name: Run tests
-        run: pytest
+        run: pytest -v --cov=astra --cov-report=xml --color=yes --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   build-docs:
     runs-on: ubuntu-latest
