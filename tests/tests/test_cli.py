@@ -1,5 +1,5 @@
-import subprocess
 import os
+import subprocess
 
 
 def test_benchmark_cli():

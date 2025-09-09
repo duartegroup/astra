@@ -27,26 +27,28 @@ get_best_model(results_dict, main_metric, secondary_metrics, parametric=False, b
     Get the best model from a dictionary of model results.
 """
 
-import pandas as pd
-import numpy as np
-import pingouin as pg
-import warnings
+import logging
 import os
 import pickle
-import logging
+import warnings
+
+import numpy as np
+import pandas as pd
+import pingouin as pg
 import scikit_posthocs as sp
-from scipy.stats import wilcoxon, levene, ttest_rel, kstest
-from statsmodels.stats.libqsturng import psturng
-from sklearn.base import clone, BaseEstimator
+from scipy.stats import kstest, levene, ttest_rel, wilcoxon
+from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import GridSearchCV
-from .models.classification import NON_PROBABILISTIC_MODELS
-from .utils import build_model, print_performance
+from statsmodels.stats.libqsturng import psturng
+
 from .metrics import (
     CLASSIFICATION_METRICS,
+    HIGHER_BETTER,
     KNOWN_METRICS,
     SCORING,
-    HIGHER_BETTER,
 )
+from .models.classification import NON_PROBABILISTIC_MODELS
+from .utils import build_model, print_performance
 
 
 def check_assumptions(

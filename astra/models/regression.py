@@ -11,18 +11,18 @@ REGRESSOR_PARAMS : dict[str, dict[str, list]]
     A dictionary mapping model names to dictionaries of hyperparameters to search over.
 """
 
-from xgboost import XGBRegressor
+from catboost import CatBoostRegressor
+from lightgbm import LGBMRegressor
 from sklearn.ensemble import (
-    RandomForestRegressor,
     GradientBoostingRegressor,
     HistGradientBoostingRegressor,
+    RandomForestRegressor,
 )
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.linear_model import BayesianRidge, Ridge
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.svm import SVR
-from sklearn.linear_model import Ridge, BayesianRidge
-from sklearn.kernel_ridge import KernelRidge
-from lightgbm import LGBMRegressor
-from catboost import CatBoostRegressor
+from xgboost import XGBRegressor
 
 REGRESSORS = {
     "XGBRegressor": XGBRegressor(random_state=42),

@@ -1,6 +1,4 @@
-import pytest
 import sys
-import astra
 
 
 def test_astra_imported():

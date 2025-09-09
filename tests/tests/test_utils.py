@@ -1,6 +1,6 @@
-import pytest
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+
 from astra.utils import get_estimator_name
 
 

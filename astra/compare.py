@@ -1,13 +1,15 @@
-import os
-import pandas as pd
 import logging
-from .model_selection import (
-    find_n_best_models,
-    perform_statistical_tests,
-    check_best_model,
-    get_best_model,
-)
+import os
+
+import pandas as pd
+
 from .metrics import LOWER_BETTER
+from .model_selection import (
+    check_best_model,
+    find_n_best_models,
+    get_best_model,
+    perform_statistical_tests,
+)
 from .utils import get_scores
 
 
@@ -56,19 +58,17 @@ def run(
     all_in_one_dir = True if len(CV_results) == 1 else False
 
     for CV_results_path in CV_results:
-
         for file in os.listdir(CV_results_path):
-
             if file.endswith("_CV_results.csv"):
                 cv_results_df = pd.read_csv(CV_results_path + file)
 
-                assert (
-                    f"rank_test_{main_metric}" in cv_results_df.columns
-                ), f"{file} does not contain results for {main_metric}"
+                assert f"rank_test_{main_metric}" in cv_results_df.columns, (
+                    f"{file} does not contain results for {main_metric}"
+                )
                 for metric in sec_metrics:
-                    assert (
-                        f"rank_test_{metric}" in cv_results_df.columns
-                    ), f"{file} does not contain results for {metric}"
+                    assert f"rank_test_{metric}" in cv_results_df.columns, (
+                        f"{file} does not contain results for {metric}"
+                    )
 
                 if all_in_one_dir:
                     # remove the "_CV_results.csv" part of the filename

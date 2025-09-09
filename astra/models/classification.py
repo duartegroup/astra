@@ -13,30 +13,17 @@ NON_PROBABILISTIC_MODELS : list[str]
     A list of model names that do not have a `predict_proba` method.
 """
 
-from xgboost import XGBClassifier
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.naive_bayes import BernoulliNB, GaussianNB, MultinomialNB
-from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
-from sklearn.ensemble import (
-    ExtraTreesClassifier,
-    RandomForestClassifier,
-    GradientBoostingClassifier,
-    BaggingClassifier,
-    HistGradientBoostingClassifier,
-    AdaBoostClassifier,
-)
-from sklearn.neighbors import KNeighborsClassifier, NearestCentroid
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.svm import LinearSVC, SVC
-from sklearn.linear_model import (
-    LogisticRegression,
-    RidgeClassifier,
-    SGDClassifier,
-    Perceptron,
-    PassiveAggressiveClassifier,
-)
-from sklearn.neural_network import MLPClassifier
 from lightgbm import LGBMClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.ensemble import (
+    AdaBoostClassifier,
+    BaggingClassifier,
+    ExtraTreesClassifier,
+    GradientBoostingClassifier,
+    HistGradientBoostingClassifier,
+    RandomForestClassifier,
+)
+from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.gaussian_process.kernels import (
     RBF,
     DotProduct,
@@ -44,6 +31,19 @@ from sklearn.gaussian_process.kernels import (
     RationalQuadratic,
     WhiteKernel,
 )
+from sklearn.linear_model import (
+    LogisticRegression,
+    PassiveAggressiveClassifier,
+    Perceptron,
+    RidgeClassifier,
+    SGDClassifier,
+)
+from sklearn.naive_bayes import BernoulliNB, GaussianNB, MultinomialNB
+from sklearn.neighbors import KNeighborsClassifier, NearestCentroid
+from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC, LinearSVC
+from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
+from xgboost import XGBClassifier
 
 CLASSIFIERS = {
     "LogisticRegression": LogisticRegression(random_state=42, max_iter=100000),

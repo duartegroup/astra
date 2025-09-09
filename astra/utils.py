@@ -27,25 +27,26 @@ print_final_results(final_model_name, final_hyperparameters, main_metric,
     Print final results of the model training and evaluation.
 """
 
+import ast
+import logging
+
 import numpy as np
 import pandas as pd
 import yaml
 from sklearn.base import BaseEstimator
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.impute import SimpleImputer, KNNImputer
 from sklearn.feature_selection import VarianceThreshold
+from sklearn.impute import KNNImputer, SimpleImputer
+from sklearn.pipeline import Pipeline, make_pipeline
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+
 from .data.processing import CorrelationFilter
-from sklearn.pipeline import make_pipeline
-import logging
-import ast
-from .metrics import LOWER_BETTER, REGRESSION_METRICS, CLASSIFICATION_METRICS
-from .models.regression import REGRESSORS, REGRESSOR_PARAMS
+from .metrics import CLASSIFICATION_METRICS, LOWER_BETTER, REGRESSION_METRICS
 from .models.classification import (
-    CLASSIFIERS,
     CLASSIFIER_PARAMS,
+    CLASSIFIERS,
     NON_PROBABILISTIC_MODELS,
 )
+from .models.regression import REGRESSOR_PARAMS, REGRESSORS
 
 
 def get_data(data: str, features: str) -> pd.DataFrame:

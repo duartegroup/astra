@@ -1,8 +1,9 @@
 import argparse
 from argparse import RawTextHelpFormatter
+
 from rich.console import Console
-from . import benchmark
-from . import compare
+
+from . import benchmark, compare
 from .utils import load_config
 
 

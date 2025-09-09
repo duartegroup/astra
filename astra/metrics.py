@@ -30,25 +30,24 @@ LOWER_BETTER : list
     A list of metrics for which lower scores are better.
 """
 
+from scipy.stats import kendalltau, pearsonr, spearmanr
 from sklearn.metrics import (
     accuracy_score,
+    average_precision_score,
     balanced_accuracy_score,
     brier_score_loss,
-    f1_score,
     cohen_kappa_score,
-    matthews_corrcoef,
-    r2_score,
-    mean_squared_error,
-    mean_absolute_error,
-    root_mean_squared_error,
-    roc_auc_score,
-    average_precision_score,
-    matthews_corrcoef,
-    precision_score,
-    recall_score,
+    f1_score,
     make_scorer,
+    matthews_corrcoef,
+    mean_absolute_error,
+    mean_squared_error,
+    precision_score,
+    r2_score,
+    recall_score,
+    roc_auc_score,
+    root_mean_squared_error,
 )
-from scipy.stats import kendalltau, pearsonr, spearmanr
 
 
 def get_kendalltau_score(y_true, y_pred):
