@@ -32,7 +32,7 @@ Options:
 - `--features`: Name of the column containing the features. Default: Features.
 - `--target`: Name of the column containing the target. Default: Target.
 - `--run_nested_CV`: Whether to run nested CV with hyperparameter tuning for the best models. Default: False.
-- `--fold_col`: Name of the column containing the *0-indexed* CV fold number. Default: Fold.
+- `--fold_col`: Name(s) of the column(s) containing the *0-indexed* CV fold number(s). If a list is provided, models will be benchmarked in an nxk-fold CV, where n is the number of repeats and k is the number of folds. If a single string is provided, it will be treated as a single fold column. nxk-fold CV does not currently support nested CV and final hyperparameter tuning. Default: Fold.
 - `--main_metric`: Main metric to use for model selection. This will be used to infer the prediction task (classification or regression). Default: R2.
 - `--sec_metrics`: Secondary metrics to use for model selection. Default: MSE, MAE.
 - `--parametric`: Whether to use parametric statistical tests for model comparison. If 'auto' (default), the assumptions of parametric tests will be checked, and parametric tests will be used if the assumptions are met.

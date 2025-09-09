@@ -21,7 +21,11 @@ def get_CLI_parser() -> argparse.ArgumentParser:
     - target: Name of the column containing the target. Default: Target.
     - run_nested_CV: Whether to run nested CV with hyperparameter tuning for the best
             models. Default: False.
-    - fold_col: Name of the column containing the CV fold number. Default: fold.
+    - fold_col: Name(s) of the column(s) containing the CV fold number(s). If a list is provided,
+            models will be benchmarked in an nxk-fold CV, where n is the number of repeats
+            and k is the number of folds. If a single string is provided, it will be treated
+            as a single fold column. nxk-fold CV does not currently support nested CV and
+            final hyperparameter tuning. Default: Fold.
     - main_metric: Main metric to use for model selection. This will be used to infer the
             prediction task (classification or regression). Default: R2.
     - sec_metrics: Secondary metrics to use for model selection. Default: MSE MAE.
@@ -98,8 +102,13 @@ def get_CLI_parser() -> argparse.ArgumentParser:
     benchmark_parser.add_argument(
         "--fold_col",
         type=str,
+        nargs="+",
         default="Fold",
-        help="Name of the column containing the CV fold number. Default: Fold.",
+        help="Name(s) of the column(s) containing the CV fold number(s).\n"
+        "If a list is provided, models will be benchmarked in an nxk-fold CV,\n"
+        "where n is the number of repeats and k is the number of folds.\n"
+        "If a single string is provided, it will be treated as a single fold column.\n"
+        "Default: Fold.",
     )
     benchmark_parser.add_argument(
         "--main_metric",

@@ -3,7 +3,12 @@ name: example_experiment
 features: Features
 target: Target
 run_nested_CV: false
-fold_col: Fold
+fold_col:
+  - Fold_0
+  - Fold_1
+  - Fold_2
+  - Fold_3
+  - Fold_4
 main_metric: MSE
 sec_metrics:
   - R2

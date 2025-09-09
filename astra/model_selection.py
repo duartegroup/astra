@@ -17,6 +17,8 @@ check_best_model(results_dic, test_statistics, metric)
     Check if there is a model that is significantly better than the others.
 get_cv_performance(model_class, df, fold_col, metric_list, impute=None, remove_constant=None, remove_correlated=None, scaler=None, custom_params=None)
     Get the cross-validated performance of a model.
+run_CV(name, data_df, features, target, fold_col, models, metric_list, impute=None, remove_constant=None, remove_correlated=None, scaler=None, custom_params=None, repeated=False)
+    Run cross-validation for multiple models and save the results.
 get_optimised_cv_performance(model_class, df, fold_col, metric_list, main_metric, parameters, n_jobs, impute=None, remove_constant=None, remove_correlated=None, scaler=None)
     Get the cross-validated performance of a model with optimised hyperparameters using grid search with nested cross-validation.
 get_best_hparams(model_class, df, fold_col, metric, parameters, n_jobs, impute=None, remove_constant=None, remove_correlated=None, scaler=None)
@@ -30,13 +32,15 @@ import numpy as np
 import pingouin as pg
 import warnings
 import os
+import pickle
+import logging
 import scikit_posthocs as sp
 from scipy.stats import wilcoxon, levene, ttest_rel, kstest
 from statsmodels.stats.libqsturng import psturng
 from sklearn.base import clone, BaseEstimator
 from sklearn.model_selection import GridSearchCV
 from .models.classification import NON_PROBABILISTIC_MODELS
-from .utils import build_model
+from .utils import build_model, print_performance
 from .metrics import (
     CLASSIFICATION_METRICS,
     KNOWN_METRICS,
@@ -600,14 +604,7 @@ def get_cv_performance(
 
     for test_fold in range(n_folds):
         # train model
-        train_folds = [
-            f
-            for i, f in enumerate(all_folds)
-            if i
-            not in [
-                test_fold,
-            ]
-        ]
+        train_folds = [f for i, f in enumerate(all_folds) if i not in [test_fold]]
         train_data = pd.concat([f for f in train_folds])
         X = np.vstack(train_data[features_col].to_numpy())
         y = np.vstack(train_data[target_col].to_numpy()).ravel()
@@ -643,6 +640,114 @@ def get_cv_performance(
                 metrics_dict[metric].append(KNOWN_METRICS[metric](y_test, y_pred))
 
     return metrics_dict
+
+
+def run_CV(
+    name: str,
+    data_df: pd.DataFrame,
+    features: str,
+    target: str,
+    fold_col: str,
+    models: dict[str, BaseEstimator],
+    metric_list: list[str],
+    impute: str | float | int | None = None,
+    remove_constant: float | None = None,
+    remove_correlated: float | None = None,
+    scaler: str | None = None,
+    custom_params: dict[str, dict[str, list]] | None = None,
+    repeated: bool = False,
+):
+    """
+    Run cross-validation for multiple models and save the results.
+
+    Parameters
+    ----------
+    name : str
+        Name for the results directory and the experiment.
+    data_df : pd.DataFrame
+        DataFrame containing the data for cross-validation.
+    features : str
+        Name of the column containing features.
+    target : str
+        Name of the column containing the target variable.
+    fold_col : str
+        Name of the column containing fold assignments.
+    models : dict[str, BaseEstimator]
+        Dictionary of models to evaluate, with model names as keys and scikit-learn-like estimators as values.
+    metric_list : list of str
+        List of metrics to evaluate during cross-validation.
+    impute : str | float | int or None, default None
+        Imputation strategy to apply before the model. Valid options are 'mean', 'median',
+        'knn', or a numeric value for constant imputation. If None, no imputation is applied.
+    remove_constant : float or None, default None
+        Threshold for variance to remove constant features. If None, no features are removed.
+    remove_correlated : float or None, default None
+        Threshold for correlation to remove correlated features. If None, no features are removed.
+    scaler : str or None, default None
+        Type of scaler to apply before the model. Valid options are 'MinMax' or 'Standard'.
+        If None, no scaling is applied.
+    custom_params : dict[str, dict[str, list]] or None, default None
+        Dictionary of custom hyperparameter grids for each model. If None, default grids will be used.
+    repeated : bool, default False
+        Whether the cross-validation is repeated. If True, results are saved with the fold column name.
+
+    Returns
+    -------
+    dict
+        Dictionary containing cross-validation results for each model.
+    """
+    results_name = f"default_CV_{fold_col}" if repeated else "default_CV"
+    ckpt_name = f"{name}_CV_{fold_col}_ckpt" if repeated else f"{name}_CV_ckpt"
+
+    if os.path.exists(f"results/{name}/{results_name}.pkl"):
+        logging.info("Loading existing results.")
+        with open(f"results/{name}/{results_name}.pkl", "br") as f:
+            results = pickle.load(f)
+
+    else:
+
+        try:
+            with open(f"cache/{ckpt_name}.pkl", "br") as f:
+                results = pickle.load(f)
+            logging.info("Loaded checkpoint.")
+        except FileNotFoundError:
+            results = {}
+
+        logging.info("Running CV.")
+        for model in models.keys():
+            logging.info(f"Running {model}.")
+
+            if model in results:
+                logging.info("Found existing results. Skipping.")
+                continue
+
+            results[model] = get_cv_performance(
+                model_class=models[model],
+                df=data_df,
+                features_col=features,
+                target_col=target,
+                fold_col=fold_col,
+                metric_list=metric_list,
+                impute=impute,
+                remove_constant=remove_constant,
+                remove_correlated=remove_correlated,
+                scaler=scaler,
+                custom_params=custom_params.get(model, None) if custom_params else None,
+            )
+            print_performance(
+                model_name=model,
+                results_dict=results[model],
+                file=logging.getLogger().handlers[0].stream.name,
+            )
+            with open(f"cache/{ckpt_name}.pkl", "wb") as f:
+                pickle.dump(results, f)
+
+        with open(f"results/{name}/{results_name}.pkl", "wb") as f:
+            pickle.dump(results, f)
+        os.remove(f"cache/{ckpt_name}.pkl")
+        logging.info("Done!")
+
+    return results
 
 
 def get_optimised_cv_performance(
@@ -727,14 +832,7 @@ def get_optimised_cv_performance(
     # outer CV loop
     for test_fold in range(n_folds):
         # get data for inner CV loop
-        cv_folds = [
-            f
-            for i, f in enumerate(all_folds)
-            if i
-            not in [
-                test_fold,
-            ]
-        ]
+        cv_folds = [f for i, f in enumerate(all_folds) if i not in [test_fold]]
         cv_data = pd.concat([df for df in cv_folds]).reset_index()
 
         # for each cv iteration, get the indices of train and val data points
@@ -748,14 +846,7 @@ def get_optimised_cv_performance(
         ]
         cv = []
         for val_fold in range(n_folds - 1):
-            train_idx = [
-                f
-                for i, f in enumerate(train_val_idx)
-                if i
-                not in [
-                    val_fold,
-                ]
-            ]
+            train_idx = [f for i, f in enumerate(train_val_idx) if i not in [val_fold]]
             train_idx = [idx for idxs in train_idx for idx in idxs]
             val_idx = train_val_idx[val_fold]
             curr_idx = train_idx, val_idx
@@ -890,14 +981,7 @@ def get_best_hparams(
     train_val_idx = [f.index.to_list() for f in all_folds]
     cv = []
     for val_fold in range(n_folds):
-        train_idx = [
-            f
-            for i, f in enumerate(train_val_idx)
-            if i
-            not in [
-                val_fold,
-            ]
-        ]
+        train_idx = [f for i, f in enumerate(train_val_idx) if i not in [val_fold]]
         train_idx = [idx for idxs in train_idx for idx in idxs]
         val_idx = train_val_idx[val_fold]
         curr_idx = train_idx, val_idx
