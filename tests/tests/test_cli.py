@@ -16,6 +16,8 @@ def test_benchmark_cli():
         "R2",
         "--scaler",
         "Standard",
+        "--fold_col",
+        "Fold_0",
     ]
     subprocess.run(command, check=True)
 
