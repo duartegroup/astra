@@ -249,6 +249,10 @@ def main() -> int:
 
     parser = get_CLI_parser()
     args = parser.parse_args()
+
+    if isinstance(args.fold_col, list) and len(args.fold_col) == 1:
+        args.fold_col = args.fold_col[0]
+
     if args.config:
         config = load_config(args.config)
 
