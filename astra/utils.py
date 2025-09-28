@@ -162,7 +162,7 @@ def get_models(
     if custom_models is not None:
         logging.info("Using provided models.")
         for model in custom_models:
-            assert model in REGRESSORS or model in CLASSIFIERS, (
+            assert model in models or model in NON_PROBABILISTIC_MODELS, (
                 f"Model '{model}' is not a valid model. "
                 "Please provide a valid model from astra.models."
             )
@@ -183,12 +183,12 @@ def get_models(
         custom_params = {
             model: custom_models[model]["params"]
             for model in custom_models
-            if custom_models[model]["params"]
+            if custom_models.get(model) and custom_models.get(model).get("params")
         }
         custom_hparams = {
             model: custom_models[model]["hparam_grid"]
             for model in custom_models
-            if custom_models[model]["hparam_grid"]
+            if custom_models.get(model) and custom_models.get(model).get("hparam_grid")
         }
         params = {
             model: custom_hparams[model] if model in custom_hparams else params[model]

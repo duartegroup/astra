@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pingouin as pg
 import scikit_posthocs as sp
-from scipy.stats import kstest, levene, ttest_rel, wilcoxon
+from scipy.stats import levene, shapiro, ttest_rel, wilcoxon
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import GridSearchCV
 from statsmodels.stats.libqsturng import psturng
@@ -98,24 +98,20 @@ def check_assumptions(
     else:
         fold_variances = True
 
-    # Run Kolmogorov-Smirnov test for normality
-    pvals_ks = []
+    # Run Shapiro-Wilk test for normality
+    pvals_shapiro = []
     for metric in metrics:
         for model in results_dict:
             scores = results_dict[model][metric]
-            _, pvalue = kstest(
-                scores,
-                "norm",
-                args=(np.mean(scores), np.std(scores)),
-            )
+            _, pvalue = shapiro(scores)
             if pvalue < 0.05 and verbose:
                 print(
                     "Warning: Normality assumption violated for model "
                     f"{model} and metric {metric}. Consider using non-parametric tests."
                 )
-            pvals_ks.append(pvalue)
+            pvals_shapiro.append(pvalue)
     # Check if any p-values are above 0.05
-    normality = all(pval > 0.05 for pval in pvals_ks)
+    normality = all(pval > 0.05 for pval in pvals_shapiro)
 
     # If any of the assumptions are violated, return False
     if not (homogeneity_of_variances and fold_variances and normality):
@@ -710,10 +706,18 @@ def run_CV(
                 scaler=scaler,
                 custom_params=custom_params.get(model, None) if custom_params else None,
             )
+            file_handler = next(
+                (
+                    h
+                    for h in logging.getLogger().handlers
+                    if isinstance(h, logging.FileHandler)
+                ),
+                None,
+            )
             print_performance(
                 model_name=model,
                 results_dict=results[model],
-                file=logging.getLogger().handlers[0].stream.name,
+                file=file_handler.stream.name if file_handler else None,
             )
             with open(f"cache/{ckpt_name}.pkl", "wb") as f:
                 pickle.dump(results, f)

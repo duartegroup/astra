@@ -74,7 +74,6 @@ CLASSIFIERS = {
 }
 
 NON_PROBABILISTIC_MODELS = [
-    "NearestCentroid",
     "LinearSVC",
     "SVC",
     "RidgeClassifier",
@@ -195,19 +194,7 @@ CLASSIFIER_PARAMS = {
     ),
     "PassiveAggressiveClassifier": dict(C=[0.1, 1, 2, 5, 10]),
     "MLPClassifier": dict(
-        hidden_layer_sizes=[
-            [
-                100,
-            ],
-            [100, 100],
-            [
-                200,
-            ],
-            [
-                50,
-            ],
-            [200, 100],
-        ],
+        hidden_layer_sizes=[[100], [100, 100], [200], [50], [200, 100]],
         activation=["identity", "logistic", "relu"],
         solver=["lbfgs", "adam"],
         alpha=[0.00001, 0.0001, 0.001],
@@ -225,9 +212,6 @@ CLASSIFIER_PARAMS = {
         n_estimators=[10, 100, 200, 500],
         max_leaves=[10, 30, 50, 0],
         learning_rate=[0.01, 0.1, 1],
-        max_depth=[
-            10,
-            30,
-        ],
+        max_depth=[10, 30],
     ),
 }
