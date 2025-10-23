@@ -272,9 +272,7 @@ def test_get_models_custom_optuna():
         "LogisticRegression": {
             "hparam_grid": {"C": [0.01, 0.1, 1.0]},
         },
-        "RandomForestClassifier": {
-            "hparam_grid": {"n_estimators": [10, 50, 100]}
-        },
+        "RandomForestClassifier": {"hparam_grid": {"n_estimators": [10, 50, 100]}},
     }
     _, hyperparams, _ = get_models(
         main_metric="accuracy",

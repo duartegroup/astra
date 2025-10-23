@@ -139,9 +139,9 @@ def run(
 
     if isinstance(fold_col, str):
         n_folds = data_df[fold_col].nunique()
-        assert fold_col in data_df.columns, (
-            f"Data does not contain a '{fold_col}' column."
-        )
+        assert (
+            fold_col in data_df.columns
+        ), f"Data does not contain a '{fold_col}' column."
         repeated_CV = False
     elif isinstance(fold_col, list):
         n_folds = [data_df[col].nunique() for col in fold_col]
