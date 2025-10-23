@@ -1,10 +1,15 @@
 import pytest
 
-from astra.models.regression import REGRESSOR_PARAMS, REGRESSORS
+from astra.models.regression import (
+    REGRESSOR_PARAMS,
+    REGRESSOR_PARAMS_OPTUNA,
+    REGRESSORS,
+)
 
 
 def test_regressors_and_params_keys_match():
     assert REGRESSORS.keys() == REGRESSOR_PARAMS.keys()
+    assert REGRESSOR_PARAMS_OPTUNA.keys() == REGRESSOR_PARAMS.keys()
 
 
 @pytest.mark.parametrize("model_name", REGRESSORS.keys())

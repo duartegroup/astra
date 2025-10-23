@@ -21,7 +21,7 @@ classifiers = [
 requires-python = ">=3.10"
 # Declare any run-time dependencies that should be installed with the package.
 dependencies = [
-    "numpy<2.0.0", # catboost requires numpy<2.0.0 (https://github.com/catboost/catboost/issues/2671)
+    "numpy",
     "pandas",
     "pyarrow",
     "fastparquet",
@@ -33,6 +33,8 @@ dependencies = [
     "scikit-posthocs",
     "rich",
     "pyyaml",
+    "optuna",
+    "optuna-integration[sklearn]",
 ]
 
 # Update the urls once the hosting is set up.
@@ -108,6 +110,9 @@ astra = "astra.cli:main"
 
 [tool.black]
 line-length = 88
+
+[tool.coverage.run]
+omit = ["astra/compare.py", "astra/models/multiclass.py", "astra/models/ordinalclassifiers.py", "astra/models/ordinalregressors.py"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -3,21 +3,32 @@ import pandas as pd
 import pytest
 import yaml
 from numpy import ndarray
+from optuna.distributions import (
+    CategoricalDistribution,
+    FloatDistribution,
+    IntDistribution,
+)
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 
 from astra.models.classification import (
     CLASSIFIER_PARAMS,
+    CLASSIFIER_PARAMS_OPTUNA,
     CLASSIFIERS,
     NON_PROBABILISTIC_MODELS,
 )
-from astra.models.regression import REGRESSOR_PARAMS, REGRESSORS
+from astra.models.regression import (
+    REGRESSOR_PARAMS,
+    REGRESSOR_PARAMS_OPTUNA,
+    REGRESSORS,
+)
 from astra.utils import (
     build_model,
     get_data,
     get_estimator_name,
     get_models,
+    get_optuna_grid,
     get_scores,
     load_config,
     print_file_console,
@@ -224,6 +235,82 @@ def test_get_models_custom(
         )
     assert hyperparams == expected_hyperparams
     assert custom_hyperparams == expected_custom_hyperparams
+
+
+def test_get_models_regression_optuna():
+    models, hyperparams, custom_hyperparams = get_models(
+        main_metric="mse",
+        sec_metrics=["r2"],
+        scaler="Standard",
+        custom_models=None,
+        use_optuna=True,
+    )
+    assert isinstance(models, dict)
+    assert isinstance(hyperparams, dict)
+    assert custom_hyperparams is None
+    assert models == REGRESSORS
+    assert hyperparams == REGRESSOR_PARAMS_OPTUNA
+
+
+def test_get_models_classification_optuna():
+    models, hyperparams, custom_hyperparams = get_models(
+        main_metric="accuracy",
+        sec_metrics=["f1"],
+        scaler=None,
+        custom_models=None,
+        use_optuna=True,
+    )
+    assert isinstance(models, dict)
+    assert isinstance(hyperparams, dict)
+    assert custom_hyperparams is None
+    assert models == CLASSIFIERS
+    assert hyperparams == CLASSIFIER_PARAMS_OPTUNA
+
+
+def test_get_models_custom_optuna():
+    custom_models = {
+        "LogisticRegression": {
+            "hparam_grid": {"C": [0.01, 0.1, 1.0]},
+        },
+        "RandomForestClassifier": {
+            "hparam_grid": {"n_estimators": [10, 50, 100]}
+        },
+    }
+    _, hyperparams, _ = get_models(
+        main_metric="accuracy",
+        sec_metrics=["f1"],
+        scaler=None,
+        custom_models=custom_models,
+        use_optuna=True,
+    )
+    assert isinstance(hyperparams["LogisticRegression"]["C"], FloatDistribution)
+    assert hyperparams["LogisticRegression"]["C"].low == 0.01
+    assert hyperparams["LogisticRegression"]["C"].high == 1.0
+    assert isinstance(
+        hyperparams["RandomForestClassifier"]["n_estimators"], IntDistribution
+    )
+    assert hyperparams["RandomForestClassifier"]["n_estimators"].low == 10
+    assert hyperparams["RandomForestClassifier"]["n_estimators"].high == 100
+
+
+def test_get_optuna_grid():
+    hparam_grid = {
+        "int_param": [1, 2, 3, 4, 5],
+        "float_param": [0.1, 0.5, 1.0],
+        "cat_param": ["a", "b", "c"],
+        "mixed_param": [1, 0.5, "a"],
+    }
+    optuna_grid = get_optuna_grid(hparam_grid)
+    assert isinstance(optuna_grid["int_param"], IntDistribution)
+    assert optuna_grid["int_param"].low == 1
+    assert optuna_grid["int_param"].high == 5
+    assert isinstance(optuna_grid["float_param"], FloatDistribution)
+    assert optuna_grid["float_param"].low == 0.1
+    assert optuna_grid["float_param"].high == 1.0
+    assert isinstance(optuna_grid["cat_param"], CategoricalDistribution)
+    assert optuna_grid["cat_param"].choices == ("a", "b", "c")
+    assert isinstance(optuna_grid["mixed_param"], CategoricalDistribution)
+    assert optuna_grid["mixed_param"].choices == (1, 0.5, "a")
 
 
 def test_get_models_unsupported():

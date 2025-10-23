@@ -55,6 +55,27 @@ def test_basic_benchmark(expected_output_files):
     check_output_files("example_experiment_basic", expected_output_files)
 
 
+def test_benchmark_optuna(expected_output_files):
+    command = [
+        "astra",
+        "benchmark",
+        "astra/data/example_df.csv",
+        "--name",
+        "example_experiment_optuna",
+        "--use_optuna",
+        "--main_metric",
+        "MSE",
+        "--sec_metrics",
+        "R2",
+        "--scaler",
+        "Standard",
+        "--fold_col",
+        "Fold_0",
+    ]
+    run_benchmark(command)
+    check_output_files("example_experiment_optuna", expected_output_files)
+
+
 def test_benchmark_repeated_CV(expected_output_files):
     command = [
         "astra",

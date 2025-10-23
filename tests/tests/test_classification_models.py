@@ -2,6 +2,7 @@ import pytest
 
 from astra.models.classification import (
     CLASSIFIER_PARAMS,
+    CLASSIFIER_PARAMS_OPTUNA,
     CLASSIFIERS,
     NON_PROBABILISTIC_MODELS,
 )
@@ -9,6 +10,7 @@ from astra.models.classification import (
 
 def test_classifiers_and_params_keys_match():
     assert CLASSIFIERS.keys() == CLASSIFIER_PARAMS.keys()
+    assert CLASSIFIER_PARAMS_OPTUNA.keys() == CLASSIFIER_PARAMS.keys()
 
 
 @pytest.mark.parametrize("model_name", CLASSIFIERS.keys())
