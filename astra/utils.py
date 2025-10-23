@@ -26,24 +26,19 @@ from .models.regression import REGRESSOR_PARAMS, REGRESSORS
 
 def get_data(data: str, features: str) -> pd.DataFrame:
     """
-    Load data from a file into a pandas DataFrame.
+    Reads a CSV, pickle, or parquet file and returns a pandas DataFrame.
 
     Parameters
     ----------
     data : str
-        Path to the data file. Supported formats: CSV, pickle, or parquet.
+        Path to the data file.
     features : str
-        Name of the column containing features.
+        Name of the column containing the features.
 
     Returns
     -------
     pd.DataFrame
-        DataFrame containing the loaded data.
-
-    Raises
-    ------
-    ValueError
-        If the file format is unsupported.
+        A pandas DataFrame containing the data.
     """
     if data.endswith(".csv"):
         data_df = pd.read_csv(data)
@@ -68,7 +63,7 @@ def get_data(data: str, features: str) -> pd.DataFrame:
     elif data.endswith(".parquet"):
         data_df = pd.read_parquet(data)
     else:
-        raise ValueError("Unsupported file format. Use CSV, pickle, or parquet.")
+        raise ValueError("Unsupported file format. Please use CSV, pickle, or parquet.")
 
     return data_df
 
@@ -117,9 +112,9 @@ def get_models(
     """
     if main_metric in REGRESSION_METRICS:
         for metric in sec_metrics:
-            assert (
-                metric in REGRESSION_METRICS
-            ), f"Secondary metric '{metric}' is not a regression metric."
+            assert metric in REGRESSION_METRICS, (
+                f"Secondary metric '{metric}' is not a regression metric."
+            )
 
         models = REGRESSORS
         params = REGRESSOR_PARAMS
@@ -127,9 +122,9 @@ def get_models(
 
     elif main_metric in CLASSIFICATION_METRICS:
         for metric in sec_metrics:
-            assert (
-                metric in CLASSIFICATION_METRICS
-            ), f"Secondary metric '{metric}' is not a classification metric."
+            assert metric in CLASSIFICATION_METRICS, (
+                f"Secondary metric '{metric}' is not a classification metric."
+            )
 
         if (
             main_metric in ["roc_auc", "pr_auc"]
@@ -336,9 +331,9 @@ def get_scores(
         for metric in [main_metric] + sec_metrics
         for i in range(n_folds)
     ]
-    assert all(
-        [col in cv_results_df.columns for col in required_columns]
-    ), f"CV results do not contain all required columns: {required_columns}"
+    assert all([col in cv_results_df.columns for col in required_columns]), (
+        f"CV results do not contain all required columns: {required_columns}"
+    )
 
     all_main_scores = [
         cv_results_df[cv_results_df[f"rank_test_{main_metric}"] == 1].iloc[0][
@@ -468,9 +463,9 @@ def print_final_results(
     median_score_main: float,
     sec_metrics_scores: dict[str, tuple[float, float, float]],
     file: str | None = None,
-):
+) -> None:
     """
-    Print final results.
+    Prints the final results to the console and a file.
 
     Parameters
     ----------
@@ -479,11 +474,11 @@ def print_final_results(
     final_hyperparameters : dict[str, int | float | str]
         Hyperparameters of the final model.
     main_metric : str
-        The main metric used for evaluation.
+        Main metric.
     mean_score_main : float
         Mean score of the main metric.
     std_score_main : float
-        Standard deviation of the main metric score.
+        Standard deviation of the main metric.
     median_score_main : float
         Median score of the main metric.
     sec_metrics_scores : dict[str, tuple[float, float, float]]
@@ -498,15 +493,11 @@ def print_final_results(
     print_file_console(message=" " * 20 + "-" * 13, file=file)
     print_file_console(message=" " * 20 + "Final results", file=file)
     print_file_console(message=" " * 20 + "-" * 13, file=file)
-    print_file_console(
-        message=" " * 20 + f"Final model: {final_model_name}",
-        file=file,
-    )
+    print_file_console(message=" " * 20 + f"Final model: {final_model_name}", file=file)
     print_file_console(message=" " * 20 + "Hyperparameters:", file=file)
     for f in final_hyperparameters:
         print_file_console(
-            message=" " * 20 + f"{f}: {final_hyperparameters[f]}",
-            file=file,
+            message=" " * 20 + f"{f}: {final_hyperparameters[f]}", file=file
         )
     print_file_console(
         message=" " * 20
