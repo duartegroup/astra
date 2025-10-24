@@ -7,11 +7,20 @@ CLASSIFIERS : dict[str, BaseEstimator]
     A dictionary mapping model names to their corresponding scikit-learn classifier instances.
 CLASSIFIER_PARAMS : dict[str, dict[str, list]]
     A dictionary mapping model names to dictionaries of hyperparameters to search over.
+CLASSIFIER_PARAMS_OPTUNA : dict[str, dict[str, optuna.distributions]]
+    A dictionary mapping model names to dictionaries of hyperparameters to search over using Optuna.
 NON_PROBABILISTIC_MODELS : list[str]
     A list of model names that do not have a `predict_proba` method.
 """
 
+import warnings
+
 from lightgbm import LGBMClassifier
+from optuna.distributions import (
+    CategoricalDistribution,
+    FloatDistribution,
+    IntDistribution,
+)
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import (
     AdaBoostClassifier,
@@ -42,6 +51,9 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC, LinearSVC
 from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
 from xgboost import XGBClassifier
+
+# catch UserWarning from Optuna
+warnings.filterwarnings("ignore", category=UserWarning)
 
 CLASSIFIERS = {
     "LogisticRegression": LogisticRegression(random_state=42, max_iter=100000),
@@ -74,7 +86,6 @@ CLASSIFIERS = {
 }
 
 NON_PROBABILISTIC_MODELS = [
-    "NearestCentroid",
     "LinearSVC",
     "SVC",
     "RidgeClassifier",
@@ -195,19 +206,7 @@ CLASSIFIER_PARAMS = {
     ),
     "PassiveAggressiveClassifier": dict(C=[0.1, 1, 2, 5, 10]),
     "MLPClassifier": dict(
-        hidden_layer_sizes=[
-            [
-                100,
-            ],
-            [100, 100],
-            [
-                200,
-            ],
-            [
-                50,
-            ],
-            [200, 100],
-        ],
+        hidden_layer_sizes=[[100], [100, 100], [200], [50], [200, 100]],
         activation=["identity", "logistic", "relu"],
         solver=["lbfgs", "adam"],
         alpha=[0.00001, 0.0001, 0.001],
@@ -225,9 +224,150 @@ CLASSIFIER_PARAMS = {
         n_estimators=[10, 100, 200, 500],
         max_leaves=[10, 30, 50, 0],
         learning_rate=[0.01, 0.1, 1],
-        max_depth=[
-            10,
-            30,
-        ],
+        max_depth=[10, 30],
     ),
+}
+
+CLASSIFIER_PARAMS_OPTUNA = {
+    "LogisticRegression": {
+        "solver": CategoricalDistribution(["newton-cg", "lbfgs", "liblinear"]),
+        "penalty": CategoricalDistribution(["l2"]),
+        "C": FloatDistribution(0.01, 100, log=True),
+    },
+    "GaussianProcessClassifier": {
+        "kernel": CategoricalDistribution(
+            [
+                1 * RBF(),
+                1 * DotProduct(),
+                1 * Matern(),
+                1 * RationalQuadratic(),
+                1 * WhiteKernel(),
+            ]
+        ),
+    },
+    "BernoulliNB": {
+        "alpha": FloatDistribution(0.01, 10.0),
+        "fit_prior": CategoricalDistribution([True, False]),
+    },
+    "GaussianNB": {
+        "var_smoothing": FloatDistribution(1e-12, 1e-6, log=True),
+    },
+    "MultinomialNB": {
+        "alpha": FloatDistribution(0.01, 10.0),
+        "fit_prior": CategoricalDistribution([True, False]),
+    },
+    "DecisionTreeClassifier": {
+        "criterion": CategoricalDistribution(["gini", "entropy", "log_loss"]),
+        "max_depth": IntDistribution(0, 100),
+        "min_samples_split": IntDistribution(2, 10),
+        "min_samples_leaf": IntDistribution(1, 4),
+        "max_features": CategoricalDistribution(["log2", "sqrt", None]),
+        "max_leaf_nodes": IntDistribution(100, 1000),
+    },
+    "ExtraTreeClassifier": {
+        "criterion": CategoricalDistribution(["gini", "entropy", "log_loss"]),
+        "max_depth": IntDistribution(0, 100),
+        "min_samples_split": IntDistribution(2, 10),
+        "min_samples_leaf": IntDistribution(1, 4),
+        "max_features": CategoricalDistribution(["log2", "sqrt"]),
+        "max_leaf_nodes": IntDistribution(0, 1000),
+    },
+    "ExtraTreesClassifier": {
+        "n_estimators": IntDistribution(10, 500),
+        "criterion": CategoricalDistribution(["gini", "entropy", "log_loss"]),
+        "bootstrap": CategoricalDistribution([True, False]),
+        "max_depth": IntDistribution(0, 100),
+        "max_features": CategoricalDistribution(["log2", "sqrt"]),
+        "min_samples_leaf": IntDistribution(1, 4),
+        "min_samples_split": IntDistribution(2, 10),
+        "max_leaf_nodes": IntDistribution(0, 1000),
+    },
+    "RandomForestClassifier": {
+        "n_estimators": IntDistribution(10, 500),
+        "bootstrap": CategoricalDistribution([True, False]),
+        "max_depth": IntDistribution(0, 100),
+        "min_samples_split": IntDistribution(2, 10),
+        "min_samples_leaf": IntDistribution(1, 4),
+    },
+    "GradientBoostingClassifier": {
+        "n_estimators": IntDistribution(10, 500),
+        "learning_rate": FloatDistribution(0.01, 1.0, log=True),
+        "max_depth": IntDistribution(0, 5),
+        "min_samples_split": IntDistribution(2, 10),
+        "min_samples_leaf": IntDistribution(1, 4),
+        "max_features": CategoricalDistribution(["log2", "sqrt"]),
+    },
+    "BaggingClassifier": {
+        "n_estimators": IntDistribution(5, 20),
+        "max_samples": FloatDistribution(0.1, 1.0),
+        "max_features": FloatDistribution(0.1, 1.0),
+    },
+    "HistGradientBoostingClassifier": {
+        "learning_rate": FloatDistribution(0.01, 1.0, log=True),
+        "max_leaf_nodes": IntDistribution(3, 50),
+        "min_samples_leaf": IntDistribution(10, 50),
+    },
+    "AdaBoostClassifier": {
+        "n_estimators": IntDistribution(10, 100),
+        "learning_rate": FloatDistribution(0.1, 10.0, log=True),
+    },
+    "KNeighborsClassifier": {
+        "n_neighbors": IntDistribution(3, 20),
+        "weights": CategoricalDistribution(["uniform", "distance"]),
+    },
+    "NearestCentroid": {
+        "shrink_threshold": FloatDistribution(0.1, 1.0),
+    },
+    "LinearDiscriminantAnalysis": {
+        "solver": CategoricalDistribution(["svd", "lsqr", "eigen"]),
+    },
+    "LinearSVC": {
+        "penalty": CategoricalDistribution(["l1", "l2"]),
+        "loss": CategoricalDistribution(["hinge", "squared_hinge"]),
+        "C": FloatDistribution(1, 100, log=True),
+    },
+    "SVC": {
+        "kernel": CategoricalDistribution(["linear", "rbf", "poly", "sigmoid"]),
+        "gamma": CategoricalDistribution(["scale", 0.01, 0.1]),
+        "C": FloatDistribution(1, 100, log=True),
+    },
+    "RidgeClassifier": {
+        "alpha": FloatDistribution(0.1, 5.0),
+    },
+    "SGDClassifier": {
+        "loss": CategoricalDistribution(["log_loss", "modified_huber"]),
+        "penalty": CategoricalDistribution(["l2", "l1", "elasticnet", None]),
+        "alpha": FloatDistribution(0.00001, 0.001, log=True),
+    },
+    "Perceptron": {
+        "penalty": CategoricalDistribution(["l2", "l1", "elasticnet", None]),
+        "alpha": FloatDistribution(0.00001, 0.001, log=True),
+    },
+    "PassiveAggressiveClassifier": {
+        "C": FloatDistribution(0.1, 10.0, log=True),
+    },
+    "MLPClassifier": {
+        "hidden_layer_sizes": CategoricalDistribution(
+            [[100], [100, 100], [200], [50], [200, 100]]
+        ),
+        "activation": CategoricalDistribution(["identity", "logistic", "relu"]),
+        "solver": CategoricalDistribution(["lbfgs", "adam"]),
+        "alpha": FloatDistribution(0.00001, 0.001, log=True),
+        "learning_rate": CategoricalDistribution(
+            ["constant", "invscaling", "adaptive"]
+        ),
+        "learning_rate_init": FloatDistribution(0.0001, 0.01, log=True),
+        "early_stopping": CategoricalDistribution([False, True]),
+    },
+    "LGBMClassifier": {
+        "n_estimators": IntDistribution(10, 500),
+        "num_leaves": IntDistribution(10, 50),
+        "learning_rate": FloatDistribution(0.01, 1.0, log=True),
+        "max_depth": IntDistribution(-1, 30),
+    },
+    "XGBClassifier": {
+        "n_estimators": IntDistribution(10, 500),
+        "learning_rate": FloatDistribution(0.01, 1.0, log=True),
+        "max_depth": IntDistribution(1, 20),
+    },
 }

@@ -35,6 +35,9 @@ Options:
 - `--features`: Name of the column containing the features. Default: Features.
 - `--target`: Name of the column containing the target. Default: Target.
 - `--run_nested_CV`: Whether to run nested CV with hyperparameter tuning for the best models. Default: False.
+- `--use_optuna`: Whether to use Optuna for hyperparameter tuning. Default: False.
+- `--n_trials`: Number of trials for Optuna hyperparameter search. Default: 100.
+- `--timeout`: Time limit (in seconds) for Optuna hyperparameter search. Default: 3600.
 - `--fold_col`: Name(s) of the column(s) containing the *0-indexed* CV fold number(s). If a list is provided, models will be benchmarked in an nxk-fold CV, where n is the number of repeats and k is the number of folds. If a single string is provided, it will be treated as a single fold column. nxk-fold CV does not currently support nested CV and final hyperparameter tuning. Default: Fold.
 - `--main_metric`: Main metric to use for model selection. This will be used to infer the prediction task (classification or regression). Default: R2.
 - `--sec_metrics`: Secondary metrics to use for model selection. Default: MSE, MAE.
@@ -54,12 +57,12 @@ astra benchmark --config <path to config file>
 ```
 See [here](configs/example.yml) for an example. Arguments in the configuration file will override CLI arguments.
 
-By default, ASTRA will benchmark all implemented [classification](astra/models/classification.py) or [regression](astra/models/regression.py) models, and search over default hyperparameter grids. You can specify which models to consider, custom starting hyperparameters, and custom hyperparameter search spaces in the configuration file.
+By default, ASTRA will benchmark all implemented [classification](astra/models/classification.py) or [regression](astra/models/regression.py) models, and search over default hyperparameter grids. You can specify which models to consider, custom starting hyperparameters, and custom hyperparameter search spaces in the configuration file. When using Optuna, custom hyperparameters will be converted into integer, float, or categorical Optuna distributions.
 
 The benchmark script will create the following files under `results/<name>`:
 - `default_CV.pkl`: A dictionary containing CV scores of the main and secondary metrics for all models using default hyperparameters.
 - `nested_CV.pkl`: A dictionary containing CV scores of the main and secondary metrics for all models with optimised hyperparameters using nested grid-search.
-- `final_CV_results.csv`: Final CV results (`cv_results_` of `GridSearchCV`).
+- `final_CV_results.csv`: Final CV results (`cv_results_` of `GridSearchCV`), or final hyperparameter search results (`trials_dataframe` of `OptunaSearchCV`).
 - `final_model.pkl`: The best performing model, refit on the whole dataset.
 - `final_hyperparameters.pkl`: A dictionary of the optimal hyperparameters.
 

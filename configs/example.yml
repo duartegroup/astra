@@ -3,6 +3,7 @@ name: example_experiment
 features: Features
 target: Target
 run_nested_CV: false
+use_optuna: false
 fold_col:
   - Fold_0
   - Fold_1

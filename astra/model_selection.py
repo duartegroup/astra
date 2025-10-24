@@ -8,10 +8,14 @@ import pickle
 import warnings
 
 import numpy as np
+import optuna
 import pandas as pd
 import pingouin as pg
 import scikit_posthocs as sp
-from scipy.stats import kstest, levene, ttest_rel, wilcoxon
+from optuna.distributions import BaseDistribution
+from optuna.exceptions import ExperimentalWarning
+from optuna.integration import OptunaSearchCV
+from scipy.stats import levene, shapiro, ttest_rel, wilcoxon
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import GridSearchCV
 from statsmodels.stats.libqsturng import psturng
@@ -24,6 +28,8 @@ from .metrics import (
 )
 from .models.classification import NON_PROBABILISTIC_MODELS
 from .utils import build_model, print_performance
+
+warnings.filterwarnings("ignore", category=ExperimentalWarning)
 
 
 def check_assumptions(
@@ -98,24 +104,20 @@ def check_assumptions(
     else:
         fold_variances = True
 
-    # Run Kolmogorov-Smirnov test for normality
-    pvals_ks = []
+    # Run Shapiro-Wilk test for normality
+    pvals_shapiro = []
     for metric in metrics:
         for model in results_dict:
             scores = results_dict[model][metric]
-            _, pvalue = kstest(
-                scores,
-                "norm",
-                args=(np.mean(scores), np.std(scores)),
-            )
+            _, pvalue = shapiro(scores)
             if pvalue < 0.05 and verbose:
                 print(
                     "Warning: Normality assumption violated for model "
                     f"{model} and metric {metric}. Consider using non-parametric tests."
                 )
-            pvals_ks.append(pvalue)
+            pvals_shapiro.append(pvalue)
     # Check if any p-values are above 0.05
-    normality = all(pval > 0.05 for pval in pvals_ks)
+    normality = all(pval > 0.05 for pval in pvals_shapiro)
 
     # If any of the assumptions are violated, return False
     if not (homogeneity_of_variances and fold_variances and normality):
@@ -710,10 +712,18 @@ def run_CV(
                 scaler=scaler,
                 custom_params=custom_params.get(model, None) if custom_params else None,
             )
+            file_handler = next(
+                (
+                    h
+                    for h in logging.getLogger().handlers
+                    if isinstance(h, logging.FileHandler)
+                ),
+                None,
+            )
             print_performance(
                 model_name=model,
                 results_dict=results[model],
-                file=logging.getLogger().handlers[0].stream.name,
+                file=file_handler.stream.name if file_handler else None,
             )
             with open(f"cache/{ckpt_name}.pkl", "wb") as f:
                 pickle.dump(results, f)
@@ -734,8 +744,11 @@ def get_optimised_cv_performance(
     fold_col: str,
     metric_list: list[str],
     main_metric: str,
-    parameters: dict[str, list],
+    parameters: dict[str, list] | dict[str, BaseDistribution],
     n_jobs: int,
+    use_optuna: bool = False,
+    n_trials: int = 100,
+    timeout: int = 3600,
     impute: str | float | int | None = None,
     remove_constant: float | None = None,
     remove_correlated: float | None = None,
@@ -761,10 +774,16 @@ def get_optimised_cv_performance(
         A list of metrics to use for evaluation.
     main_metric : str
         The main metric to optimise hyperparameters for.
-    parameters : dict[str, list]
+    parameters : dict[str, list] or dict[str, BaseDistribution]
         A dictionary of hyperparameters to search over.
     n_jobs : int
         The number of jobs to run in parallel during grid search.
+    use_optuna : bool, default=False
+        Whether to use Optuna for hyperparameter optimisation instead of grid search.
+    n_trials : int, default=100
+        The number of trials to run during Optuna hyperparameter optimisation.
+    timeout : int, default=3600
+        The maximum time in seconds to run Optuna hyperparameter optimisation.
     impute : str or float or int or None, default=None
         The imputation strategy to use for missing values. If None, no imputation is performed.
         Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.
@@ -829,15 +848,30 @@ def get_optimised_cv_performance(
             cv.append(curr_idx)
 
         # perform hyperparameter search
-        clf = GridSearchCV(
-            estimator=model,
-            param_grid=parameters,
-            scoring=scoring,
-            n_jobs=n_jobs,
-            refit=True,
-            cv=cv,
-            pre_dispatch="n_jobs",
-        )
+        if use_optuna:
+            optuna.logging.set_verbosity(optuna.logging.WARNING)
+            clf = OptunaSearchCV(
+                estimator=model,
+                param_distributions=parameters,
+                cv=cv,
+                n_jobs=n_jobs,
+                scoring=scoring[main_metric],
+                n_trials=n_trials,
+                timeout=timeout,
+                refit=True,
+                verbose=0,
+                random_state=42,
+            )
+        else:
+            clf = GridSearchCV(
+                estimator=model,
+                param_grid=parameters,
+                scoring=scoring,
+                n_jobs=n_jobs,
+                refit=True,
+                cv=cv,
+                pre_dispatch="n_jobs",
+            )
         X = np.vstack(cv_data[features_col].to_numpy())
         y = np.vstack(cv_data[target_col].to_numpy()).ravel()
         # Suppress warnings for LGBM, needs to be done using os.environ, as GridSearchCV uses
@@ -885,13 +919,16 @@ def get_best_hparams(
     fold_col: str,
     main_metric: str,
     sec_metrics: list[str],
-    parameters: dict[str, list],
+    parameters: dict[str, list] | dict[str, BaseDistribution],
     n_jobs: int,
+    use_optuna: bool = False,
+    n_trials: int = 100,
+    timeout: int = 3600,
     impute: str | float | int | None = None,
     remove_constant: float | None = None,
     remove_correlated: float | None = None,
     scaler: str | None = None,
-) -> GridSearchCV:
+) -> GridSearchCV | OptunaSearchCV:
     """
     Get the best hyperparameters for a model using grid search with (non-nested) cross-validation.
 
@@ -911,10 +948,16 @@ def get_best_hparams(
         The metric to optimise hyperparameters for.
     sec_metrics : list[str]
         A list of secondary metrics to track during hyperparameter search.
-    parameters : dict[str, list]
+    parameters : dict[str, list] or dict[str, BaseDistribution]
         A dictionary of hyperparameters to search over.
     n_jobs : int
         The number of jobs to run in parallel during grid search.
+    use_optuna : bool, default=False
+        Whether to use Optuna for hyperparameter optimisation instead of grid search.
+    n_trials : int, default=100
+        The number of trials to run during Optuna hyperparameter optimisation.
+    timeout : int, default=3600
+        The maximum time in seconds to run Optuna hyperparameter optimisation.
     impute : str or float or int or None, default=None
         The imputation strategy to use for missing values. If None, no imputation is performed.
         Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.
@@ -929,8 +972,8 @@ def get_best_hparams(
 
     Returns
     -------
-    GridSearchCV
-        A GridSearchCV object containing the best hyperparameters.
+    GridSearchCV or OptunaSearchCV
+        A GridSearchCV or OptunaSearchCV object containing the best hyperparameters.
     """
     assert (
         main_metric in KNOWN_METRICS.keys()
@@ -964,15 +1007,31 @@ def get_best_hparams(
         cv.append(curr_idx)
 
     # perform hyperparameter search
-    clf = GridSearchCV(
-        estimator=model,
-        param_grid=parameters,
-        scoring=scoring,
-        n_jobs=n_jobs,
-        refit=main_metric,
-        cv=cv,
-        pre_dispatch="n_jobs",
-    )
+    # TODO: Integrate Optuna
+    if use_optuna:
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        clf = OptunaSearchCV(
+            estimator=model,
+            param_distributions=parameters,
+            cv=cv,
+            n_jobs=n_jobs,
+            scoring=scoring[main_metric],
+            n_trials=n_trials,
+            timeout=timeout,
+            refit=True,
+            verbose=0,
+            random_state=42,
+        )
+    else:
+        clf = GridSearchCV(
+            estimator=model,
+            param_grid=parameters,
+            scoring=scoring,
+            n_jobs=n_jobs,
+            refit=main_metric,
+            cv=cv,
+            pre_dispatch="n_jobs",
+        )
     X = np.vstack(df[features_col].to_numpy())
     y = np.vstack(df[target_col].to_numpy()).ravel()
     # Suppress warnings for LGBM, needs to be done using os.environ, as GridSearchCV uses

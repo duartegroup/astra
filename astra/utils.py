@@ -4,10 +4,17 @@ This module contains utility functions used in the package.
 
 import ast
 import logging
+import warnings
 
 import numpy as np
 import pandas as pd
 import yaml
+from optuna.distributions import (
+    BaseDistribution,
+    CategoricalDistribution,
+    FloatDistribution,
+    IntDistribution,
+)
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.impute import KNNImputer, SimpleImputer
@@ -18,32 +25,28 @@ from .data.processing import CorrelationFilter
 from .metrics import CLASSIFICATION_METRICS, LOWER_BETTER, REGRESSION_METRICS
 from .models.classification import (
     CLASSIFIER_PARAMS,
+    CLASSIFIER_PARAMS_OPTUNA,
     CLASSIFIERS,
     NON_PROBABILISTIC_MODELS,
 )
-from .models.regression import REGRESSOR_PARAMS, REGRESSORS
+from .models.regression import REGRESSOR_PARAMS, REGRESSOR_PARAMS_OPTUNA, REGRESSORS
 
 
 def get_data(data: str, features: str) -> pd.DataFrame:
     """
-    Load data from a file into a pandas DataFrame.
+    Reads a CSV, pickle, or parquet file and returns a pandas DataFrame.
 
     Parameters
     ----------
     data : str
-        Path to the data file. Supported formats: CSV, pickle, or parquet.
+        Path to the data file.
     features : str
-        Name of the column containing features.
+        Name of the column containing the features.
 
     Returns
     -------
     pd.DataFrame
-        DataFrame containing the loaded data.
-
-    Raises
-    ------
-    ValueError
-        If the file format is unsupported.
+        A pandas DataFrame containing the data.
     """
     if data.endswith(".csv"):
         data_df = pd.read_csv(data)
@@ -68,7 +71,7 @@ def get_data(data: str, features: str) -> pd.DataFrame:
     elif data.endswith(".parquet"):
         data_df = pd.read_parquet(data)
     else:
-        raise ValueError("Unsupported file format. Use CSV, pickle, or parquet.")
+        raise ValueError("Unsupported file format. Please use CSV, pickle, or parquet.")
 
     return data_df
 
@@ -81,6 +84,7 @@ def get_models(
         dict[str, None | dict[str, dict] | tuple[dict[str, dict], dict[str, dict]]]
         | None
     ) = None,
+    use_optuna: bool = False,
 ) -> tuple[
     dict[str, BaseEstimator],
     dict[str, dict[str, list]],
@@ -101,6 +105,9 @@ def get_models(
         Dictionary of models to use for benchmarking. If None, default models will be used.
         The keys should be the model names, and the values should be dictionaries of starting
         hyperparameters for the model, and/or a dictionary of hyperparameter search grids.
+    use_optuna : bool, default False
+        Whether to retrieve hyperparameter search dictionaries suitable for Optuna. Note that we do not currently
+        support custom hyperparameter grids when using Optuna.
 
     Returns
     -------
@@ -122,7 +129,7 @@ def get_models(
             ), f"Secondary metric '{metric}' is not a regression metric."
 
         models = REGRESSORS
-        params = REGRESSOR_PARAMS
+        params = REGRESSOR_PARAMS_OPTUNA if use_optuna else REGRESSOR_PARAMS
         logging.info("Benchmarking regression models.")
 
     elif main_metric in CLASSIFICATION_METRICS:
@@ -143,7 +150,7 @@ def get_models(
             }
         else:
             models = CLASSIFIERS
-        params = CLASSIFIER_PARAMS
+        params = CLASSIFIER_PARAMS_OPTUNA if use_optuna else CLASSIFIER_PARAMS
         logging.info("Benchmarking classification models.")
 
     else:
@@ -162,7 +169,7 @@ def get_models(
     if custom_models is not None:
         logging.info("Using provided models.")
         for model in custom_models:
-            assert model in REGRESSORS or model in CLASSIFIERS, (
+            assert model in models or model in NON_PROBABILISTIC_MODELS, (
                 f"Model '{model}' is not a valid model. "
                 "Please provide a valid model from astra.models."
             )
@@ -183,12 +190,16 @@ def get_models(
         custom_params = {
             model: custom_models[model]["params"]
             for model in custom_models
-            if custom_models[model]["params"]
+            if custom_models.get(model) and custom_models.get(model).get("params")
         }
         custom_hparams = {
-            model: custom_models[model]["hparam_grid"]
+            model: (
+                get_optuna_grid(custom_models[model]["hparam_grid"])
+                if use_optuna
+                else custom_models[model]["hparam_grid"]
+            )
             for model in custom_models
-            if custom_models[model]["hparam_grid"]
+            if custom_models.get(model) and custom_models.get(model).get("hparam_grid")
         }
         params = {
             model: custom_hparams[model] if model in custom_hparams else params[model]
@@ -197,6 +208,36 @@ def get_models(
         return models, params, custom_params
     else:
         return models, params, None
+
+
+def get_optuna_grid(hparam_grid: dict[str, list]) -> dict[str, BaseDistribution]:
+    """
+    Convert a hyperparameter grid to an Optuna-compatible format.
+
+    Parameters
+    ----------
+    hparam_grid : dict[str, list]
+        A dictionary where keys are hyperparameter names and values are lists of possible values.
+        For numeric values, the minimum and maximum will be used to create a uniform distribution.
+        For categorical values, a categorical distribution will be created.
+
+    Returns
+    -------
+    dict[str, BaseDistribution]
+        A dictionary where keys are hyperparameter names and values are Optuna distribution objects.
+    """
+    optuna_grid = {}
+    for param, values in hparam_grid.items():
+        if all(isinstance(v, int) for v in values):
+            optuna_grid[param] = IntDistribution(min(values), max(values))
+        elif all(isinstance(v, float) for v in values):
+            optuna_grid[param] = FloatDistribution(min(values), max(values))
+        else:
+            # catch UserWarning from Optuna when creating CategoricalDistribution with mixed types
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", UserWarning)
+                optuna_grid[param] = CategoricalDistribution(values)
+    return optuna_grid
 
 
 def build_model(
@@ -468,9 +509,9 @@ def print_final_results(
     median_score_main: float,
     sec_metrics_scores: dict[str, tuple[float, float, float]],
     file: str | None = None,
-):
+) -> None:
     """
-    Print final results.
+    Prints the final results to the console and a file.
 
     Parameters
     ----------
@@ -479,11 +520,11 @@ def print_final_results(
     final_hyperparameters : dict[str, int | float | str]
         Hyperparameters of the final model.
     main_metric : str
-        The main metric used for evaluation.
+        Main metric.
     mean_score_main : float
         Mean score of the main metric.
     std_score_main : float
-        Standard deviation of the main metric score.
+        Standard deviation of the main metric.
     median_score_main : float
         Median score of the main metric.
     sec_metrics_scores : dict[str, tuple[float, float, float]]
@@ -498,15 +539,11 @@ def print_final_results(
     print_file_console(message=" " * 20 + "-" * 13, file=file)
     print_file_console(message=" " * 20 + "Final results", file=file)
     print_file_console(message=" " * 20 + "-" * 13, file=file)
-    print_file_console(
-        message=" " * 20 + f"Final model: {final_model_name}",
-        file=file,
-    )
+    print_file_console(message=" " * 20 + f"Final model: {final_model_name}", file=file)
     print_file_console(message=" " * 20 + "Hyperparameters:", file=file)
     for f in final_hyperparameters:
         print_file_console(
-            message=" " * 20 + f"{f}: {final_hyperparameters[f]}",
-            file=file,
+            message=" " * 20 + f"{f}: {final_hyperparameters[f]}", file=file
         )
     print_file_console(
         message=" " * 20

@@ -14,9 +14,11 @@ from .model_selection import (
 )
 from .models import (
     CLASSIFIER_PARAMS,
+    CLASSIFIER_PARAMS_OPTUNA,
     CLASSIFIERS,
     NON_PROBABILISTIC_MODELS,
     REGRESSOR_PARAMS,
+    REGRESSOR_PARAMS_OPTUNA,
     REGRESSORS,
 )
 
@@ -35,7 +37,9 @@ __all__ = [
     "get_best_model",
     "CLASSIFIERS",
     "CLASSIFIER_PARAMS",
+    "CLASSIFIER_PARAMS_OPTUNA",
     "NON_PROBABILISTIC_MODELS",
     "REGRESSORS",
     "REGRESSOR_PARAMS",
+    "REGRESSOR_PARAMS_OPTUNA",
 ]
