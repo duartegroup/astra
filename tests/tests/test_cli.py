@@ -45,7 +45,7 @@ def test_basic_benchmark_config(expected_output_files_repeated):
         "configs/example.yml",
     ]
     run_benchmark(command)
-    check_output_files("example_experiment_repeated", expected_output_files_repeated)
+    check_output_files("example_experiment", expected_output_files_repeated)
 
 
 def test_basic_benchmark(expected_output_files):
