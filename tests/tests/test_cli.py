@@ -15,6 +15,19 @@ def expected_output_files():
     ]
 
 
+@pytest.fixture
+def expected_output_files_repeated():
+    return [
+        "benchmark.log",
+        "default_CV_all_folds.pkl",
+        "default_CV_Fold_0.pkl",
+        "default_CV_Fold_1.pkl",
+        "default_CV_Fold_2.pkl",
+        "default_CV_Fold_3.pkl",
+        "default_CV_Fold_4.pkl",
+    ]
+
+
 def check_output_files(experiment_name, expected_files):
     for filename in expected_files:
         assert os.path.exists(f"results/{experiment_name}/{filename}")
@@ -24,7 +37,7 @@ def run_benchmark(command):
     subprocess.run(command, check=True)
 
 
-def test_basic_benchmark_config(expected_output_files):
+def test_basic_benchmark_config(expected_output_files_repeated):
     command = [
         "astra",
         "benchmark",
@@ -32,7 +45,7 @@ def test_basic_benchmark_config(expected_output_files):
         "configs/example.yml",
     ]
     run_benchmark(command)
-    check_output_files("example_experiment", expected_output_files)
+    check_output_files("example_experiment_repeated", expected_output_files_repeated)
 
 
 def test_basic_benchmark(expected_output_files):
@@ -76,7 +89,7 @@ def test_benchmark_optuna(expected_output_files):
     check_output_files("example_experiment_optuna", expected_output_files)
 
 
-def test_benchmark_repeated_CV(expected_output_files):
+def test_benchmark_repeated_CV(expected_output_files_repeated):
     command = [
         "astra",
         "benchmark",
@@ -90,10 +103,14 @@ def test_benchmark_repeated_CV(expected_output_files):
         "--scaler",
         "Standard",
         "--fold_col",
-        "Fold_0 Fold_1 Fold_2 Fold_3 Fold_4",
+        "Fold_0",
+        "Fold_1",
+        "Fold_2",
+        "Fold_3",
+        "Fold_4",
     ]
     run_benchmark(command)
-    check_output_files("example_experiment_repeated", expected_output_files)
+    check_output_files("example_experiment_repeated", expected_output_files_repeated)
 
 
 def test_benchmark_nested_CV(expected_output_files):
