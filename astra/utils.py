@@ -124,9 +124,9 @@ def get_models(
     """
     if main_metric in REGRESSION_METRICS:
         for metric in sec_metrics:
-            assert metric in REGRESSION_METRICS, (
-                f"Secondary metric '{metric}' is not a regression metric."
-            )
+            assert (
+                metric in REGRESSION_METRICS
+            ), f"Secondary metric '{metric}' is not a regression metric."
 
         models = REGRESSORS
         params = REGRESSOR_PARAMS_OPTUNA if use_optuna else REGRESSOR_PARAMS
@@ -134,9 +134,9 @@ def get_models(
 
     elif main_metric in CLASSIFICATION_METRICS:
         for metric in sec_metrics:
-            assert metric in CLASSIFICATION_METRICS, (
-                f"Secondary metric '{metric}' is not a classification metric."
-            )
+            assert (
+                metric in CLASSIFICATION_METRICS
+            ), f"Secondary metric '{metric}' is not a classification metric."
 
         if (
             main_metric in ["roc_auc", "pr_auc"]
@@ -381,9 +381,9 @@ def get_scores(
         for metric in [main_metric] + sec_metrics
         for i in range(n_folds)
     ]
-    assert all([col in cv_results_df.columns for col in required_columns]), (
-        f"CV results do not contain all required columns: {required_columns}"
-    )
+    assert all(
+        [col in cv_results_df.columns for col in required_columns]
+    ), f"CV results do not contain all required columns: {required_columns}"
 
     final_results_dict = {}
     all_main_scores = [
