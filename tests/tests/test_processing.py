@@ -10,7 +10,7 @@ def correlated_data():
     X = np.zeros((10, 4))
     X[:, 0] = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     X[:, 1] = X[:, 0] * 2  # correlated with 0
-    X[:, 2] = np.array([10, 9, 8, 7, 6, 5, 4, 3, 2, 1])
+    X[:, 2] = np.random.rand(10)
     X[:, 3] = X[:, 2] * 3  # correlated with 2
     return X
 

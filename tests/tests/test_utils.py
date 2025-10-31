@@ -404,9 +404,9 @@ def test_get_scores():
     assert np.isclose(mean_score, 0.105)
     assert np.isclose(std_score, 0.005)
     assert np.isclose(median_score, 0.105)
-    assert np.isclose(sec_scores["r2"][0], 0.695)
+    assert np.isclose(sec_scores["r2"][0], 0.895)
     assert np.isclose(sec_scores["r2"][1], 0.005)
-    assert np.isclose(sec_scores["r2"][2], 0.695)
+    assert np.isclose(sec_scores["r2"][2], 0.895)
     assert "mse" in results_dict
     assert "r2" in results_dict
     assert results_dict["mse"] == [0.1, 0.11]
@@ -429,9 +429,9 @@ def test_get_scores():
     assert np.isclose(mean_score, 0.895)
     assert np.isclose(std_score, 0.005)
     assert np.isclose(median_score, 0.895)
-    assert np.isclose(sec_scores["f1"][0], 0.595)
+    assert np.isclose(sec_scores["f1"][0], 0.795)
     assert np.isclose(sec_scores["f1"][1], 0.005)
-    assert np.isclose(sec_scores["f1"][2], 0.595)
+    assert np.isclose(sec_scores["f1"][2], 0.795)
     assert "accuracy" in results_dict
     assert "f1" in results_dict
     assert results_dict["accuracy"] == [0.9, 0.89]

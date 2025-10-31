@@ -412,7 +412,7 @@ def get_scores(
     sec_metrics_scores = {}
     for metric in sec_metrics:
         all_scores = [
-            cv_results_df[cv_results_df[f"rank_test_{metric}"] == 1].iloc[0][
+            cv_results_df[cv_results_df[f"rank_test_{main_metric}"] == 1].iloc[0][
                 f"split{i}_test_{metric}"
             ]
             for i in range(n_folds)
