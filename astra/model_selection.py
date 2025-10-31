@@ -12,12 +12,9 @@ import optuna
 import pandas as pd
 import pingouin as pg
 import scikit_posthocs as sp
-<<<<<<< HEAD
-=======
 from optuna.distributions import BaseDistribution
 from optuna.exceptions import ExperimentalWarning
 from optuna.integration import OptunaSearchCV
->>>>>>> 7ef386c88a406a87d0553e2d1a5c5f4139271492
 from scipy.stats import levene, shapiro, ttest_rel, wilcoxon
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import GridSearchCV
