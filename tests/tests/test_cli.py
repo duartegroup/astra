@@ -9,7 +9,8 @@ def expected_output_files():
     return [
         "benchmark.log",
         "default_CV.pkl",
-        "final_CV_results.csv",
+        "final_CV.pkl",
+        "final_CV_hparam_search.csv",
         "final_hyperparameters.pkl",
         "final_model.pkl",
     ]

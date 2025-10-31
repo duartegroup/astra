@@ -39,6 +39,7 @@ def get_CLI_parser() -> argparse.ArgumentParser:
     - CV_results_path: Path to the directory containing the CV results
     - main_metric: The main metric to use for comparison
     - sec_metrics: Secondary metrics to use for comparison
+    - parametric: Whether to use parametric statistical tests for model comparison.
 
     Returns
     -------
@@ -189,13 +190,11 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         type=str,
         nargs="+",
         help="Path to a single directory containing CV results, or a list of directories\n"
-        "containing CV results, as returned by scikit-learn's BaseSearchCV.cv_results_.\n"
-        "If a single directory is provided, CV results for the different models should be\n"
-        "saved in a file ending with '_CV_results.csv', and this ending will be removed to\n"
-        "get the model name.\n"
-        "If multiple directories are provided, each should contain the CV results for a\n"
-        "different model saved in a file ending with '_CV_results.csv', and the parent\n"
-        "directory will be used as the model name.",
+        "containing CV results. CV results should be pickled dictionaries with metrics as\n"
+        "keys and lists of scores as values, for example, `final_CV.pkl` returned by\n"
+        "astra benchmark, and ending with `final_CV.pkl`. The model name will be the parent\n"
+        "directory if passing a list of paths, or the file name (minus the `final_CV.pkl`)\n"
+        "if passing a single directory.",
     )
     compare_parser.add_argument(
         "--main_metric",
@@ -210,10 +209,13 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         help="Secondary metrics to use for comparison",
     )
     compare_parser.add_argument(
-        "--n_folds",
-        type=int,
-        default=5,
-        help="Number of CV folds. Default: 5.",
+        "--parametric",
+        type=str,
+        choices=["True", "False", "auto"],
+        default="auto",
+        help="Whether to use parametric statistical tests for model comparison.\n"
+        "If 'auto' (default), the assumptions of parametric tests will be checked,\n"
+        "and parametric tests will be used if the assumptions are met.",
     )
 
     return parser
@@ -264,36 +266,35 @@ def main() -> int:
     parser = get_CLI_parser()
     args = parser.parse_args()
 
-    if isinstance(args.fold_col, list) and len(args.fold_col) == 1:
-        args.fold_col = args.fold_col[0]
-
-    if args.config:
-        config = load_config(args.config)
-
-        # Override CLI arguments with config values
-        for key, value in config.items():
-            setattr(args, key, value)
-
-        if args.data is None:
-            raise ValueError("The config file must include a 'data' field.")
-
-        # Custom model settings
-        if "models" in config:
-            args.models = {}
-            for model in config["models"]:
-                model_name = model["name"]
-                model_params = model.get("params", None)
-                hparam_grid = model.get("hparam_grid", None)
-                args.models[model_name] = {
-                    "params": model_params,
-                    "hparam_grid": hparam_grid,
-                }
-
-    # convert all args.main_metric and args.sec_metrics to lowercase
-    args.main_metric = args.main_metric.lower()
-    args.sec_metrics = [metric.lower() for metric in args.sec_metrics]
-
     if args.command == "benchmark":
+        if isinstance(args.fold_col, list) and len(args.fold_col) == 1:
+            args.fold_col = args.fold_col[0]
+
+        if args.config:
+            config = load_config(args.config)
+
+            # Override CLI arguments with config values
+            for key, value in config.items():
+                setattr(args, key, value)
+
+            if args.data is None:
+                raise ValueError("The config file must include a 'data' field.")
+
+            # Custom model settings
+            if "models" in config:
+                args.models = {}
+                for model in config["models"]:
+                    model_name = model["name"]
+                    model_params = model.get("params", None)
+                    hparam_grid = model.get("hparam_grid", None)
+                    args.models[model_name] = {
+                        "params": model_params,
+                        "hparam_grid": hparam_grid,
+                    }
+
+        args.main_metric = args.main_metric.lower()
+        args.sec_metrics = [metric.lower() for metric in args.sec_metrics]
+
         benchmark.run(
             data=args.data,
             name=args.name,
@@ -314,13 +315,18 @@ def main() -> int:
             custom_models=args.models if hasattr(args, "models") else None,
             n_jobs=args.n_jobs,
         )
+
     elif args.command == "compare":
+        args.main_metric = args.main_metric.lower()
+        args.sec_metrics = [metric.lower() for metric in args.sec_metrics]
+
         compare.run(
             CV_results=args.CV_results,
             main_metric=args.main_metric,
             sec_metrics=args.sec_metrics,
-            n_folds=args.n_folds,
+            parametric=args.parametric,
         )
+
     else:
         parser.print_help()
         return 1

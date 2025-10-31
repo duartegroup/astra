@@ -1,10 +1,11 @@
 import logging
 import os
+import pickle
 
-import pandas as pd
+import numpy as np
 
-from .metrics import LOWER_BETTER
 from .model_selection import (
+    check_assumptions,
     check_best_model,
     find_n_best_models,
     get_best_model,
@@ -14,7 +15,10 @@ from .utils import get_scores
 
 
 def run(
-    CV_results: list[str], main_metric: str, sec_metrics: list[str], n_folds: int
+    CV_results: list[str],
+    main_metric: str,
+    sec_metrics: list[str],
+    parametric: str | bool = "auto",
 ) -> None:
     """
     Compare the results of different models using the CV results.
@@ -27,8 +31,9 @@ def run(
         The main metric to use for comparison.
     sec_metrics : list of str
         Secondary metrics to use for comparison.
-    n_folds : int
-        Number of CV folds.
+    parametric : str or bool, default="auto"
+        Whether to use parametric tests. If 'auto', the assumptions of parametric tests
+        will be checked, and parametric tests will be used if the assumptions are met.
 
     Returns
     -------
@@ -59,43 +64,40 @@ def run(
 
     for CV_results_path in CV_results:
         for file in os.listdir(CV_results_path):
-            if file.endswith("_CV_results.csv"):
-                cv_results_df = pd.read_csv(CV_results_path + file)
+            if file.endswith("final_CV.pkl"):
+                with open(CV_results_path + file, "rb") as f:
+                    cv_results = pickle.load(f)
 
-                assert (
-                    f"rank_test_{main_metric}" in cv_results_df.columns
-                ), f"{file} does not contain results for {main_metric}"
+                assert main_metric in cv_results, (
+                    f"{file} does not contain results for {main_metric}"
+                )
                 for metric in sec_metrics:
-                    assert (
-                        f"rank_test_{metric}" in cv_results_df.columns
-                    ), f"{file} does not contain results for {metric}"
+                    assert metric in cv_results, (
+                        f"{file} does not contain results for {metric}"
+                    )
 
                 if all_in_one_dir:
-                    # remove the "_CV_results.csv" part of the filename
-                    model_name = file.split("_CV_results.csv")[0]
+                    model_name = file.split("final_CV.pkl")[0]
                 else:
-                    # use the parent directory as the model name
                     model_name = CV_results_path.split("/")[-2]
 
-                all_results[model_name] = {}
+                all_results[model_name] = {
+                    metric: cv_results[metric] for metric in [main_metric] + sec_metrics
+                }
 
-                for metric in [main_metric] + sec_metrics:
-                    test_score_columns = [
-                        col
-                        for col in cv_results_df.columns
-                        if ("split" in col) and (f"_test_{metric}" in col)
-                    ]
-                    scores = [
-                        cv_results_df[
-                            cv_results_df[f"rank_test_{main_metric}"] == 1
-                        ].iloc[0][col]
-                        for col in test_score_columns
-                    ]
-                    # for metrics where lower is better, we need to negate the scores
-                    # as they will have been negated in the CV
-                    if metric in LOWER_BETTER:
-                        scores = [-score for score in scores]
-                    all_results[model_name][metric] = scores
+    logging.info("Starting comparison of CV results.")
+
+    if parametric == "auto":
+        logging.info("Will check assumptions for parametric tests and use them if met.")
+    elif parametric is True:
+        logging.info("Using parametric tests.")
+    elif parametric is False:
+        logging.info("Using non-parametric tests.")
+    else:
+        raise ValueError(
+            "`parametric` must be one of [True, False, 'auto']. "
+            f"Got {parametric} instead."
+        )
 
     if len(all_results) == 0:
         raise ValueError("No CV results found")
@@ -104,24 +106,34 @@ def run(
         raise ValueError("Only one CV result found, cannot compare")
 
     elif len(all_results) == 2:
-        logging.info(
-            "Two CV results found, comparing them using Wilcoxon rank-sum test"
-        )
-        _, rank_sum = perform_statistical_tests(all_results, main_metric)
-        better_model = check_best_model(all_results, rank_sum, main_metric)
+        logging.info("Two CV results found. Performing pairwise comparison.")
+
+        if parametric == "auto":
+            logging.info("Checking assumptions for parametric tests.")
+            parametric = check_assumptions(results_dict=all_results, verbose=False)
+            logging.info(f"Assumptions of parametric tests met: {parametric}.")
+        elif parametric is True:
+            logging.info("Checking assumptions for parametric tests.")
+            _ = check_assumptions(results_dict=all_results, verbose=True)
+
+        _, naive_stats = perform_statistical_tests(all_results, main_metric, parametric)
+        better_model = check_best_model(all_results, naive_stats, main_metric)
+
         if better_model:
             logging.info(
                 f"{better_model} is significantly better according to {main_metric}"
             )
+
         else:
             for metric in sec_metrics:
-                _, rank_sum = perform_statistical_tests(all_results, metric)
-                better_model = check_best_model(all_results, rank_sum, metric)
+                _, naive_stats = perform_statistical_tests(all_results, metric)
+                better_model = check_best_model(all_results, naive_stats, metric)
                 if better_model:
                     logging.info(
                         f"{better_model} is significantly better according to {metric}"
                     )
                     break
+
         if not better_model:
             logging.info("No significant difference found between the models")
 
@@ -129,8 +141,20 @@ def run(
         logging.info(
             f"{len(all_results)} CV results found, comparing them using Friedman test"
         )
+
+        if parametric == "auto":
+            logging.info("Checking assumptions for parametric tests.")
+            parametric = check_assumptions(results_dict=all_results, verbose=False)
+            logging.info(f"Assumptions of parametric tests met: {parametric}.")
+        elif parametric is True:
+            logging.info("Checking assumptions for parametric tests.")
+            _ = check_assumptions(results_dict=all_results, verbose=True)
+
         n_best_models = find_n_best_models(
-            results_dic=all_results, metric=main_metric, bf_corr=True
+            results_dic=all_results,
+            metric=main_metric,
+            parametric=parametric,
+            bf_corr=True,
         )
         logging.info(f"Best models based on {main_metric}:")
         for model in n_best_models:
@@ -141,32 +165,37 @@ def run(
             results_dict=best_results,
             main_metric=main_metric,
             secondary_metrics=sec_metrics,
+            parametric=parametric,
             bf_corr=True,
         )
         logging.info(f"Best model overall: {best_model}. Reason: {reason}.")
+
         if all_in_one_dir:
-            cv_results_df = pd.read_csv(CV_results[0] + best_model + "_CV_results.csv")
+            with open(CV_results[0] + best_model + "final_CV.pkl", "rb") as f:
+                cv_results = pickle.load(f)
         else:
             for CV_results_path in CV_results:
                 if best_model == CV_results_path.split("/")[-2]:
                     for file in os.listdir(CV_results_path):
-                        if file.endswith("_CV_results.csv"):
-                            cv_results_df = pd.read_csv(CV_results_path + file)
+                        if file.endswith("final_CV.pkl"):
+                            with open(CV_results_path + file, "rb") as f:
+                                cv_results = pickle.load(f)
                             break
                     break
-        mean_score_main, std_score_main, median_score_main, sec_metrics_scores = (
-            get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
-        )
+
         print("-" * 50)
         print("Results:")
         print("-" * 50)
-        print(f"Mean {main_metric}:", f"{mean_score_main:.3f} ± {std_score_main:.3f}.")
-        print(f"Median {main_metric}:", f"{median_score_main:.3f}.")
+        print(
+            f"Mean {main_metric}:",
+            f"{np.mean(cv_results[main_metric]):.3f} ± {np.std(cv_results[main_metric]):.3f}.",
+        )
+        print(f"Median {main_metric}:", f"{np.median(cv_results[main_metric]):.3f}.")
         for metric in sec_metrics:
             print(
                 f"Mean {metric}:",
-                f"{sec_metrics_scores[metric][0]:.3f} ± {sec_metrics_scores[metric][1]:.3f}.\n",
+                f"{np.mean(cv_results[metric]):.3f} ± {np.std(cv_results[metric]):.3f}.\n",
                 f"Median {metric}:",
-                f"{sec_metrics_scores[metric][2]:.3f}.",
+                f"{np.median(cv_results[metric]):.3f}.",
             )
         print("-" * 50)

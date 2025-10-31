@@ -139,9 +139,9 @@ def run(
 
     if isinstance(fold_col, str):
         n_folds = data_df[fold_col].nunique()
-        assert (
-            fold_col in data_df.columns
-        ), f"Data does not contain a '{fold_col}' column."
+        assert fold_col in data_df.columns, (
+            f"Data does not contain a '{fold_col}' column."
+        )
         repeated_CV = False
     elif isinstance(fold_col, list):
         n_folds = [data_df[col].nunique() for col in fold_col]
@@ -436,14 +436,20 @@ def run(
                 ]
         else:
             cv_results_df = pd.DataFrame(model.cv_results_)
-            mean_score_main, std_score_main, median_score_main, sec_metrics_scores = (
-                get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
-            )
+            (
+                final_results_dict,
+                mean_score_main,
+                std_score_main,
+                median_score_main,
+                sec_metrics_scores,
+            ) = get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
+        with open(f"results/{name}/final_CV.pkl", "wb") as f:
+            pickle.dump(final_results_dict, f)
         with open(f"results/{name}/final_model.pkl", "wb") as f:
             pickle.dump(final_model, f)
         with open(f"results/{name}/final_hyperparameters.pkl", "wb") as f:
             pickle.dump(final_hyperparameters, f)
-        cv_results_df.to_csv(f"results/{name}/final_CV_results.csv")
+        cv_results_df.to_csv(f"results/{name}/final_CV_hparam_search.csv")
 
         print_final_results(
             final_model_name=final_model_name,

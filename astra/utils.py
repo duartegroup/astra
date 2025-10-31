@@ -124,9 +124,9 @@ def get_models(
     """
     if main_metric in REGRESSION_METRICS:
         for metric in sec_metrics:
-            assert (
-                metric in REGRESSION_METRICS
-            ), f"Secondary metric '{metric}' is not a regression metric."
+            assert metric in REGRESSION_METRICS, (
+                f"Secondary metric '{metric}' is not a regression metric."
+            )
 
         models = REGRESSORS
         params = REGRESSOR_PARAMS_OPTUNA if use_optuna else REGRESSOR_PARAMS
@@ -134,9 +134,9 @@ def get_models(
 
     elif main_metric in CLASSIFICATION_METRICS:
         for metric in sec_metrics:
-            assert (
-                metric in CLASSIFICATION_METRICS
-            ), f"Secondary metric '{metric}' is not a classification metric."
+            assert metric in CLASSIFICATION_METRICS, (
+                f"Secondary metric '{metric}' is not a classification metric."
+            )
 
         if (
             main_metric in ["roc_auc", "pr_auc"]
@@ -349,7 +349,9 @@ def get_estimator_name(model: BaseEstimator) -> str:
 
 def get_scores(
     cv_results_df: pd.DataFrame, main_metric: str, sec_metrics: list[str], n_folds: int
-) -> tuple[float, float, float, dict[str, tuple[float, float, float]]]:
+) -> tuple[
+    dict[str, list[float]], float, float, float, dict[str, tuple[float, float, float]]
+]:
     """
     Get means and standard deviations of the main and secondary metrics from the CV results.
 
@@ -366,9 +368,11 @@ def get_scores(
 
     Returns
     -------
-    tuple of floats and dict of str to tuple of floats
-        Mean, standard deviation and median of the main metric, and means, standard deviations,
-        and medians of the secondary metrics.
+    tuple of (dict, float, float, float, dict)
+        A tuple containing:
+        - A dictionary with metrics as keys and lists of scores as values.
+        - Mean, standard deviation and median of the main metric,
+        - and a dictionary with secondary metrics as keys and tuples of (mean, std, median) as values.
     """
     required_columns = [
         f"rank_test_{metric}" for metric in [main_metric] + sec_metrics
@@ -377,23 +381,29 @@ def get_scores(
         for metric in [main_metric] + sec_metrics
         for i in range(n_folds)
     ]
-    assert all(
-        [col in cv_results_df.columns for col in required_columns]
-    ), f"CV results do not contain all required columns: {required_columns}"
+    assert all([col in cv_results_df.columns for col in required_columns]), (
+        f"CV results do not contain all required columns: {required_columns}"
+    )
 
+    final_results_dict = {}
     all_main_scores = [
         cv_results_df[cv_results_df[f"rank_test_{main_metric}"] == 1].iloc[0][
             f"split{i}_test_{main_metric}"
         ]
         for i in range(n_folds)
     ]
-    mean_score_main = (
+    final_results_dict[main_metric] = list(
+        -np.array(all_main_scores)
+        if (main_metric in LOWER_BETTER)
+        else np.array(all_main_scores)
+    )
+    mean_score_main = float(
         -np.mean(all_main_scores)
         if (main_metric in LOWER_BETTER)
         else np.mean(all_main_scores)
     )
-    std_score_main = np.std(all_main_scores)
-    median_score_main = (
+    std_score_main = float(np.std(all_main_scores))
+    median_score_main = float(
         -np.median(all_main_scores)
         if (main_metric in LOWER_BETTER)
         else np.median(all_main_scores)
@@ -407,17 +417,30 @@ def get_scores(
             ]
             for i in range(n_folds)
         ]
+        final_results_dict[metric] = list(
+            -np.array(all_scores) if (metric in LOWER_BETTER) else np.array(all_scores)
+        )
         sec_metrics_scores[metric] = (
-            -np.mean(all_scores) if (metric in LOWER_BETTER) else np.mean(all_scores),
-            np.std(all_scores),
-            (
+            float(
+                -np.mean(all_scores)
+                if (metric in LOWER_BETTER)
+                else np.mean(all_scores)
+            ),
+            float(np.std(all_scores)),
+            float(
                 -np.median(all_scores)
                 if (metric in LOWER_BETTER)
                 else np.median(all_scores)
             ),
         )
 
-    return mean_score_main, std_score_main, median_score_main, sec_metrics_scores
+    return (
+        final_results_dict,
+        mean_score_main,
+        std_score_main,
+        median_score_main,
+        sec_metrics_scores,
+    )
 
 
 def load_config(file_path: str) -> tuple:
