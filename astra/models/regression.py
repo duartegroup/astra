@@ -7,10 +7,17 @@ REGRESSORS : dict[str, BaseEstimator]
     A dictionary mapping model names to their corresponding scikit-learn regressor instances.
 REGRESSOR_PARAMS : dict[str, dict[str, list]]
     A dictionary mapping model names to dictionaries of hyperparameters to search over.
+REGRESSOR_PARAMS_OPTUNA : dict[str, dict[str, optuna.distributions]]
+    A dictionary mapping model names to dictionaries of hyperparameters to search over using Optuna.
 """
 
 from catboost import CatBoostRegressor
 from lightgbm import LGBMRegressor
+from optuna.distributions import (
+    CategoricalDistribution,
+    FloatDistribution,
+    IntDistribution,
+)
 from sklearn.ensemble import (
     GradientBoostingRegressor,
     HistGradientBoostingRegressor,
@@ -98,5 +105,72 @@ REGRESSOR_PARAMS = {
         iterations=[30, 50, 100, 150, 200],
         learning_rate=[0.01, 0.1],
         depth=[2, 4, 6, 8, 10],
+    ),
+}
+
+REGRESSOR_PARAMS_OPTUNA = {
+    "XGBRegressor": dict(
+        n_estimators=IntDistribution(10, 500),
+        max_leaves=IntDistribution(0, 50),
+        learning_rate=FloatDistribution(0.01, 1.0, log=True),
+        max_depth=IntDistribution(3, 30),
+    ),
+    "RandomForestRegressor": dict(
+        n_estimators=IntDistribution(10, 200),
+        max_depth=IntDistribution(0, 100),
+        min_samples_split=IntDistribution(2, 10),
+        min_samples_leaf=IntDistribution(1, 5),
+        max_leaf_nodes=IntDistribution(0, 1000),
+        bootstrap=CategoricalDistribution([True, False]),
+    ),
+    "GradientBoostingRegressor": dict(
+        loss=CategoricalDistribution(["squared_error", "absolute_error"]),
+        learning_rate=FloatDistribution(0.01, 1.0, log=True),
+        n_estimators=IntDistribution(10, 200),
+        min_samples_split=IntDistribution(2, 10),
+        min_samples_leaf=IntDistribution(1, 5),
+        max_depth=IntDistribution(1, 5),
+        max_leaf_nodes=IntDistribution(0, 1000),
+    ),
+    "HistGradientBoostingRegressor": dict(
+        loss=CategoricalDistribution(["squared_error", "absolute_error"]),
+        learning_rate=FloatDistribution(0.01, 1.0, log=True),
+        max_iter=IntDistribution(10, 200),
+        max_leaf_nodes=IntDistribution(10, 50),
+        min_samples_leaf=IntDistribution(10, 30),
+    ),
+    "KNeighborsRegressor": dict(
+        n_neighbors=IntDistribution(3, 20),
+        weights=CategoricalDistribution(["uniform", "distance"]),
+    ),
+    "SVR": dict(
+        kernel=CategoricalDistribution(["linear", "poly", "rbf", "sigmoid"]),
+        C=FloatDistribution(1, 100, log=True),
+    ),
+    "Ridge": dict(alpha=FloatDistribution(0.1, 5.0)),
+    "BayesianRidge": dict(
+        max_iter=IntDistribution(100, 500),
+        alpha_1=FloatDistribution(1e-7, 1e-5, log=True),
+        alpha_2=FloatDistribution(1e-7, 1e-5, log=True),
+        lambda_1=FloatDistribution(1e-7, 1e-5, log=True),
+        lambda_2=FloatDistribution(1e-7, 1e-5, log=True),
+    ),
+    "KernelRidge": dict(
+        alpha=FloatDistribution(0.5, 1.5, log=True),
+        kernel=CategoricalDistribution(
+            ["linear", "poly", "polynomial", "rbf", "laplacian", "sigmoid"]
+        ),
+    ),
+    "LGBMRegressor": dict(
+        boosting_type=CategoricalDistribution(["gbdt", "dart"]),
+        num_leaves=IntDistribution(10, 50),
+        max_depth=IntDistribution(-1, 30),
+        learning_rate=FloatDistribution(0.01, 1.0, log=True),
+        n_estimators=IntDistribution(10, 500),
+    ),
+    "CatBoostRegressor": dict(
+        iterations=IntDistribution(30, 200),
+        learning_rate=FloatDistribution(0.01, 1.0, log=True),
+        depth=IntDistribution(2, 10),
     ),
 }

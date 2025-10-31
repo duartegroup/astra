@@ -21,6 +21,9 @@ def get_CLI_parser() -> argparse.ArgumentParser:
     - features: Name of the column containing the features. Default: Features.
     - target: Name of the column containing the target. Default: Target.
     - run_nested_CV: Whether to run nested CV with hyperparameter tuning for the best models. Default: False.
+    - use_optuna: Whether to use Optuna for hyperparameter optimization. If not set, GridSearchCV from scikit-learn will be used. Default: False.
+    - n_trials: Number of trials for Optuna hyperparameter search. Default: 100.
+    - timeout: Time limit (in seconds) for hyperparameter search. Default: 3600.
     - fold_col: Name(s) of the column(s) containing the CV fold number(s). If a list is provided, models will be benchmarked in an nxk-fold CV, where n is the number of repeats and k is the number of folds. If a single string is provided, it will be treated as a single fold column. nxk-fold CV does not currently support nested CV and final hyperparameter tuning. Default: Fold.
     - main_metric: Main metric to use for model selection. This will be used to infer the prediction task (classification or regression). Default: R2.
     - sec_metrics: Secondary metrics to use for model selection. Default: MSE MAE.
@@ -90,6 +93,26 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         default=False,
         help="Whether to run nested CV with hyperparameter tuning for the best\n"
         "models. Default: False.",
+    )
+    benchmark_parser.add_argument(
+        "--use_optuna",
+        action="store_true",
+        default=False,
+        help="Whether to use Optuna for hyperparameter optimization.\n"
+        "If not set, GridSearchCV from scikit-learn will be used.\n"
+        "Default: False.",
+    )
+    benchmark_parser.add_argument(
+        "--n_trials",
+        type=int,
+        default=100,
+        help="Number of trials for Optuna hyperparameter search. Default: 100.",
+    )
+    benchmark_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=3600,
+        help="Time limit (in seconds) for Optuna hyperparameter search. Default: 3600.",
     )
     benchmark_parser.add_argument(
         "--fold_col",
@@ -277,6 +300,9 @@ def main() -> int:
             features=args.features,
             target=args.target,
             run_nested_CV=args.run_nested_CV,
+            use_optuna=args.use_optuna,
+            n_trials=args.n_trials,
+            timeout=args.timeout,
             fold_col=args.fold_col,
             main_metric=args.main_metric,
             sec_metrics=args.sec_metrics,

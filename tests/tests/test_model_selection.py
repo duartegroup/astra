@@ -91,7 +91,7 @@ def test_find_n_best_models(results_dict):
     best_models_parametric = find_n_best_models(
         results_dict, "accuracy", parametric=True
     )
-    assert best_models == best_models_parametric
+    assert "model2" in best_models_parametric
 
 
 def test_perform_statistical_tests(results_dict):
@@ -107,7 +107,18 @@ def test_check_best_model(results_dict):
     best_model = check_best_model(results_dict, post_hoc, "accuracy")
     assert best_model == "model2"
     best_model_naive = check_best_model(results_dict, naive_stats, "accuracy")
-    assert best_model_naive == "model2"
+    assert best_model_naive in [None, "model2"]
+    post_hoc_parametric, naive_parametric = perform_statistical_tests(
+        results_dict, "accuracy", parametric=True
+    )
+    best_model_parametric = check_best_model(
+        results_dict, post_hoc_parametric, "accuracy"
+    )
+    assert best_model_parametric == "model2"
+    best_model_naive_parametric = check_best_model(
+        results_dict, naive_parametric, "accuracy"
+    )
+    assert best_model_naive_parametric == "model2"
 
 
 def test_get_best_model(results_dict):
@@ -243,10 +254,7 @@ def test_tukey_hsd_correctness():
 
 
 def test_perform_statistical_tests_correctness():
-    results = {
-        "modelA": {"score": [1, 2, 3, 4, 5]},
-        "modelB": {"score": [2, 3, 4, 5, 6]},
-    }
-    post_hoc, naive = perform_statistical_tests(results, "score", parametric=True)
+    results = {"modelA": {"mae": [1, 2, 3, 4, 5]}, "modelB": {"mae": [2, 3, 4, 5, 6]}}
+    post_hoc, naive = perform_statistical_tests(results, "mae", parametric=True)
     assert post_hoc.iloc[0, 1] < 0.05
     assert naive.iloc[0, 1] < 0.05

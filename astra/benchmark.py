@@ -2,6 +2,7 @@ import logging
 import os
 import pickle
 
+import numpy as np
 import pandas as pd
 
 from .model_selection import (
@@ -9,6 +10,7 @@ from .model_selection import (
     find_n_best_models,
     get_best_hparams,
     get_best_model,
+    get_cv_performance,
     get_optimised_cv_performance,
     run_CV,
 )
@@ -29,6 +31,9 @@ def run(
     features: str = "Features",
     target: str = "Target",
     run_nested_CV: bool = False,
+    use_optuna: bool = False,
+    n_trials: int = 100,
+    timeout: int = 3600,
     fold_col: str | list[str] = "Fold",
     main_metric: str = "R2",
     sec_metrics: list[str] = ["MSE", "MAE"],
@@ -61,6 +66,13 @@ def run(
         Name of the column containing the target. Default: Target.
     run_nested_CV : bool, default=False
         Whether to run nested CV with hyperparameter tuning for the best models.
+    use_optuna : bool, default=False
+        Whether to use Optuna for hyperparameter optimization. If not set, GridSearchCV
+        from scikit-learn will be used.
+    n_trials : int, default=100
+        Number of trials for Optuna hyperparameter search.
+    timeout : int, default=3600
+        Time limit (in seconds) for Optuna hyperparameter search.
     fold_col : str or list[str], default='Fold'
         Name(s) of the column(s) containing the CV fold number(s). If a list is provided,
         models will be benchmarked in an nxk-fold CV, where n is the number of repeats
@@ -161,6 +173,14 @@ def run(
         logging.info(f"Running {n_folds}-fold CV.")
         logging.info(f"Fold column: {fold_col}")
 
+    if use_optuna:
+        logging.info(
+            f"Using Optuna for hyperparameter optimization, with {n_trials} trials"
+            f" and a timeout of {timeout} seconds."
+        )
+    else:
+        logging.info("Using grid search hyperparameter optimization.")
+
     if parametric == "auto":
         logging.info("Will check assumptions for parametric tests and use them if met.")
     elif parametric is True:
@@ -179,6 +199,7 @@ def run(
         sec_metrics=sec_metrics,
         scaler=scaler,
         custom_models=custom_models,
+        use_optuna=use_optuna,
     )
     logging.info(f"Main metric: {main_metric}")
     logging.info(f"Secondary metrics: {sec_metrics}")
@@ -190,26 +211,24 @@ def run(
             logging.info(f"Imputing missing values with constant value: {impute}.")
         else:
             raise ValueError(
-                "`impute` must be a string or a number. " f"Got {impute} instead."
+                f"`impute` must be a string or a number. Got {impute} instead."
             )
     if remove_constant is not None:
         if not isinstance(remove_constant, float) and not remove_constant == 0:
             raise ValueError(
-                "`remove_constant` must be a float. " f"Got {remove_constant} instead."
+                f"`remove_constant` must be a float. Got {remove_constant} instead."
             )
         logging.info(f"Removing features with variance below {remove_constant}.")
     if remove_correlated is not None:
         if not isinstance(remove_correlated, float):
             raise ValueError(
-                "`remove_correlated` must be a float. "
-                f"Got {remove_correlated} instead."
+                f"`remove_correlated` must be a float. Got {remove_correlated} instead."
             )
         logging.info(f"Removing features with correlation above {remove_correlated}.")
     if scaler is not None:
         if scaler not in ["Standard", "MinMax"]:
             raise ValueError(
-                "`scaler` must be one of ['Standard', 'MinMax']. "
-                f"Got {scaler} instead."
+                f"`scaler` must be one of ['Standard', 'MinMax']. Got {scaler} instead."
             )
         logging.info(f"Using {scaler.lower()} scaler.")
 
@@ -325,6 +344,9 @@ def run(
                     main_metric=main_metric,
                     parameters=params[model],
                     n_jobs=n_jobs,
+                    use_optuna=use_optuna,
+                    n_trials=n_trials,
+                    timeout=timeout,
                     impute=impute,
                     remove_constant=remove_constant,
                     remove_correlated=remove_correlated,
@@ -370,6 +392,9 @@ def run(
             sec_metrics=sec_metrics,
             parameters=params[best_model],
             n_jobs=n_jobs,
+            use_optuna=use_optuna,
+            n_trials=n_trials,
+            timeout=timeout,
             impute=impute,
             remove_constant=remove_constant,
             remove_correlated=remove_correlated,
@@ -384,10 +409,36 @@ def run(
             key.replace(f"{final_model_name.lower()}__", ""): value
             for key, value in final_hyperparameters.items()
         }
-        cv_results_df = pd.DataFrame(model.cv_results_)
-        mean_score_main, std_score_main, median_score_main, sec_metrics_scores = (
-            get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
-        )
+        if use_optuna:
+            cv_results_df = pd.DataFrame(model.trials_dataframe())
+            final_results_dict = get_cv_performance(
+                model_class=models[best_model],
+                df=data_df,
+                features_col=features,
+                target_col=target,
+                fold_col=fold_col,
+                metric_list=[main_metric] + sec_metrics,
+                impute=impute,
+                remove_constant=remove_constant,
+                remove_correlated=remove_correlated,
+                scaler=scaler,
+                custom_params=final_hyperparameters,
+            )
+            mean_score_main = np.mean(final_results_dict[main_metric])
+            std_score_main = np.std(final_results_dict[main_metric])
+            median_score_main = np.median(final_results_dict[main_metric])
+            sec_metrics_scores = {}
+            for metric in sec_metrics:
+                sec_metrics_scores[metric] = [
+                    np.mean(final_results_dict[metric]),
+                    np.std(final_results_dict[metric]),
+                    np.median(final_results_dict[metric]),
+                ]
+        else:
+            cv_results_df = pd.DataFrame(model.cv_results_)
+            mean_score_main, std_score_main, median_score_main, sec_metrics_scores = (
+                get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
+            )
         with open(f"results/{name}/final_model.pkl", "wb") as f:
             pickle.dump(final_model, f)
         with open(f"results/{name}/final_hyperparameters.pkl", "wb") as f:
