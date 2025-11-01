@@ -295,6 +295,11 @@ def main() -> int:
         args.main_metric = args.main_metric.lower()
         args.sec_metrics = [metric.lower() for metric in args.sec_metrics]
 
+        if args.parametric == "True":
+            args.parametric = True
+        if args.parametric == "False":
+            args.parametric = False
+
         benchmark.run(
             data=args.data,
             name=args.name,
@@ -319,6 +324,11 @@ def main() -> int:
     elif args.command == "compare":
         args.main_metric = args.main_metric.lower()
         args.sec_metrics = [metric.lower() for metric in args.sec_metrics]
+
+        if args.parametric == "True":
+            args.parametric = True
+        if args.parametric == "False":
+            args.parametric = False
 
         compare.run(
             CV_results=args.CV_results,
