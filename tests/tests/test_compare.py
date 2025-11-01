@@ -5,6 +5,8 @@ import subprocess
 
 import pytest
 
+from astra.compare import run
+
 
 @pytest.fixture
 def temp_dir():
@@ -133,6 +135,8 @@ def test_path_does_not_exist(temp_dir):
     ]
     result = run_command(command)
     assert "does not exist" in result.stderr
+    with pytest.raises(ValueError, match="does not exist"):
+        run(["non_existent_dir"], "roc_auc", ["pr_auc"])
 
 
 def test_directory_is_empty(temp_dir):
@@ -149,6 +153,8 @@ def test_directory_is_empty(temp_dir):
     ]
     result = run_command(command)
     assert "is empty" in result.stderr
+    with pytest.raises(ValueError, match="is empty"):
+        run([dir_path], "roc_auc", ["pr_auc"])
 
 
 def test_no_cv_results_found(temp_dir):
@@ -167,6 +173,8 @@ def test_no_cv_results_found(temp_dir):
     ]
     result = run_command(command)
     assert "No CV results found" in result.stderr
+    with pytest.raises(ValueError, match="No CV results found"):
+        run([dir_path], "roc_auc", ["pr_auc"])
 
 
 def test_only_one_cv_result_found(temp_dir):
@@ -189,6 +197,8 @@ def test_only_one_cv_result_found(temp_dir):
     ]
     result = run_command(command)
     assert "Only one CV result found" in result.stderr
+    with pytest.raises(ValueError, match="Only one CV result found"):
+        run([dir_path], "roc_auc", ["pr_auc"])
 
 
 def test_main_metric_missing(cv_results_single_dir):
@@ -203,6 +213,8 @@ def test_main_metric_missing(cv_results_single_dir):
     ]
     result = run_command(command)
     assert "does not contain results for accuracy" in result.stderr
+    with pytest.raises(AssertionError, match="does not contain results for accuracy"):
+        run([cv_results_single_dir], "accuracy", ["pr_auc"])
 
 
 def test_run_sec_metric_missing(cv_results_single_dir):
@@ -217,6 +229,8 @@ def test_run_sec_metric_missing(cv_results_single_dir):
     ]
     result = run_command(command)
     assert "does not contain results for accuracy" in result.stderr
+    with pytest.raises(AssertionError, match="does not contain results for accuracy"):
+        run([cv_results_single_dir], "roc_auc", ["accuracy"])
 
 
 def test_invalid_parametric(cv_results_single_dir):
@@ -233,6 +247,8 @@ def test_invalid_parametric(cv_results_single_dir):
     ]
     result = run_command(command)
     assert "invalid choice: 'invalid'" in result.stderr
+    with pytest.raises(ValueError, match="Got invalid instead."):
+        run([cv_results_single_dir], "roc_auc", ["pr_auc"], parametric="invalid")
 
 
 def test_two_models_single_dir(cv_results_single_dir_two_models):
@@ -247,6 +263,7 @@ def test_two_models_single_dir(cv_results_single_dir_two_models):
     ]
     result = run_command(command)
     assert result.returncode == 0
+    run([cv_results_single_dir_two_models], "roc_auc", ["pr_auc"])
 
 
 def test_multiple_models_single_dir(cv_results_single_dir):
@@ -261,6 +278,7 @@ def test_multiple_models_single_dir(cv_results_single_dir):
     ]
     result = run_command(command)
     assert result.returncode == 0
+    run([cv_results_single_dir], "roc_auc", ["pr_auc"])
 
 
 def test_two_models_two_dirs(cv_results_multiple_dirs):
@@ -279,6 +297,7 @@ def test_two_models_two_dirs(cv_results_multiple_dirs):
     ]
     result = run_command(command)
     assert result.returncode == 0
+    run(cv_results_multiple_dirs, "roc_auc", ["pr_auc"])
 
 
 def test_multiple_models_multiple_dirs(cv_results_multiple_dirs):
@@ -293,6 +312,7 @@ def test_multiple_models_multiple_dirs(cv_results_multiple_dirs):
     ]
     result = run_command(command)
     assert result.returncode == 0
+    run(cv_results_multiple_dirs, "roc_auc", ["pr_auc"])
 
 
 def test_two_models_single_dir_parametric_false(cv_results_single_dir_two_models):
@@ -309,6 +329,7 @@ def test_two_models_single_dir_parametric_false(cv_results_single_dir_two_models
     ]
     result = run_command(command)
     assert result.returncode == 0
+    run([cv_results_single_dir_two_models], "roc_auc", ["pr_auc"], parametric=False)
 
 
 def test_two_models_single_dir_parametric_true(cv_results_single_dir_two_models):
@@ -325,6 +346,7 @@ def test_two_models_single_dir_parametric_true(cv_results_single_dir_two_models)
     ]
     result = run_command(command)
     assert result.returncode == 0
+    run([cv_results_single_dir_two_models], "roc_auc", ["pr_auc"], parametric=True)
 
 
 def test_multiple_models_single_dir_parametric_true(cv_results_single_dir):
@@ -341,6 +363,7 @@ def test_multiple_models_single_dir_parametric_true(cv_results_single_dir):
     ]
     result = run_command(command)
     assert result.returncode == 0
+    run([cv_results_single_dir], "roc_auc", ["pr_auc"], parametric=True)
 
 
 def test_multiple_models_single_dir_parametric_false(cv_results_single_dir):
@@ -357,6 +380,7 @@ def test_multiple_models_single_dir_parametric_false(cv_results_single_dir):
     ]
     result = run_command(command)
     assert result.returncode == 0
+    run([cv_results_single_dir], "roc_auc", ["pr_auc"], parametric=False)
 
 
 def test_two_models_two_dirs_parametric_false(cv_results_multiple_dirs):
@@ -377,6 +401,7 @@ def test_two_models_two_dirs_parametric_false(cv_results_multiple_dirs):
     ]
     result = run_command(command)
     assert result.returncode == 0
+    run(model_list, "roc_auc", ["pr_auc"], parametric=False)
 
 
 def test_two_models_two_dirs_parametric_true(cv_results_multiple_dirs):
@@ -397,6 +422,7 @@ def test_two_models_two_dirs_parametric_true(cv_results_multiple_dirs):
     ]
     result = run_command(command)
     assert result.returncode == 0
+    run(model_list, "roc_auc", ["pr_auc"], parametric=True)
 
 
 def test_multiple_models_multiple_dirs_parametric_true(cv_results_multiple_dirs):
@@ -413,6 +439,7 @@ def test_multiple_models_multiple_dirs_parametric_true(cv_results_multiple_dirs)
     ]
     result = run_command(command)
     assert result.returncode == 0
+    run(cv_results_multiple_dirs, "roc_auc", ["pr_auc"], parametric=True)
 
 
 def test_multiple_models_multiple_dirs_parametric_false(cv_results_multiple_dirs):
@@ -429,3 +456,4 @@ def test_multiple_models_multiple_dirs_parametric_false(cv_results_multiple_dirs
     ]
     result = run_command(command)
     assert result.returncode == 0
+    run(cv_results_multiple_dirs, "roc_auc", ["pr_auc"], parametric=False)
