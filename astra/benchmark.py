@@ -47,6 +47,7 @@ def run(
         | None
     ) = None,
     n_jobs: int = 1,
+    test_mode: bool = False,
 ) -> None:
     """
     Run the benchmark.
@@ -106,6 +107,8 @@ def run(
         Default models are defined in astra.models.classification and astra.models.regression.
     n_jobs : int, default=1
         Number of jobs to run in parallel for hyperparameter tuning.
+    test_mode : bool, default=False
+        Exists for compatibility with the unit tests. If True, will run in test mode.
 
     Raises
     ------
@@ -317,7 +320,11 @@ def run(
             logging.info(f"Best models based on {main_metric}:")
             for model in n_best_models:
                 print_file_console(
-                    file=logging.getLogger().handlers[0].stream.name,
+                    file=(
+                        logging.getLogger().handlers[0].stream.name
+                        if not test_mode
+                        else f"results/{name}/unit_test.log"
+                    ),
                     message=" " * 20 + f"{model}",
                 )
 
@@ -355,7 +362,11 @@ def run(
                 print_performance(
                     model_name=model,
                     results_dict=results[model],
-                    file=logging.getLogger().handlers[0].stream.name,
+                    file=(
+                        logging.getLogger().handlers[0].stream.name
+                        if not test_mode
+                        else f"results/{name}/unit_test.log"
+                    ),
                 )
                 with open(f"cache/{name}_nested_CV_ckpt.pkl", "wb") as f:
                     pickle.dump(results, f)
@@ -378,7 +389,11 @@ def run(
         print_performance(
             model_name=best_model,
             results_dict=results[best_model],
-            file=logging.getLogger().handlers[0].stream.name,
+            file=(
+                logging.getLogger().handlers[0].stream.name
+                if not test_mode
+                else f"results/{name}/unit_test.log"
+            ),
         )
     else:
         logging.info("Starting final hyperparameter tuning.")
@@ -436,14 +451,20 @@ def run(
                 ]
         else:
             cv_results_df = pd.DataFrame(model.cv_results_)
-            mean_score_main, std_score_main, median_score_main, sec_metrics_scores = (
-                get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
-            )
+            (
+                final_results_dict,
+                mean_score_main,
+                std_score_main,
+                median_score_main,
+                sec_metrics_scores,
+            ) = get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
+        with open(f"results/{name}/final_CV.pkl", "wb") as f:
+            pickle.dump(final_results_dict, f)
         with open(f"results/{name}/final_model.pkl", "wb") as f:
             pickle.dump(final_model, f)
         with open(f"results/{name}/final_hyperparameters.pkl", "wb") as f:
             pickle.dump(final_hyperparameters, f)
-        cv_results_df.to_csv(f"results/{name}/final_CV_results.csv")
+        cv_results_df.to_csv(f"results/{name}/final_CV_hparam_search.csv")
 
         print_final_results(
             final_model_name=final_model_name,
@@ -453,5 +474,9 @@ def run(
             std_score_main=std_score_main,
             median_score_main=median_score_main,
             sec_metrics_scores=sec_metrics_scores,
-            file=logging.getLogger().handlers[0].stream.name,
+            file=(
+                logging.getLogger().handlers[0].stream.name
+                if not test_mode
+                else f"results/{name}/unit_test.log"
+            ),
         )

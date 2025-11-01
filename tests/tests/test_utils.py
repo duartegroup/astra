@@ -398,15 +398,19 @@ def test_get_scores():
     )
 
     # Test with a metric where lower is better
-    mean_score, std_score, median_score, sec_scores = get_scores(
+    results_dict, mean_score, std_score, median_score, sec_scores = get_scores(
         cv_results_df, "mse", ["r2"], 2
     )
     assert np.isclose(mean_score, 0.105)
     assert np.isclose(std_score, 0.005)
     assert np.isclose(median_score, 0.105)
-    assert np.isclose(sec_scores["r2"][0], 0.695)
+    assert np.isclose(sec_scores["r2"][0], 0.895)
     assert np.isclose(sec_scores["r2"][1], 0.005)
-    assert np.isclose(sec_scores["r2"][2], 0.695)
+    assert np.isclose(sec_scores["r2"][2], 0.895)
+    assert "mse" in results_dict
+    assert "r2" in results_dict
+    assert results_dict["mse"] == [0.1, 0.11]
+    assert results_dict["r2"] == [0.9, 0.89]
 
     # Test with a metric where higher is better
     cv_results_df = pd.DataFrame(
@@ -419,15 +423,19 @@ def test_get_scores():
             "split1_test_f1": [0.79, 0.69, 0.59],
         }
     )
-    mean_score, std_score, median_score, sec_scores = get_scores(
+    results_dict, mean_score, std_score, median_score, sec_scores = get_scores(
         cv_results_df, "accuracy", ["f1"], 2
     )
     assert np.isclose(mean_score, 0.895)
     assert np.isclose(std_score, 0.005)
     assert np.isclose(median_score, 0.895)
-    assert np.isclose(sec_scores["f1"][0], 0.595)
+    assert np.isclose(sec_scores["f1"][0], 0.795)
     assert np.isclose(sec_scores["f1"][1], 0.005)
-    assert np.isclose(sec_scores["f1"][2], 0.595)
+    assert np.isclose(sec_scores["f1"][2], 0.795)
+    assert "accuracy" in results_dict
+    assert "f1" in results_dict
+    assert results_dict["accuracy"] == [0.9, 0.89]
+    assert results_dict["f1"] == [0.8, 0.79]
 
     # Test for missing columns
     with pytest.raises(AssertionError):
