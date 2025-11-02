@@ -335,10 +335,17 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">optuna.distributions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BaseDistribution</span><span class="p">,</span>
+    <span class="n">CategoricalDistribution</span><span class="p">,</span>
+    <span class="n">FloatDistribution</span><span class="p">,</span>
+    <span class="n">IntDistribution</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseEstimator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.feature_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">VarianceThreshold</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.impute</span><span class="w"> </span><span class="kn">import</span> <span class="n">KNNImputer</span><span class="p">,</span> <span class="n">SimpleImputer</span>
@@ -349,34 +356,30 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLASSIFICATION_METRICS</span><span class="p">,</span> <span class="n">LOWER_BETTER</span><span class="p">,</span> <span class="n">REGRESSION_METRICS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.models.classification</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">CLASSIFIER_PARAMS</span><span class="p">,</span>
+    <span class="n">CLASSIFIER_PARAMS_OPTUNA</span><span class="p">,</span>
     <span class="n">CLASSIFIERS</span><span class="p">,</span>
     <span class="n">NON_PROBABILISTIC_MODELS</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.models.regression</span><span class="w"> </span><span class="kn">import</span> <span class="n">REGRESSOR_PARAMS</span><span class="p">,</span> <span class="n">REGRESSORS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.models.regression</span><span class="w"> </span><span class="kn">import</span> <span class="n">REGRESSOR_PARAMS</span><span class="p">,</span> <span class="n">REGRESSOR_PARAMS_OPTUNA</span><span class="p">,</span> <span class="n">REGRESSORS</span>
 
 
 <div class="viewcode-block" id="get_data">
 <a class="viewcode-back" href="../../autosummary/astra.utils.html#astra.utils.get_data">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_data</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Load data from a file into a pandas DataFrame.</span>
+<span class="sd">    Reads a CSV, pickle, or parquet file and returns a pandas DataFrame.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data : str</span>
-<span class="sd">        Path to the data file. Supported formats: CSV, pickle, or parquet.</span>
+<span class="sd">        Path to the data file.</span>
 <span class="sd">    features : str</span>
-<span class="sd">        Name of the column containing features.</span>
+<span class="sd">        Name of the column containing the features.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    pd.DataFrame</span>
-<span class="sd">        DataFrame containing the loaded data.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If the file format is unsupported.</span>
+<span class="sd">        A pandas DataFrame containing the data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">):</span>
         <span class="n">data_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -401,7 +404,7 @@
     <span class="k">elif</span> <span class="n">data</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.parquet&quot;</span><span class="p">):</span>
         <span class="n">data_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported file format. Use CSV, pickle, or parquet.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported file format. Please use CSV, pickle, or parquet.&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">data_df</span></div>
 
@@ -417,6 +420,7 @@
         <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]]</span>
         <span class="o">|</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">use_optuna</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span>
     <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">],</span>
     <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]],</span>
@@ -437,6 +441,9 @@
 <span class="sd">        Dictionary of models to use for benchmarking. If None, default models will be used.</span>
 <span class="sd">        The keys should be the model names, and the values should be dictionaries of starting</span>
 <span class="sd">        hyperparameters for the model, and/or a dictionary of hyperparameter search grids.</span>
+<span class="sd">    use_optuna : bool, default False</span>
+<span class="sd">        Whether to retrieve hyperparameter search dictionaries suitable for Optuna. Note that we do not currently</span>
+<span class="sd">        support custom hyperparameter grids when using Optuna.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -453,19 +460,19 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">main_metric</span> <span class="ow">in</span> <span class="n">REGRESSION_METRICS</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">sec_metrics</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">REGRESSION_METRICS</span><span class="p">,</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Secondary metric &#39;</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&#39; is not a regression metric.&quot;</span>
-            <span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">metric</span> <span class="ow">in</span> <span class="n">REGRESSION_METRICS</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Secondary metric &#39;</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&#39; is not a regression metric.&quot;</span>
 
         <span class="n">models</span> <span class="o">=</span> <span class="n">REGRESSORS</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="n">REGRESSOR_PARAMS</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">REGRESSOR_PARAMS_OPTUNA</span> <span class="k">if</span> <span class="n">use_optuna</span> <span class="k">else</span> <span class="n">REGRESSOR_PARAMS</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Benchmarking regression models.&quot;</span><span class="p">)</span>
 
     <span class="k">elif</span> <span class="n">main_metric</span> <span class="ow">in</span> <span class="n">CLASSIFICATION_METRICS</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">sec_metrics</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">CLASSIFICATION_METRICS</span><span class="p">,</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Secondary metric &#39;</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&#39; is not a classification metric.&quot;</span>
-            <span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">metric</span> <span class="ow">in</span> <span class="n">CLASSIFICATION_METRICS</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Secondary metric &#39;</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&#39; is not a classification metric.&quot;</span>
 
         <span class="k">if</span> <span class="p">(</span>
             <span class="n">main_metric</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;roc_auc&quot;</span><span class="p">,</span> <span class="s2">&quot;pr_auc&quot;</span><span class="p">]</span>
@@ -479,7 +486,7 @@
             <span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">models</span> <span class="o">=</span> <span class="n">CLASSIFIERS</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="n">CLASSIFIER_PARAMS</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">CLASSIFIER_PARAMS_OPTUNA</span> <span class="k">if</span> <span class="n">use_optuna</span> <span class="k">else</span> <span class="n">CLASSIFIER_PARAMS</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Benchmarking classification models.&quot;</span><span class="p">)</span>
 
     <span class="k">else</span><span class="p">:</span>
@@ -498,7 +505,7 @@
     <span class="k">if</span> <span class="n">custom_models</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Using provided models.&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">custom_models</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">REGRESSORS</span> <span class="ow">or</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">CLASSIFIERS</span><span class="p">,</span> <span class="p">(</span>
+            <span class="k">assert</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span> <span class="ow">or</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">NON_PROBABILISTIC_MODELS</span><span class="p">,</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Model &#39;</span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2">&#39; is not a valid model. &quot;</span>
                 <span class="s2">&quot;Please provide a valid model from astra.models.&quot;</span>
             <span class="p">)</span>
@@ -519,12 +526,16 @@
         <span class="n">custom_params</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">model</span><span class="p">:</span> <span class="n">custom_models</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="s2">&quot;params&quot;</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">custom_models</span>
-            <span class="k">if</span> <span class="n">custom_models</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="s2">&quot;params&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">custom_models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="ow">and</span> <span class="n">custom_models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;params&quot;</span><span class="p">)</span>
         <span class="p">}</span>
         <span class="n">custom_hparams</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">model</span><span class="p">:</span> <span class="n">custom_models</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="s2">&quot;hparam_grid&quot;</span><span class="p">]</span>
+            <span class="n">model</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">get_optuna_grid</span><span class="p">(</span><span class="n">custom_models</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="s2">&quot;hparam_grid&quot;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">use_optuna</span>
+                <span class="k">else</span> <span class="n">custom_models</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="s2">&quot;hparam_grid&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
             <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">custom_models</span>
-            <span class="k">if</span> <span class="n">custom_models</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="s2">&quot;hparam_grid&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">custom_models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="ow">and</span> <span class="n">custom_models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hparam_grid&quot;</span><span class="p">)</span>
         <span class="p">}</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">model</span><span class="p">:</span> <span class="n">custom_hparams</span><span class="p">[</span><span class="n">model</span><span class="p">]</span> <span class="k">if</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">custom_hparams</span> <span class="k">else</span> <span class="n">params</span><span class="p">[</span><span class="n">model</span><span class="p">]</span>
@@ -533,6 +544,39 @@
         <span class="k">return</span> <span class="n">models</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">custom_params</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">models</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="get_optuna_grid">
+<a class="viewcode-back" href="../../autosummary/astra.utils.html#astra.utils.get_optuna_grid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_optuna_grid</span><span class="p">(</span><span class="n">hparam_grid</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">BaseDistribution</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a hyperparameter grid to an Optuna-compatible format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    hparam_grid : dict[str, list]</span>
+<span class="sd">        A dictionary where keys are hyperparameter names and values are lists of possible values.</span>
+<span class="sd">        For numeric values, the minimum and maximum will be used to create a uniform distribution.</span>
+<span class="sd">        For categorical values, a categorical distribution will be created.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict[str, BaseDistribution]</span>
+<span class="sd">        A dictionary where keys are hyperparameter names and values are Optuna distribution objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">optuna_grid</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">hparam_grid</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">):</span>
+            <span class="n">optuna_grid</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">IntDistribution</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">):</span>
+            <span class="n">optuna_grid</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">FloatDistribution</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># catch UserWarning from Optuna when creating CategoricalDistribution with mixed types</span>
+            <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span>
+                <span class="n">optuna_grid</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">CategoricalDistribution</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">optuna_grid</span></div>
 
 
 
@@ -653,7 +697,9 @@
 <a class="viewcode-back" href="../../autosummary/astra.utils.html#astra.utils.get_scores">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_scores</span><span class="p">(</span>
     <span class="n">cv_results_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">main_metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sec_metrics</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">n_folds</span><span class="p">:</span> <span class="nb">int</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span>
+    <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span>
+<span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get means and standard deviations of the main and secondary metrics from the CV results.</span>
 
@@ -670,9 +716,11 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tuple of floats and dict of str to tuple of floats</span>
-<span class="sd">        Mean, standard deviation and median of the main metric, and means, standard deviations,</span>
-<span class="sd">        and medians of the secondary metrics.</span>
+<span class="sd">    tuple of (dict, float, float, float, dict)</span>
+<span class="sd">        A tuple containing:</span>
+<span class="sd">        - A dictionary with metrics as keys and lists of scores as values.</span>
+<span class="sd">        - Mean, standard deviation and median of the main metric,</span>
+<span class="sd">        - and a dictionary with secondary metrics as keys and tuples of (mean, std, median) as values.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">required_columns</span> <span class="o">=</span> <span class="p">[</span>
         <span class="sa">f</span><span class="s2">&quot;rank_test_</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="p">[</span><span class="n">main_metric</span><span class="p">]</span> <span class="o">+</span> <span class="n">sec_metrics</span>
@@ -681,23 +729,29 @@
         <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="p">[</span><span class="n">main_metric</span><span class="p">]</span> <span class="o">+</span> <span class="n">sec_metrics</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_folds</span><span class="p">)</span>
     <span class="p">]</span>
-    <span class="k">assert</span> <span class="nb">all</span><span class="p">([</span><span class="n">col</span> <span class="ow">in</span> <span class="n">cv_results_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">required_columns</span><span class="p">]),</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;CV results do not contain all required columns: </span><span class="si">{</span><span class="n">required_columns</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">col</span> <span class="ow">in</span> <span class="n">cv_results_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">required_columns</span><span class="p">]</span>
+    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;CV results do not contain all required columns: </span><span class="si">{</span><span class="n">required_columns</span><span class="si">}</span><span class="s2">&quot;</span>
 
+    <span class="n">final_results_dict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">all_main_scores</span> <span class="o">=</span> <span class="p">[</span>
         <span class="n">cv_results_df</span><span class="p">[</span><span class="n">cv_results_df</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;rank_test_</span><span class="si">{</span><span class="n">main_metric</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span>
             <span class="sa">f</span><span class="s2">&quot;split</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_test_</span><span class="si">{</span><span class="n">main_metric</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_folds</span><span class="p">)</span>
     <span class="p">]</span>
-    <span class="n">mean_score_main</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">final_results_dict</span><span class="p">[</span><span class="n">main_metric</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+        <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">all_main_scores</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">main_metric</span> <span class="ow">in</span> <span class="n">LOWER_BETTER</span><span class="p">)</span>
+        <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">all_main_scores</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">mean_score_main</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
         <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">all_main_scores</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">main_metric</span> <span class="ow">in</span> <span class="n">LOWER_BETTER</span><span class="p">)</span>
         <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">all_main_scores</span><span class="p">)</span>
     <span class="p">)</span>
-    <span class="n">std_score_main</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">all_main_scores</span><span class="p">)</span>
-    <span class="n">median_score_main</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">std_score_main</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">all_main_scores</span><span class="p">))</span>
+    <span class="n">median_score_main</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
         <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">all_main_scores</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">main_metric</span> <span class="ow">in</span> <span class="n">LOWER_BETTER</span><span class="p">)</span>
         <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">all_main_scores</span><span class="p">)</span>
@@ -706,22 +760,35 @@
     <span class="n">sec_metrics_scores</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">sec_metrics</span><span class="p">:</span>
         <span class="n">all_scores</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">cv_results_df</span><span class="p">[</span><span class="n">cv_results_df</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;rank_test_</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span>
+            <span class="n">cv_results_df</span><span class="p">[</span><span class="n">cv_results_df</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;rank_test_</span><span class="si">{</span><span class="n">main_metric</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span>
                 <span class="sa">f</span><span class="s2">&quot;split</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_test_</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">]</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_folds</span><span class="p">)</span>
         <span class="p">]</span>
+        <span class="n">final_results_dict</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">metric</span> <span class="ow">in</span> <span class="n">LOWER_BETTER</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="n">sec_metrics_scores</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">metric</span> <span class="ow">in</span> <span class="n">LOWER_BETTER</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">all_scores</span><span class="p">),</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">all_scores</span><span class="p">),</span>
-            <span class="p">(</span>
+            <span class="nb">float</span><span class="p">(</span>
+                <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">metric</span> <span class="ow">in</span> <span class="n">LOWER_BETTER</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)),</span>
+            <span class="nb">float</span><span class="p">(</span>
                 <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)</span>
                 <span class="k">if</span> <span class="p">(</span><span class="n">metric</span> <span class="ow">in</span> <span class="n">LOWER_BETTER</span><span class="p">)</span>
                 <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)</span>
             <span class="p">),</span>
         <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">mean_score_main</span><span class="p">,</span> <span class="n">std_score_main</span><span class="p">,</span> <span class="n">median_score_main</span><span class="p">,</span> <span class="n">sec_metrics_scores</span></div>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">final_results_dict</span><span class="p">,</span>
+        <span class="n">mean_score_main</span><span class="p">,</span>
+        <span class="n">std_score_main</span><span class="p">,</span>
+        <span class="n">median_score_main</span><span class="p">,</span>
+        <span class="n">sec_metrics_scores</span><span class="p">,</span>
+    <span class="p">)</span></div>
 
 
 
@@ -825,9 +892,9 @@
     <span class="n">median_score_main</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">sec_metrics_scores</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
     <span class="n">file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">):</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Print final results.</span>
+<span class="sd">    Prints the final results to the console and a file.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -836,11 +903,11 @@
 <span class="sd">    final_hyperparameters : dict[str, int | float | str]</span>
 <span class="sd">        Hyperparameters of the final model.</span>
 <span class="sd">    main_metric : str</span>
-<span class="sd">        The main metric used for evaluation.</span>
+<span class="sd">        Main metric.</span>
 <span class="sd">    mean_score_main : float</span>
 <span class="sd">        Mean score of the main metric.</span>
 <span class="sd">    std_score_main : float</span>
-<span class="sd">        Standard deviation of the main metric score.</span>
+<span class="sd">        Standard deviation of the main metric.</span>
 <span class="sd">    median_score_main : float</span>
 <span class="sd">        Median score of the main metric.</span>
 <span class="sd">    sec_metrics_scores : dict[str, tuple[float, float, float]]</span>
@@ -855,15 +922,11 @@
     <span class="n">print_file_console</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">13</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
     <span class="n">print_file_console</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">+</span> <span class="s2">&quot;Final results&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
     <span class="n">print_file_console</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">13</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
-    <span class="n">print_file_console</span><span class="p">(</span>
-        <span class="n">message</span><span class="o">=</span><span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Final model: </span><span class="si">{</span><span class="n">final_model_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">print_file_console</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Final model: </span><span class="si">{</span><span class="n">final_model_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
     <span class="n">print_file_console</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">+</span> <span class="s2">&quot;Hyperparameters:&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">final_hyperparameters</span><span class="p">:</span>
         <span class="n">print_file_console</span><span class="p">(</span>
-            <span class="n">message</span><span class="o">=</span><span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">final_hyperparameters</span><span class="p">[</span><span class="n">f</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
+            <span class="n">message</span><span class="o">=</span><span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">final_hyperparameters</span><span class="p">[</span><span class="n">f</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span>
         <span class="p">)</span>
     <span class="n">print_file_console</span><span class="p">(</span>
         <span class="n">message</span><span class="o">=</span><span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">20</span>
@@ -935,7 +998,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>

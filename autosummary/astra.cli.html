@@ -356,7 +356,7 @@
   <section id="module-astra.cli">
 <span id="astra-cli"></span><h1>astra.cli<a class="headerlink" href="#module-astra.cli" title="Link to this heading">#</a></h1>
 <p class="rubric">Functions</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#astra.cli.get_CLI_parser" title="astra.cli.get_CLI_parser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_CLI_parser</span></code></a>()</p></td>
 <td><p>Get the argument parser for the CLI.</p></td>
@@ -382,6 +382,9 @@
 <li><p>features: Name of the column containing the features. Default: Features.</p></li>
 <li><p>target: Name of the column containing the target. Default: Target.</p></li>
 <li><p>run_nested_CV: Whether to run nested CV with hyperparameter tuning for the best models. Default: False.</p></li>
+<li><p>use_optuna: Whether to use Optuna for hyperparameter optimization. If not set, GridSearchCV from scikit-learn will be used. Default: False.</p></li>
+<li><p>n_trials: Number of trials for Optuna hyperparameter search. Default: 100.</p></li>
+<li><p>timeout: Time limit (in seconds) for hyperparameter search. Default: 3600.</p></li>
 <li><p>fold_col: Name(s) of the column(s) containing the CV fold number(s). If a list is provided, models will be benchmarked in an nxk-fold CV, where n is the number of repeats and k is the number of folds. If a single string is provided, it will be treated as a single fold column. nxk-fold CV does not currently support nested CV and final hyperparameter tuning. Default: Fold.</p></li>
 <li><p>main_metric: Main metric to use for model selection. This will be used to infer the prediction task (classification or regression). Default: R2.</p></li>
 <li><p>sec_metrics: Secondary metrics to use for model selection. Default: MSE MAE.</p></li>
@@ -397,6 +400,7 @@
 <li><p>CV_results_path: Path to the directory containing the CV results</p></li>
 <li><p>main_metric: The main metric to use for comparison</p></li>
 <li><p>sec_metrics: Secondary metrics to use for comparison</p></li>
+<li><p>parametric: Whether to use parametric statistical tests for model comparison.</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -519,7 +523,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>

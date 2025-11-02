@@ -12,6 +12,7 @@
       get_data
       get_estimator_name
       get_models
+      get_optuna_grid
       get_scores
       load_config
       print_file_console

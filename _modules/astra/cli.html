@@ -354,6 +354,9 @@
 <span class="sd">    - features: Name of the column containing the features. Default: Features.</span>
 <span class="sd">    - target: Name of the column containing the target. Default: Target.</span>
 <span class="sd">    - run_nested_CV: Whether to run nested CV with hyperparameter tuning for the best models. Default: False.</span>
+<span class="sd">    - use_optuna: Whether to use Optuna for hyperparameter optimization. If not set, GridSearchCV from scikit-learn will be used. Default: False.</span>
+<span class="sd">    - n_trials: Number of trials for Optuna hyperparameter search. Default: 100.</span>
+<span class="sd">    - timeout: Time limit (in seconds) for hyperparameter search. Default: 3600.</span>
 <span class="sd">    - fold_col: Name(s) of the column(s) containing the CV fold number(s). If a list is provided, models will be benchmarked in an nxk-fold CV, where n is the number of repeats and k is the number of folds. If a single string is provided, it will be treated as a single fold column. nxk-fold CV does not currently support nested CV and final hyperparameter tuning. Default: Fold.</span>
 <span class="sd">    - main_metric: Main metric to use for model selection. This will be used to infer the prediction task (classification or regression). Default: R2.</span>
 <span class="sd">    - sec_metrics: Secondary metrics to use for model selection. Default: MSE MAE.</span>
@@ -369,6 +372,7 @@
 <span class="sd">    - CV_results_path: Path to the directory containing the CV results</span>
 <span class="sd">    - main_metric: The main metric to use for comparison</span>
 <span class="sd">    - sec_metrics: Secondary metrics to use for comparison</span>
+<span class="sd">    - parametric: Whether to use parametric statistical tests for model comparison.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -423,6 +427,26 @@
         <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Whether to run nested CV with hyperparameter tuning for the best</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="s2">&quot;models. Default: False.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--use_optuna&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Whether to use Optuna for hyperparameter optimization.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;If not set, GridSearchCV from scikit-learn will be used.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;Default: False.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--n_trials&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of trials for Optuna hyperparameter search. Default: 100.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--timeout&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">3600</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Time limit (in seconds) for Optuna hyperparameter search. Default: 3600.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">benchmark_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--fold_col&quot;</span><span class="p">,</span>
@@ -499,13 +523,11 @@
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to a single directory containing CV results, or a list of directories</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;containing CV results, as returned by scikit-learn&#39;s BaseSearchCV.cv_results_.</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;If a single directory is provided, CV results for the different models should be</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;saved in a file ending with &#39;_CV_results.csv&#39;, and this ending will be removed to</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;get the model name.</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;If multiple directories are provided, each should contain the CV results for a</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;different model saved in a file ending with &#39;_CV_results.csv&#39;, and the parent</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;directory will be used as the model name.&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;containing CV results. CV results should be pickled dictionaries with metrics as</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;keys and lists of scores as values, for example, `final_CV.pkl` returned by</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;astra benchmark, and ending with `final_CV.pkl`. The model name will be the parent</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;directory if passing a list of paths, or the file name (minus the `final_CV.pkl`)</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;if passing a single directory.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">compare_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--main_metric&quot;</span><span class="p">,</span>
@@ -520,10 +542,13 @@
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Secondary metrics to use for comparison&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">compare_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--n_folds&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of CV folds. Default: 5.&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--parametric&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;True&quot;</span><span class="p">,</span> <span class="s2">&quot;False&quot;</span><span class="p">,</span> <span class="s2">&quot;auto&quot;</span><span class="p">],</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Whether to use parametric statistical tests for model comparison.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;If &#39;auto&#39; (default), the assumptions of parametric tests will be checked,</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;and parametric tests will be used if the assumptions are met.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">parser</span></div>
@@ -577,42 +602,49 @@
     <span class="n">parser</span> <span class="o">=</span> <span class="n">get_CLI_parser</span><span class="p">()</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">fold_col</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">fold_col</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">args</span><span class="o">.</span><span class="n">fold_col</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">fold_col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
-
-        <span class="c1"># Override CLI arguments with config values</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="nb">setattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The config file must include a &#39;data&#39; field.&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Custom model settings</span>
-        <span class="k">if</span> <span class="s2">&quot;models&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="n">args</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;models&quot;</span><span class="p">]:</span>
-                <span class="n">model_name</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
-                <span class="n">model_params</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;params&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="n">hparam_grid</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hparam_grid&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="n">args</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="n">model_params</span><span class="p">,</span>
-                    <span class="s2">&quot;hparam_grid&quot;</span><span class="p">:</span> <span class="n">hparam_grid</span><span class="p">,</span>
-                <span class="p">}</span>
-
-    <span class="c1"># convert all args.main_metric and args.sec_metrics to lowercase</span>
-    <span class="n">args</span><span class="o">.</span><span class="n">main_metric</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">main_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-    <span class="n">args</span><span class="o">.</span><span class="n">sec_metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">sec_metrics</span><span class="p">]</span>
-
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;benchmark&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">fold_col</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">fold_col</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">fold_col</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">fold_col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+
+            <span class="c1"># Override CLI arguments with config values</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The config file must include a &#39;data&#39; field.&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Custom model settings</span>
+            <span class="k">if</span> <span class="s2">&quot;models&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;models&quot;</span><span class="p">]:</span>
+                    <span class="n">model_name</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+                    <span class="n">model_params</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;params&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="n">hparam_grid</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hparam_grid&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="n">model_params</span><span class="p">,</span>
+                        <span class="s2">&quot;hparam_grid&quot;</span><span class="p">:</span> <span class="n">hparam_grid</span><span class="p">,</span>
+                    <span class="p">}</span>
+
+        <span class="n">args</span><span class="o">.</span><span class="n">main_metric</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">main_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">sec_metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">sec_metrics</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">parametric</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">parametric</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">parametric</span> <span class="o">==</span> <span class="s2">&quot;False&quot;</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">parametric</span> <span class="o">=</span> <span class="kc">False</span>
+
         <span class="n">benchmark</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
             <span class="n">data</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
             <span class="n">name</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
             <span class="n">features</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">features</span><span class="p">,</span>
             <span class="n">target</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
             <span class="n">run_nested_CV</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">run_nested_CV</span><span class="p">,</span>
+            <span class="n">use_optuna</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">use_optuna</span><span class="p">,</span>
+            <span class="n">n_trials</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_trials</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span>
             <span class="n">fold_col</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">fold_col</span><span class="p">,</span>
             <span class="n">main_metric</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">main_metric</span><span class="p">,</span>
             <span class="n">sec_metrics</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">sec_metrics</span><span class="p">,</span>
@@ -624,13 +656,23 @@
             <span class="n">custom_models</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">models</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">&quot;models&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">n_jobs</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span>
         <span class="p">)</span>
+
     <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;compare&quot;</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">main_metric</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">main_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">sec_metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">sec_metrics</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">parametric</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">parametric</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">parametric</span> <span class="o">==</span> <span class="s2">&quot;False&quot;</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">parametric</span> <span class="o">=</span> <span class="kc">False</span>
+
         <span class="n">compare</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
             <span class="n">CV_results</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">CV_results</span><span class="p">,</span>
             <span class="n">main_metric</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">main_metric</span><span class="p">,</span>
             <span class="n">sec_metrics</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">sec_metrics</span><span class="p">,</span>
-            <span class="n">n_folds</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_folds</span><span class="p">,</span>
+            <span class="n">parametric</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">parametric</span><span class="p">,</span>
         <span class="p">)</span>
+
     <span class="k">else</span><span class="p">:</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
         <span class="k">return</span> <span class="mi">1</span>
@@ -691,7 +733,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>
