@@ -20,7 +20,6 @@ sys.path.insert(0, os.path.abspath(".."))
 
 import astra  # noqa: E402
 
-
 # -- Project information -----------------------------------------------------
 
 project = "ASTRA"
