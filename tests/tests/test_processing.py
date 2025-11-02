@@ -7,12 +7,10 @@ from astra.data.processing import CorrelationFilter
 
 @pytest.fixture
 def correlated_data():
-    rand_0 = np.random.rand(5) * 5
-    rand_1 = np.random.rand(5) * 10
-    X = np.zeros((5, 4))
-    X[:, 0] = rand_0
+    X = np.zeros((10, 4))
+    X[:, 0] = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     X[:, 1] = X[:, 0] * 2  # correlated with 0
-    X[:, 2] = rand_1
+    X[:, 2] = np.random.rand(10)
     X[:, 3] = X[:, 2] * 3  # correlated with 2
     return X
 

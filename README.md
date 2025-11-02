@@ -62,7 +62,8 @@ By default, ASTRA will benchmark all implemented [classification](astra/models/c
 The benchmark script will create the following files under `results/<name>`:
 - `default_CV.pkl`: A dictionary containing CV scores of the main and secondary metrics for all models using default hyperparameters.
 - `nested_CV.pkl`: A dictionary containing CV scores of the main and secondary metrics for all models with optimised hyperparameters using nested grid-search.
-- `final_CV_results.csv`: Final CV results (`cv_results_` of `GridSearchCV`), or final hyperparameter search results (`trials_dataframe` of `OptunaSearchCV`).
+- `final_CV.pkl`: A dictionary containing CV scores of the main and secondary metrics for the final model with optimised hyperparameters.
+- `final_CV_hparam_search.csv`: Final hyperparameter search results (`cv_results_` of `GridSearchCV` or `trials_dataframe` of `OptunaSearchCV`).
 - `final_model.pkl`: The best performing model, refit on the whole dataset.
 - `final_hyperparameters.pkl`: A dictionary of the optimal hyperparameters.
 
@@ -73,11 +74,12 @@ Use `astra compare` to statistically analyse benchmark results:
 ```bash
 astra compare <CV_results_path>
 ```
-where `CV_results_path` is the path to the directory containing the CV results.
+where `CV_results_path` is a list of paths to directories containing CV results, or the path to a single directory containing all CV results. CV results should be pickled dictionaries with metrics as keys and lists of scores as values, for example, `final_CV.pkl` returned by `astra benchmark`, and ending with `final_CV.pkl`. The model name will be the parent directory if passing a list of paths, or the file name (minus the `final_CV.pkl`) if passing a single directory.
 
 Options:
 - `--main_metric`: The main metric to use for comparison.
 - `--sec_metrics`: Secondary metrics to use for comparison.
+- `--parametric`: Whether to use parametric statistical tests for model comparison. If 'auto' (default), the assumptions of parametric tests will be checked, and parametric tests will be used if the assumptions are met.
 
 ## Requirements
 - Python >=3.11
