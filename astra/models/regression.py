@@ -26,7 +26,6 @@ from sklearn.ensemble import (
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import BayesianRidge, Ridge
 from sklearn.neighbors import KNeighborsRegressor
-from sklearn.neural_network import MLPRegressor
 from sklearn.svm import SVR
 from xgboost import XGBRegressor
 
@@ -42,7 +41,6 @@ REGRESSORS = {
     "KernelRidge": KernelRidge(),
     "LGBMRegressor": LGBMRegressor(random_state=42, force_row_wise=True, verbosity=-1),
     "CatBoostRegressor": CatBoostRegressor(random_state=42, verbose=False),
-    "MLPRegressor": MLPRegressor(random_state=42),
 }
 
 REGRESSOR_PARAMS = {
@@ -113,14 +111,6 @@ REGRESSOR_PARAMS = {
         iterations=[50, 100, 500],
         learning_rate=[1e-3, 1e-2, 1e-1],
         depth=[2, 4, 6, 8, 10],
-    ),
-    "MLPRegressor": dict(
-        hidden_layer_sizes=[(32,), (64,), (64, 32), (128,)],
-        activation=["relu", "tanh"],
-        solver=["adam", "lbfgs"],
-        alpha=[1e-6, 1e-5, 1e-4, 1e-3],
-        learning_rate_init=[1e-4, 1e-3, 1e-2],
-        early_stopping=[False, True],
     ),
 }
 
@@ -240,17 +230,5 @@ REGRESSOR_PARAMS_OPTUNA = {
         random_strength=FloatDistribution(1e-6, 10.0, log=True),
         bagging_temperature=FloatDistribution(0.0, 1.0),
         bootstrap_type=CategoricalDistribution(["Bayesian", "Bernoulli", "MVS"]),
-    ),
-    "MLPRegressor": dict(
-        loss=CategoricalDistribution(["squared_error", "poisson"]),
-        hidden_layer_sizes=CategoricalDistribution(
-            [(32,), (64,), (64, 32), (128,), (128, 64)]
-        ),
-        activation=CategoricalDistribution(["relu", "tanh", "logistic"]),
-        solver=CategoricalDistribution(["adam", "lbfgs", "sgd"]),
-        batch_size=IntDistribution(16, 256),
-        alpha=FloatDistribution(1e-6, 1e-2, log=True),
-        learning_rate_init=FloatDistribution(1e-4, 1e-1, log=True),
-        early_stopping=CategoricalDistribution([False, True]),
     ),
 }
