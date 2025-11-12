@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; ASTRA  documentation</title>
+    <title>User Guide &#8212; ASTRA 1.0.0 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=4b3d11ce"></script>
+    <script src="_static/documentation_options.js?v=80cc54d1"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="prev" title="Getting Started" href="getting_started.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="English"/>
-  <meta name="docsearch:version" content="" />
+  <meta name="docsearch:version" content="1.0.0" />
   </head>
   
   
@@ -78,8 +78,8 @@
   <input type="search"
          class="form-control"
          name="q"
-         placeholder="Search the docs ..."
-         aria-label="Search the docs ..."
+         placeholder="Search the docs..."
+         aria-label="Search the docs..."
          autocomplete="off"
          autocorrect="off"
          autocapitalize="off"
@@ -115,7 +115,7 @@
   
   
   
-    <p class="title logo__title">ASTRA  documentation</p>
+    <p class="title logo__title">ASTRA</p>
   
 </a></div>
     
@@ -176,12 +176,37 @@
       
       
         <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs..."
+         aria-label="Search the docs..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/duartegroup/astra" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
       
     </div>
     
@@ -267,12 +292,37 @@
       <div class="sidebar-header-items__end">
         
           <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs..."
+         aria-label="Search the docs..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/duartegroup/astra" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
         
       </div>
     
@@ -341,7 +391,67 @@
                   
   <section id="user-guide">
 <h1>User Guide<a class="headerlink" href="#user-guide" title="Link to this heading">#</a></h1>
-<p>This page details how to use ASTRA.</p>
+<p>This page details how to use ASTRA. ASTRA provides a command-line interface (CLI) for benchmarking and comparing machine learning models.</p>
+<section id="benchmarking-models">
+<h2>Benchmarking Models<a class="headerlink" href="#benchmarking-models" title="Link to this heading">#</a></h2>
+<p>Use <cite>astra benchmark</cite> to run performance benchmarks across different models using</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>astra<span class="w"> </span>benchmark<span class="w"> </span>&lt;data&gt;
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">data</span></code> is the path to the dataset to train and evaluate models on. This should be a <code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>, saved in CSV, pickle, or parquet format (which will be inferred from the file ending, and needs to be <code class="docutils literal notranslate"><span class="pre">.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">.pkl</span></code>, <code class="docutils literal notranslate"><span class="pre">.pickle</span></code>, or <code class="docutils literal notranslate"><span class="pre">.parquet</span></code>), containing input features, the target variable, and a column indicating which fold a data point belongs to. See <a class="reference external" href="../astra/data/example_df.csv">here</a> for an example.</p>
+<p><strong>Options:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--name</span></code>: Name of the experiment. Results will be saved in a folder with this name in the 'results' directory. Will be used to load cached results if they exist. Default: <code class="docutils literal notranslate"><span class="pre">data</span></code> file name (without the extension).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--features</span></code>: Name of the column containing the features. Default: Features.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--target</span></code>: Name of the column containing the target. Default: Target.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--run_nested_CV</span></code>: Whether to run nested CV with hyperparameter tuning for the best models. Default: False.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--use_optuna</span></code>: Whether to use Optuna for hyperparameter tuning. Default: False.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--n_trials</span></code>: Number of trials for Optuna hyperparameter search. Default: 100.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--timeout</span></code>: Time limit (in seconds) for Optuna hyperparameter search. Default: 3600.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--fold_col</span></code>: Name(s) of the column(s) containing the <em>0-indexed</em> CV fold number(s). If a list is provided, models will be benchmarked in an nxk-fold CV, where n is the number of repeats and k is the number of folds. If a single string is provided, it will be treated as a single fold column. nxk-fold CV does not currently support nested CV and final hyperparameter tuning. Default: Fold.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--main_metric</span></code>: Main metric to use for model selection. This will be used to infer the prediction task (classification or regression). Default: R2.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--sec_metrics</span></code>: Secondary metrics to use for model selection. Default: MSE, MAE.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--parametric</span></code>: Whether to use parametric statistical tests for model comparison. If 'auto' (default), the assumptions of parametric tests will be checked, and parametric tests will be used if the assumptions are met.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--impute</span></code>: Method to use for imputing missing values. If None, no imputation will be performed. Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--remove_constant</span></code>: If specified, features with variance below this threshold will be removed. If None, no features are removed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--remove_correlated</span></code>: If specified, features with correlation above this threshold will be removed. If None, no features are removed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--scaler</span></code>: Type of scaler to use, if the data is to be scaled first. Valid choices are 'Standard' and 'MinMax'. Default: None.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--n_jobs</span></code>: Number of jobs to run in parallel for hyperparameter tuning. Default: 1.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Metrics are not case-sensitive. See <a class="reference external" href="../astra/metrics.py">here</a> for an overview of available metrics.</p>
+</div>
+<p>Alternatively, you can specify some or all arguments using a configuration file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>astra<span class="w"> </span>benchmark<span class="w"> </span>--config<span class="w"> </span>&lt;path<span class="w"> </span>to<span class="w"> </span>config<span class="w"> </span>file&gt;
+</pre></div>
+</div>
+<p>See <a class="reference external" href="../configs/example.yml">here</a> for an example. Arguments in the configuration file will override CLI arguments.</p>
+<p>By default, ASTRA will benchmark all implemented <a class="reference external" href="../astra/models/classification.py">classification</a> or <a class="reference external" href="../astra/models/regression.py">regression</a> models, and search over default hyperparameter grids. You can specify which models to consider, custom starting hyperparameters, and custom hyperparameter search spaces in the configuration file. When using Optuna, custom hyperparameters will be converted into integer, float, or categorical Optuna distributions.</p>
+<p>The benchmark script will create the following files under <code class="docutils literal notranslate"><span class="pre">results/&lt;name&gt;</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">default_CV.pkl</span></code>: A dictionary containing CV scores of the main and secondary metrics for all models using default hyperparameters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nested_CV.pkl</span></code>: A dictionary containing CV scores of the main and secondary metrics for all models with optimised hyperparameters using nested grid-search.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">final_CV.pkl</span></code>: A dictionary containing CV scores of the main and secondary metrics for the final model with optimised hyperparameters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">final_CV_hparam_search.csv</span></code>: Final hyperparameter search results (<code class="docutils literal notranslate"><span class="pre">cv_results_</span></code> of <code class="docutils literal notranslate"><span class="pre">GridSearchCV</span></code> or <code class="docutils literal notranslate"><span class="pre">trials_dataframe</span></code> of <code class="docutils literal notranslate"><span class="pre">OptunaSearchCV</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">final_model.pkl</span></code>: The best performing model, refit on the whole dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">final_hyperparameters.pkl</span></code>: A dictionary of the optimal hyperparameters.</p></li>
+</ul>
+</section>
+<section id="comparing-models">
+<h2>Comparing Models<a class="headerlink" href="#comparing-models" title="Link to this heading">#</a></h2>
+<p>Use <cite>astra compare</cite> to statistically analyse benchmark results:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>astra<span class="w"> </span>compare<span class="w"> </span>&lt;CV_results_path&gt;
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">CV_results_path</span></code> is a list of paths to directories containing CV results, or the path to a single directory containing all CV results. CV results should be pickled dictionaries with metrics as keys and lists of scores as values, for example, <code class="docutils literal notranslate"><span class="pre">final_CV.pkl</span></code> returned by <cite>astra benchmark</cite>, and ending with <code class="docutils literal notranslate"><span class="pre">final_CV.pkl</span></code>. The model name will be the parent directory if passing a list of paths, or the file name (minus the <code class="docutils literal notranslate"><span class="pre">final_CV.pkl</span></code>) if passing a single directory.</p>
+<p><strong>Options:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--main_metric</span></code>: The main metric to use for comparison.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--sec_metrics</span></code>: Secondary metrics to use for comparison.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--parametric</span></code>: Whether to use parametric statistical tests for model comparison. If 'auto' (default), the assumptions of parametric tests will be checked, and parametric tests will be used if the assumptions are met.</p></li>
+</ul>
+</section>
 </section>
 
 
@@ -351,30 +461,6 @@
               
               
               
-                <footer class="prev-next-footer d-print-none">
-                  
-<div class="prev-next-area">
-    <a class="left-prev"
-       href="getting_started.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Getting Started</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="api.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">API Documentation</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
-</div>
-                </footer>
-              
             </div>
             
             
@@ -382,6 +468,19 @@
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#benchmarking-models">Benchmarking Models</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparing-models">Comparing Models</a></li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">
@@ -417,7 +516,7 @@
 
   <p class="copyright">
     
-      © Copyright 2024, Wojtek Treyde. Project structure based on the Computational Molecular Science Python Cookiecutter version 1.10.
+      © Copyright 2025, Wojtek Treyde. Project structure based on the Computational Molecular Science Python Cookiecutter version 1.10.
       <br/>
     
   </p>
