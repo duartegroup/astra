@@ -166,6 +166,7 @@ def test_benchmark_nested_CV(expected_output_files):
         scaler="Standard",
         fold_col="Fold_0",
         test_mode=True,
+        n_jobs=4,
     )
     command = [
         "astra",
