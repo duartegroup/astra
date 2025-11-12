@@ -7,6 +7,12 @@ Automated model selection using Statistical Testing for Robust Algorithms (ASTRA
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
+This repository contains the source code for Automated model selection using Statistical Testing for Robust Algorithms (ASTRA), an automated pipeline for training and selecting the best ML model in low-data regimes. The main innovation of ASTRA lies in leveraging statistical testing to automate model selection, reducing human bias and ensuring model robustness by considering the distribution of model scores. ASTRA uses a combination of (nested) cross-validation, statistical testing, and efficient hyperparameter tuning to identify the best model for a given task, balancing computational cost and exhaustive exploration.
+
+## Documentation
+
+The documentation for ASTRA, including installation instructions, a user guide, and an API reference, can be accessed [here](http://duartegroup.github.io/astra/).
+
 ## Installation
 
 To install the package from source:
@@ -81,24 +87,9 @@ Options:
 - `--sec_metrics`: Secondary metrics to use for comparison.
 - `--parametric`: Whether to use parametric statistical tests for model comparison. If 'auto' (default), the assumptions of parametric tests will be checked, and parametric tests will be used if the assumptions are met.
 
-## Requirements
-- Python >=3.11
-- Core dependencies (automatically installed):
-  - numpy
-  - pandas
-  - lightgbm
-  - pingouin
-  - xgboost
-  - torch
-  - torchaudio
-  - torchvision
-  - catboost
-  - scikit-learn
-  - scikit-posthocs
-
 ### Copyright
 
-Copyright (c) 2024, Wojtek Treyde
+Copyright (c) 2025, Wojtek Treyde
 
 
 #### Acknowledgements

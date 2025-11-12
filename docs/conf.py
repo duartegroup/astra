@@ -18,20 +18,21 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
+import astra  # noqa: E402
 
 # -- Project information -----------------------------------------------------
 
 project = "ASTRA"
 copyright = (
-    "2024, Wojtek Treyde. Project structure based on the "
+    "2025, Wojtek Treyde. Project structure based on the "
     "Computational Molecular Science Python Cookiecutter version 1.10"
 )
 author = "Wojtek Treyde"
 
 # The short X.Y version
-version = ""
+version = astra.__version__
 # The full version, including alpha/beta/rc tags
-release = ""
+release = astra.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -105,7 +106,18 @@ html_theme = "pydata_sphinx_theme"
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    "github_url": "https://github.com/duartegroup/astra",
+    "logo": {
+        "text": "ASTRA",
+    },
+    "use_edit_page_button": False,
+    "show_toc_level": 1,
+    "show_nav_level": 2,
+    "show_prev_next": False,
+    "search_bar_text": "Search the docs...",
+    "navbar_end": ["search-field.html", "navbar-icon-links.html"],
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -180,3 +192,9 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "sklearn": ("https://scikit-learn.org/stable/", None),
+}
