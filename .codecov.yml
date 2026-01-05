@@ -1,14 +1,13 @@
-# Codecov configuration to make it a bit less noisy
 coverage:
   status:
     patch: false
     project:
       default:
-        threshold: 50%
+        target: auto
+        threshold: 5%
 comment:
   layout: "header"
-  require_changes: false
-  branches: null
+  require_changes: true
   behavior: default
   flags: null
   paths: null

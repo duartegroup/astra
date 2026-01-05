@@ -2,24 +2,29 @@
 requires = ["setuptools>=61.0", "versioningit~=2.0"]
 build-backend = "setuptools.build_meta"
 
-# Self-descriptive entries which should always be present
-# https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
 [project]
 name = "astra"
 description = "Automated model selection using statistical testing for robust algorithms"
 dynamic = ["version"]
 readme = "README.md"
+keywords = ["machine learning", "model selection", "statistical testing", "automl"]
 authors = [
     { name = "Wojtek Treyde", email = "wojtek.treyde@sjc.ox.ac.uk" }
 ]
 license = { text = "MIT" }
-# See https://pypi.org/classifiers/
+
 classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
 ]
 requires-python = ">=3.11"
-# Declare any run-time dependencies that should be installed with the package.
 dependencies = [
     "numpy",
     "pandas",
@@ -29,7 +34,7 @@ dependencies = [
     "pingouin",
     "xgboost>=2.1.4",
     "catboost",
-    "scikit-learn>1.7",
+    "scikit-learn>=1.7",
     "scikit-posthocs",
     "rich",
     "pyyaml",
@@ -37,10 +42,9 @@ dependencies = [
     "optuna-integration[sklearn]",
 ]
 
-# Update the urls once the hosting is set up.
-#[project.urls]
-#"Source" = "https://github.com/<username>/astra/"
-#"Documentation" = "https://astra.readthedocs.io/"
+[project.urls]
+"Source" = "https://github.com/duartegroup/astra/"
+"Documentation" = "https://duartegroup.github.io/astra/"
 
 [project.optional-dependencies]
 test = [
@@ -97,7 +101,7 @@ distance-dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
 
 [tool.versioningit.vcs]
 # The method key:
-method = "git"  # <- The method name
+method = "git"
 # Parameters to pass to the method:
 match = ["*"]
 default-tag = "1.0.0"
@@ -112,7 +116,7 @@ astra = "astra.cli:main"
 line-length = 88
 
 [tool.coverage.run]
-omit = ["astra/compare.py", "astra/models/multiclass.py", "astra/models/ordinalclassifiers.py", "astra/models/ordinalregressors.py"]
+omit = ["*/tests/*", "astra/_version.py", "astra/models/multiclass.py", "astra/models/ordinalclassifiers.py", "astra/models/ordinalregressors.py"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
