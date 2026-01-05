@@ -58,6 +58,7 @@ dev = [
   "pydata-sphinx-theme",
   "sphinx-design",
   "sphinx-copybutton",
+  "pre-commit",
 ]
 
 [tool.setuptools]
