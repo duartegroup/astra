@@ -1007,7 +1007,6 @@ def get_best_hparams(
         cv.append(curr_idx)
 
     # perform hyperparameter search
-    # TODO: Integrate Optuna
     if use_optuna:
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         clf = OptunaSearchCV(
