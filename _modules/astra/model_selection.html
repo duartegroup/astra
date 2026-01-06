@@ -1417,7 +1417,6 @@
         <span class="n">cv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_idx</span><span class="p">)</span>
 
     <span class="c1"># perform hyperparameter search</span>
-    <span class="c1"># TODO: Integrate Optuna</span>
     <span class="k">if</span> <span class="n">use_optuna</span><span class="p">:</span>
         <span class="n">optuna</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="n">optuna</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
         <span class="n">clf</span> <span class="o">=</span> <span class="n">OptunaSearchCV</span><span class="p">(</span>

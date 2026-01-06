@@ -398,7 +398,7 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>astra<span class="w"> </span>benchmark<span class="w"> </span>&lt;data&gt;
 </pre></div>
 </div>
-<p>where <code class="docutils literal notranslate"><span class="pre">data</span></code> is the path to the dataset to train and evaluate models on. This should be a <code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>, saved in CSV, pickle, or parquet format (which will be inferred from the file ending, and needs to be <code class="docutils literal notranslate"><span class="pre">.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">.pkl</span></code>, <code class="docutils literal notranslate"><span class="pre">.pickle</span></code>, or <code class="docutils literal notranslate"><span class="pre">.parquet</span></code>), containing input features, the target variable, and a column indicating which fold a data point belongs to. See <a class="reference external" href="../astra/data/example_df.csv">here</a> for an example.</p>
+<p>where <code class="docutils literal notranslate"><span class="pre">data</span></code> is the path to the dataset to train and evaluate models on. This should be a <code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>, saved in CSV, pickle, or parquet format (which will be inferred from the file ending, and needs to be <code class="docutils literal notranslate"><span class="pre">.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">.pkl</span></code>, <code class="docutils literal notranslate"><span class="pre">.pickle</span></code>, or <code class="docutils literal notranslate"><span class="pre">.parquet</span></code>), containing input features, the target variable, and a column indicating which fold a data point belongs to. See <a class="reference external" href="https://github.com/duartegroup/astra/blob/main/astra/data/example_df.csv">here</a> for an example.</p>
 <p><strong>Options:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">--name</span></code>: Name of the experiment. Results will be saved in a folder with this name in the 'results' directory. Will be used to load cached results if they exist. Default: <code class="docutils literal notranslate"><span class="pre">data</span></code> file name (without the extension).</p></li>
@@ -420,14 +420,14 @@
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Metrics are not case-sensitive. See <a class="reference external" href="../astra/metrics.py">here</a> for an overview of available metrics.</p>
+<p>Metrics are not case-sensitive. See <a class="reference external" href="https://github.com/duartegroup/astra/blob/main/astra/metrics.py#L99">here</a> for an overview of available metrics.</p>
 </div>
 <p>Alternatively, you can specify some or all arguments using a configuration file:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>astra<span class="w"> </span>benchmark<span class="w"> </span>--config<span class="w"> </span>&lt;path<span class="w"> </span>to<span class="w"> </span>config<span class="w"> </span>file&gt;
 </pre></div>
 </div>
-<p>See <a class="reference external" href="../configs/example.yml">here</a> for an example. Arguments in the configuration file will override CLI arguments.</p>
-<p>By default, ASTRA will benchmark all implemented <a class="reference external" href="../astra/models/classification.py">classification</a> or <a class="reference external" href="../astra/models/regression.py">regression</a> models, and search over default hyperparameter grids. You can specify which models to consider, custom starting hyperparameters, and custom hyperparameter search spaces in the configuration file. When using Optuna, custom hyperparameters will be converted into integer, float, or categorical Optuna distributions.</p>
+<p>See <a class="reference external" href="https://github.com/duartegroup/astra/blob/main/configs/example.yml">here</a> for an example. Arguments in the configuration file will override CLI arguments.</p>
+<p>By default, ASTRA will benchmark all implemented <a class="reference external" href="https://github.com/duartegroup/astra/blob/main/astra/models/classification.py">classification</a> or <a class="reference external" href="https://github.com/duartegroup/astra/blob/main/astra/models/regression.py">regression</a> models, and search over default hyperparameter grids. You can specify which models to consider, custom starting hyperparameters, and custom hyperparameter search spaces in the configuration file. When using Optuna, custom hyperparameters will be converted into integer, float, or categorical Optuna distributions.</p>
 <p>The benchmark script will create the following files under <code class="docutils literal notranslate"><span class="pre">results/&lt;name&gt;</span></code>:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">default_CV.pkl</span></code>: A dictionary containing CV scores of the main and secondary metrics for all models using default hyperparameters.</p></li>

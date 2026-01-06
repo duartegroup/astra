@@ -12,7 +12,7 @@ Use `astra benchmark` to run performance benchmarks across different models usin
 
     astra benchmark <data>
 
-where ``data`` is the path to the dataset to train and evaluate models on. This should be a ``pd.DataFrame``, saved in CSV, pickle, or parquet format (which will be inferred from the file ending, and needs to be ``.csv``, ``.pkl``, ``.pickle``, or ``.parquet``), containing input features, the target variable, and a column indicating which fold a data point belongs to. See `here <../astra/data/example_df.csv>`_ for an example.
+where ``data`` is the path to the dataset to train and evaluate models on. This should be a ``pd.DataFrame``, saved in CSV, pickle, or parquet format (which will be inferred from the file ending, and needs to be ``.csv``, ``.pkl``, ``.pickle``, or ``.parquet``), containing input features, the target variable, and a column indicating which fold a data point belongs to. See `here <https://github.com/duartegroup/astra/blob/main/astra/data/example_df.csv>`_ for an example.
 
 **Options:**
 
@@ -35,7 +35,7 @@ where ``data`` is the path to the dataset to train and evaluate models on. This 
 
 .. note::
 
-    Metrics are not case-sensitive. See `here <../astra/metrics.py>`_ for an overview of available metrics.
+    Metrics are not case-sensitive. See `here <https://github.com/duartegroup/astra/blob/main/astra/metrics.py#L99>`_ for an overview of available metrics.
 
 Alternatively, you can specify some or all arguments using a configuration file:
 
@@ -43,9 +43,9 @@ Alternatively, you can specify some or all arguments using a configuration file:
 
     astra benchmark --config <path to config file>
 
-See `here <../configs/example.yml>`_ for an example. Arguments in the configuration file will override CLI arguments.
+See `here <https://github.com/duartegroup/astra/blob/main/configs/example.yml>`_ for an example. Arguments in the configuration file will override CLI arguments.
 
-By default, ASTRA will benchmark all implemented `classification <../astra/models/classification.py>`_ or `regression <../astra/models/regression.py>`_ models, and search over default hyperparameter grids. You can specify which models to consider, custom starting hyperparameters, and custom hyperparameter search spaces in the configuration file. When using Optuna, custom hyperparameters will be converted into integer, float, or categorical Optuna distributions.
+By default, ASTRA will benchmark all implemented `classification <https://github.com/duartegroup/astra/blob/main/astra/models/classification.py>`_ or `regression <https://github.com/duartegroup/astra/blob/main/astra/models/regression.py>`_ models, and search over default hyperparameter grids. You can specify which models to consider, custom starting hyperparameters, and custom hyperparameter search spaces in the configuration file. When using Optuna, custom hyperparameters will be converted into integer, float, or categorical Optuna distributions.
 
 The benchmark script will create the following files under ``results/<name>``:
 
