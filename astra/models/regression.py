@@ -4,11 +4,11 @@ This module contains variables for instantiating regressors and their hyperparam
 Attributes
 ----------
 REGRESSORS : dict[str, BaseEstimator]
-    A dictionary mapping model names to their corresponding scikit-learn regressor instances.
+    A dictionary mapping model names to their corresponding scikit-learn regressor instances. [`source <https://github.com/duartegroup/astra/blob/main/astra/models/regression.py#L32-L44>`_]
 REGRESSOR_PARAMS : dict[str, dict[str, list]]
-    A dictionary mapping model names to dictionaries of hyperparameters to search over.
+    A dictionary mapping model names to dictionaries of hyperparameters to search over. [`source <https://github.com/duartegroup/astra/blob/main/astra/models/regression.py#L46-L115>`_]
 REGRESSOR_PARAMS_OPTUNA : dict[str, dict[str, optuna.distributions]]
-    A dictionary mapping model names to dictionaries of hyperparameters to search over using Optuna.
+    A dictionary mapping model names to dictionaries of hyperparameters to search over using Optuna. [`source <https://github.com/duartegroup/astra/blob/main/astra/models/regression.py#L117-L234>`_]
 """
 
 from catboost import CatBoostRegressor
