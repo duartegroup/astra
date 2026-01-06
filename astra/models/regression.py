@@ -133,10 +133,10 @@ REGRESSOR_PARAMS_OPTUNA = {
     ),
     "RandomForestRegressor": dict(
         n_estimators=IntDistribution(10, 1000),
-        max_depth=IntDistribution(0, 100),
+        max_depth=IntDistribution(1, 100),
         min_samples_split=IntDistribution(2, 20),
         min_samples_leaf=IntDistribution(1, 10),
-        max_leaf_nodes=IntDistribution(0, 1000),
+        max_leaf_nodes=IntDistribution(2, 1000),
         bootstrap=CategoricalDistribution([True, False]),
         max_features=CategoricalDistribution(["log2", "sqrt", 0.2, 0.5, None]),
         min_weight_fraction_leaf=FloatDistribution(0.0, 0.5),
@@ -149,14 +149,14 @@ REGRESSOR_PARAMS_OPTUNA = {
         n_estimators=IntDistribution(10, 500),
         min_samples_split=IntDistribution(2, 20),
         min_samples_leaf=IntDistribution(1, 20),
-        max_depth=IntDistribution(0, 10),
-        max_leaf_nodes=IntDistribution(0, 1000),
+        max_depth=IntDistribution(1, 10),
+        max_leaf_nodes=IntDistribution(2, 1000),
         subsample=FloatDistribution(0.4, 1.0),
         max_features=CategoricalDistribution([None, "sqrt", "log2", 0.5]),
         criterion=CategoricalDistribution(["friedman_mse", "squared_error"]),
         min_weight_fraction_leaf=FloatDistribution(0.0, 0.5),
         min_impurity_decrease=FloatDistribution(0.0, 1.0),
-        n_iter_no_change=IntDistribution(0, 50),
+        n_iter_no_change=IntDistribution(1, 50),
     ),
     "HistGradientBoostingRegressor": dict(
         loss=CategoricalDistribution(
@@ -169,7 +169,7 @@ REGRESSOR_PARAMS_OPTUNA = {
         l2_regularization=FloatDistribution(0.0, 1.0),
         max_bins=IntDistribution(32, 256),
         early_stopping=CategoricalDistribution([True, False]),
-        max_depth=IntDistribution(0, 30),
+        max_depth=IntDistribution(1, 30),
         max_features=FloatDistribution(0.3, 1.0),
     ),
     "KNeighborsRegressor": dict(
@@ -228,7 +228,6 @@ REGRESSOR_PARAMS_OPTUNA = {
             ["Median", "Uniform", "UniformAndQuantiles", "MaxLogSum", "MinEntropy"]
         ),
         random_strength=FloatDistribution(1e-6, 10.0, log=True),
-        bagging_temperature=FloatDistribution(0.0, 1.0),
         bootstrap_type=CategoricalDistribution(["Bayesian", "Bernoulli", "MVS"]),
     ),
 }
