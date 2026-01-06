@@ -4,19 +4,19 @@ This module contains functions for model selection and evaluation.
 Attributes
 ----------
 CLASSIFICATION_METRICS : dict
-    A dictionary mapping classification metric names to their corresponding functions.
+    A dictionary mapping classification metric names to their corresponding functions. [`source <https://github.com/duartegroup/astra/blob/main/astra/metrics.py#L99-L109>`_]
 REGRESSION_METRICS : dict
-    A dictionary mapping regression metric names to their corresponding functions.
+    A dictionary mapping regression metric names to their corresponding functions. [`source <https://github.com/duartegroup/astra/blob/main/astra/metrics.py#L111-L119>`_]
 MULTICLASS_METRICS : dict
-    A dictionary mapping multiclass classification metric names to their corresponding functions.
+    A dictionary mapping multiclass classification metric names to their corresponding functions. [`source <https://github.com/duartegroup/astra/blob/main/astra/metrics.py#L124-L128>`_]
 KNOWN_METRICS : dict
-    A dictionary mapping all metric names to their corresponding functions.
+    A dictionary mapping all metric names to their corresponding functions. [`source <https://github.com/duartegroup/astra/blob/main/astra/metrics.py#L130>`_]
 SCORING : dict
-    A dictionary mapping all metric names to their corresponding scoring functions.
+    A dictionary mapping all metric names to their corresponding scoring functions. [`source <https://github.com/duartegroup/astra/blob/main/astra/metrics.py#L137-L155>`_]
 HIGHER_BETTER : list
-    A list of metrics for which higher scores are better.
+    A list of metrics for which higher scores are better. [`source <https://github.com/duartegroup/astra/blob/main/astra/metrics.py#L157-L170>`_]
 LOWER_BETTER : list
-    A list of metrics for which lower scores are better.
+    A list of metrics for which lower scores are better. [`source <https://github.com/duartegroup/astra/blob/main/astra/metrics.py#L171>`_]
 """
 
 from scipy.stats import kendalltau, pearsonr, spearmanr

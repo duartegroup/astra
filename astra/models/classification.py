@@ -4,13 +4,13 @@ This module contains variables for instantiating classifiers and their hyperpara
 Attributes
 ----------
 CLASSIFIERS : dict[str, BaseEstimator]
-    A dictionary mapping model names to their corresponding scikit-learn classifier instances.
+    A dictionary mapping model names to their corresponding scikit-learn classifier instances. [`source <https://github.com/duartegroup/astra/blob/main/astra/models/classification.py#L58-L86>`_]
 CLASSIFIER_PARAMS : dict[str, dict[str, list]]
-    A dictionary mapping model names to dictionaries of hyperparameters to search over.
+    A dictionary mapping model names to dictionaries of hyperparameters to search over. [`source <https://github.com/duartegroup/astra/blob/main/astra/models/classification.py#L96-L247>`_]
 CLASSIFIER_PARAMS_OPTUNA : dict[str, dict[str, optuna.distributions]]
-    A dictionary mapping model names to dictionaries of hyperparameters to search over using Optuna.
+    A dictionary mapping model names to dictionaries of hyperparameters to search over using Optuna. [`source <https://github.com/duartegroup/astra/blob/main/astra/models/classification.py#L249-L452>`_]
 NON_PROBABILISTIC_MODELS : list[str]
-    A list of model names that do not have a `predict_proba` method.
+    A list of model names that do not have a `predict_proba` method. [`source <https://github.com/duartegroup/astra/blob/main/astra/models/classification.py#L88-L94>`_]
 """
 
 import warnings
