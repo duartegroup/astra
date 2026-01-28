@@ -135,9 +135,7 @@ def run(
             logging.info("No significant difference found between the models")
 
     else:
-        logging.info(
-            f"{len(all_results)} CV results found, comparing them using Friedman test"
-        )
+        logging.info(f"{len(all_results)} CV results found.")
 
         if parametric == "auto":
             logging.info("Checking assumptions for parametric tests.")
