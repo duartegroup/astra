@@ -65,13 +65,13 @@ def run(
                 with open(CV_results_path + file, "rb") as f:
                     cv_results = pickle.load(f)
 
-                assert (
-                    main_metric in cv_results
-                ), f"{file} does not contain results for {main_metric}"
+                assert main_metric in cv_results, (
+                    f"{file} does not contain results for {main_metric}"
+                )
                 for metric in sec_metrics:
-                    assert (
-                        metric in cv_results
-                    ), f"{file} does not contain results for {metric}"
+                    assert metric in cv_results, (
+                        f"{file} does not contain results for {metric}"
+                    )
 
                 if all_in_one_dir:
                     model_name = file.split("final_CV.pkl")[0]
@@ -164,6 +164,16 @@ def run(
             bf_corr=True,
         )
         logging.info(f"Best model overall: {best_model}. Reason: {reason}.")
+        if reason not in [
+            "Repeated measure ANOVA",
+            "Friedman test",
+            "Tukey's HSD test",
+            "Conover post-hoc test",
+        ]:
+            logging.warning(
+                "The best model was determined using a fallback method. "
+                "Please consider whether it is appropriate for your use case."
+            )
 
         if all_in_one_dir:
             with open(CV_results[0] + best_model + "final_CV.pkl", "rb") as f:
