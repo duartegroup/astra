@@ -1,66 +1,52 @@
-.. astra documentation master file, created by
-   sphinx-quickstart on Thu Mar 15 13:55:56 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. div:: hero
 
-Welcome to ASTRA's documentation!
-=========================================================
+   .. raw:: html
+
+      <h1 class="hero-title">✦ ASTRA ✦</h1>
+      <p class="hero-tagline">Automated model selection using statistical testing for robust algorithms</p>
+
+   .. code-block:: bash
+
+      git clone https://github.com/duartegroup/astra.git && cd astra && pip install .
+
+   |ci-badge| |license-badge| |python-badge|
+
+----
 
 .. grid:: 1 1 2 2
+   :gutter: 3
 
-    .. grid-item-card:: Getting Started
-      :margin: 0 3 0 0
-      
-      Learn the basics of using ASTRA.
+   .. grid-item-card::
+      :link: getting_started
+      :link-type: doc
 
-      .. button-link:: ./getting_started.html
-         :color: primary
-         :outline:
-         :expand:
+      :octicon:`rocket;1.5em;sd-text-warning` **Getting Started**
+      ^^^
+      Install ASTRA and run your first benchmark in minutes.
 
-         To the Getting Started Guide
+   .. grid-item-card::
+      :link: user_guide
+      :link-type: doc
 
-      
+      :octicon:`book;1.5em;sd-text-warning` **User Guide**
+      ^^^
+      In-depth reference for all CLI commands and options.
 
-    .. grid-item-card::  User Guide
-      :margin: 0 3 0 0
-      
-      An in-depth guide for users.
+   .. grid-item-card::
+      :link: api
+      :link-type: doc
 
-      .. button-link:: ./user_guide.html
-         :color: primary
-         :outline:
-         :expand:
+      :octicon:`code-square;1.5em;sd-text-warning` **API Reference**
+      ^^^
+      Full documentation of the Python API.
 
-         To the User Guide
-      
-      
+   .. grid-item-card::
+      :link: developer_guide
+      :link-type: doc
 
-    .. grid-item-card:: API Reference
-      :margin: 0 3 0 0
-      
-      How to use the API of ASTRA.
-
-      .. button-link:: ./api.html
-         :color: primary
-         :outline:
-         :expand:
-
-         To the API Reference.
-
-      
-
-    .. grid-item-card::  Developer Guide
-      :margin: 0 3 0 0
-      
-      How to contribute to ASTRA.
-
-      .. button-link:: ./developer_guide.html
-         :color: primary
-         :outline:
-         :expand:
-
-         To the Developer Guide
+      :octicon:`git-pull-request;1.5em;sd-text-warning` **Developer Guide**
+      ^^^
+      How to set up a dev environment and contribute.
 
 
 .. toctree::
@@ -73,3 +59,15 @@ Welcome to ASTRA's documentation!
    api
    developer_guide
 
+
+.. |ci-badge| image:: https://img.shields.io/github/actions/workflow/status/duartegroup/astra/CI.yaml?branch=main&style=flat-square&label=CI&color=f59e0b
+   :target: https://github.com/duartegroup/astra/actions/workflows/CI.yaml
+   :alt: CI status
+
+.. |license-badge| image:: https://img.shields.io/badge/License-MIT-f59e0b?style=flat-square
+   :target: https://github.com/duartegroup/astra/blob/main/LICENSE
+   :alt: MIT License
+
+.. |python-badge| image:: https://img.shields.io/badge/Python-3.11%2B-3776ab?style=flat-square&logo=python&logoColor=white
+   :target: https://www.python.org/
+   :alt: Python 3.11+

@@ -1,74 +1,179 @@
 User Guide
 ==========
 
-This page details how to use ASTRA. ASTRA provides a command-line interface (CLI) for benchmarking and comparing machine learning models.
+ASTRA provides a command-line interface (CLI) for benchmarking and comparing
+machine learning models using statistical testing.
 
 Benchmarking Models
 -------------------
 
-Use `astra benchmark` to run performance benchmarks across different models using
+Use ``astra benchmark`` to run performance benchmarks across different models:
 
 .. code-block:: bash
 
     astra benchmark <data>
 
-where ``data`` is the path to the dataset to train and evaluate models on. This should be a ``pd.DataFrame``, saved in CSV, pickle, or parquet format (which will be inferred from the file ending, and needs to be ``.csv``, ``.pkl``, ``.pickle``, or ``.parquet``), containing input features, the target variable, and a column indicating which fold a data point belongs to. See `here <https://github.com/duartegroup/astra/blob/main/astra/data/example_df.csv>`_ for an example.
+where ``data`` is the path to a dataset (CSV, pickle, or parquet) containing
+input features, the target variable, and a fold column. See
+`here <https://github.com/duartegroup/astra/blob/main/astra/data/example_df.csv>`_
+for an example.
 
-**Options:**
+.. tip::
 
-* ``--name``: Name of the experiment. Results will be saved in a folder with this name in the 'results' directory. Will be used to load cached results if they exist. Default: ``data`` file name (without the extension).
-* ``--features``: Name of the column containing the features. Default: Features.
-* ``--target``: Name of the column containing the target. Default: Target.
-* ``--run_nested_CV``: Whether to run nested CV with hyperparameter tuning for the best models. Default: False.
-* ``--use_optuna``: Whether to use Optuna for hyperparameter tuning. Default: False.
-* ``--n_trials``: Number of trials for Optuna hyperparameter search. Default: 100.
-* ``--timeout``: Time limit (in seconds) for Optuna hyperparameter search. Default: 3600.
-* ``--fold_col``: Name(s) of the column(s) containing the *0-indexed* CV fold number(s). If a list is provided, models will be benchmarked in an nxk-fold CV, where n is the number of repeats and k is the number of folds. If a single string is provided, it will be treated as a single fold column. nxk-fold CV does not currently support nested CV and final hyperparameter tuning. Default: Fold.
-* ``--main_metric``: Main metric to use for model selection. This will be used to infer the prediction task (classification or regression). Default: R2.
-* ``--sec_metrics``: Secondary metrics to use for model selection. Default: MSE, MAE.
-* ``--parametric``: Whether to use parametric statistical tests for model comparison. If 'auto' (default), the assumptions of parametric tests will be checked, and parametric tests will be used if the assumptions are met.
-* ``--impute``: Method to use for imputing missing values. If None, no imputation will be performed. Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.
-* ``--remove_constant``: If specified, features with variance below this threshold will be removed. If None, no features are removed.
-* ``--remove_correlated``: If specified, features with correlation above this threshold will be removed. If None, no features are removed.
-* ``--scaler``: Type of scaler to use, if the data is to be scaled first. Valid choices are 'Standard' and 'MinMax'. Default: None.
-* ``--n_jobs``: Number of jobs to run in parallel for hyperparameter tuning. Default: 1.
+   You can specify some or all options via a YAML configuration file:
+
+   .. code-block:: bash
+
+      astra benchmark --config <config.yml>
+
+   See `here <https://github.com/duartegroup/astra/blob/main/configs/example.yml>`_
+   for the format. Arguments in the config file take precedence over CLI flags.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 14 14 50
+
+   * - Option
+     - Type
+     - Default
+     - Description
+   * - ``--name``
+     - str
+     - data filename
+     - Name of the experiment. Results are saved in ``results/<name>/``.
+       Used to load cached results if they exist.
+   * - ``--features``
+     - str
+     - Features
+     - Name of the column containing the input features.
+   * - ``--target``
+     - str
+     - Target
+     - Name of the column containing the target variable.
+   * - ``--run_nested_CV``
+     - bool
+     - False
+     - Run nested CV with hyperparameter tuning for the best models.
+   * - ``--use_optuna``
+     - bool
+     - False
+     - Use Optuna for hyperparameter tuning instead of grid search.
+   * - ``--n_trials``
+     - int
+     - 100
+     - Number of trials for Optuna hyperparameter search.
+   * - ``--timeout``
+     - int
+     - 3600
+     - Time limit in seconds for Optuna hyperparameter search.
+   * - ``--fold_col``
+     - str | list
+     - Fold
+     - Name(s) of the *0-indexed* fold column(s). Providing a list enables
+       nxk-fold CV (n repeats × k folds).
+   * - ``--main_metric``
+     - str
+     - R2
+     - Main metric for model selection. Determines whether the task is
+       regression or classification.
+   * - ``--sec_metrics``
+     - list[str]
+     - MSE, MAE
+     - Secondary metrics to report alongside the main metric.
+   * - ``--parametric``
+     - str
+     - auto
+     - Whether to use parametric statistical tests. ``auto`` checks
+       assumptions and selects the appropriate test automatically.
+   * - ``--impute``
+     - str | float | None
+     - None
+     - Missing value imputation strategy. Choices: ``mean``, ``median``,
+       ``knn``, or a numeric constant.
+   * - ``--remove_constant``
+     - float | None
+     - None
+     - Remove features whose variance falls below this threshold.
+   * - ``--remove_correlated``
+     - float | None
+     - None
+     - Remove features whose correlation with another feature exceeds
+       this threshold.
+   * - ``--scaler``
+     - str | None
+     - None
+     - Scale features before training. Choices: ``Standard``, ``MinMax``.
+   * - ``--n_jobs``
+     - int
+     - 1
+     - Number of parallel jobs for hyperparameter tuning.
 
 .. note::
 
-    Metrics are not case-sensitive. See `here <https://github.com/duartegroup/astra/blob/main/astra/metrics.py#L99>`_ for an overview of available metrics.
+   Metrics are not case-sensitive. See
+   `here <https://github.com/duartegroup/astra/blob/main/astra/metrics.py#L99>`_
+   for all available metrics.
 
-Alternatively, you can specify some or all arguments using a configuration file:
+.. warning::
 
-.. code-block:: bash
+   nxk-fold CV (multiple ``--fold_col`` values) does not currently support
+   nested CV or final hyperparameter tuning.
 
-    astra benchmark --config <path to config file>
+By default, ASTRA benchmarks all implemented
+`classification <https://github.com/duartegroup/astra/blob/main/astra/models/classification.py>`_
+or
+`regression <https://github.com/duartegroup/astra/blob/main/astra/models/regression.py>`_
+models over default hyperparameter grids. Custom models, starting
+hyperparameters, and search spaces can be specified in the configuration file.
 
-See `here <https://github.com/duartegroup/astra/blob/main/configs/example.yml>`_ for an example. Arguments in the configuration file will override CLI arguments.
+The benchmark creates the following files under ``results/<name>/``:
 
-By default, ASTRA will benchmark all implemented `classification <https://github.com/duartegroup/astra/blob/main/astra/models/classification.py>`_ or `regression <https://github.com/duartegroup/astra/blob/main/astra/models/regression.py>`_ models, and search over default hyperparameter grids. You can specify which models to consider, custom starting hyperparameters, and custom hyperparameter search spaces in the configuration file. When using Optuna, custom hyperparameters will be converted into integer, float, or categorical Optuna distributions.
+* ``default_CV.pkl`` — CV scores for all models with default hyperparameters.
+* ``nested_CV.pkl`` — CV scores for all models with optimised hyperparameters
+  (nested grid search).
+* ``final_CV.pkl`` — CV scores for the final model with optimised
+  hyperparameters.
+* ``final_CV_hparam_search.csv`` — Full hyperparameter search results.
+* ``final_model.pkl`` — Best model refit on the full dataset.
+* ``final_hyperparameters.pkl`` — Optimal hyperparameters.
 
-The benchmark script will create the following files under ``results/<name>``:
+.. tip::
 
-* ``default_CV.pkl``: A dictionary containing CV scores of the main and secondary metrics for all models using default hyperparameters.
-* ``nested_CV.pkl``: A dictionary containing CV scores of the main and secondary metrics for all models with optimised hyperparameters using nested grid-search.
-* ``final_CV.pkl``: A dictionary containing CV scores of the main and secondary metrics for the final model with optimised hyperparameters.
-* ``final_CV_hparam_search.csv``: Final hyperparameter search results (``cv_results_`` of ``GridSearchCV`` or ``trials_dataframe`` of ``OptunaSearchCV``).
-* ``final_model.pkl``: The best performing model, refit on the whole dataset.
-* ``final_hyperparameters.pkl``: A dictionary of the optimal hyperparameters.
+   All ``.pkl`` files can be loaded with Python's built-in :func:`pickle.load`
+   or with :func:`pandas.read_pickle`.
 
 Comparing Models
 ----------------
 
-Use `astra compare` to statistically analyse benchmark results:
+Use ``astra compare`` to statistically analyse benchmark results:
 
 .. code-block:: bash
 
     astra compare <CV_results_path>
 
-where ``CV_results_path`` is a list of paths to directories containing CV results, or the path to a single directory containing all CV results. CV results should be pickled dictionaries with metrics as keys and lists of scores as values, for example, ``final_CV.pkl`` returned by `astra benchmark`, and ending with ``final_CV.pkl``. The model name will be the parent directory if passing a list of paths, or the file name (minus the ``final_CV.pkl``) if passing a single directory.
+where ``CV_results_path`` is either a list of paths to directories each
+containing ``final_CV.pkl``, or a single directory containing multiple
+``*final_CV.pkl`` files. The model name is inferred from the parent directory
+name (list mode) or from the filename prefix (single directory mode).
 
-**Options:**
+.. list-table::
+   :header-rows: 1
+   :widths: 22 14 14 50
 
-* ``--main_metric``: The main metric to use for comparison.
-* ``--sec_metrics``: Secondary metrics to use for comparison.
-* ``--parametric``: Whether to use parametric statistical tests for model comparison. If 'auto' (default), the assumptions of parametric tests will be checked, and parametric tests will be used if the assumptions are met.
+   * - Option
+     - Type
+     - Default
+     - Description
+   * - ``--main_metric``
+     - str
+     - —
+     - The main metric to use for comparison.
+   * - ``--sec_metrics``
+     - list[str]
+     - —
+     - Secondary metrics to report.
+   * - ``--parametric``
+     - str
+     - ``auto``
+     - Whether to use parametric statistical tests. ``auto`` checks
+       assumptions and selects the appropriate test automatically.

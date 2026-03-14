@@ -6,10 +6,13 @@ Welcome to ASTRA! ASTRA is a Python package for Automated model selection using 
 Installation
 ------------
 
-You can install ASTRA using pip:
+ASTRA is not yet available on PyPI. Clone the repository and install it
+locally:
 
 .. code-block:: bash
 
+    git clone https://github.com/duartegroup/astra.git
+    cd astra
     pip install .
 
 Usage
