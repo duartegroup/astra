@@ -404,9 +404,17 @@ CLASSIFIER_PARAMS_OPTUNA = {
         tol=FloatDistribution(1e-5, 1e-2, log=True),
     ),
     "MLPClassifier": dict(
-        hidden_layer_sizes=dict(
-            hidden_layer_size_1=IntDistribution(16, 256),
-            hidden_layer_size_2=IntDistribution(0, 256),
+        hidden_layer_sizes=CategoricalDistribution(
+            [
+                (32,),
+                (64,),
+                (128,),
+                (256,),
+                (64, 32),
+                (128, 64),
+                (256, 128),
+                (256, 128, 64),
+            ]
         ),
         activation=CategoricalDistribution(["identity", "logistic", "relu"]),
         solver=CategoricalDistribution(["lbfgs", "adam", "sgd"]),
