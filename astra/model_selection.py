@@ -221,10 +221,10 @@ def find_n_best_models(
             break
         if parametric:
             # Perform repeated measures ANOVA
-            pvalue = pg.rm_anova(stat_for_test)["p-unc"].values[0]
+            pvalue = pg.rm_anova(stat_for_test)["p_unc"].values[0]
         else:
             # Perform Friedman test
-            pvalue = pg.friedman(stat_for_test)["p-unc"].values[0]
+            pvalue = pg.friedman(stat_for_test)["p_unc"].values[0]
 
         # Bonferroni correction of significance level
         if bf_corr:
