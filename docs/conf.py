@@ -27,7 +27,10 @@ extensions = [
     "sphinx_design",
     "sphinx_copybutton",
     "notfound.extension",
+    "myst_nb",
 ]
+
+nb_execution_mode = "off"
 
 autodoc_default_options = {
     "members": True,

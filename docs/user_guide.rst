@@ -136,6 +136,7 @@ The benchmark creates the following files under ``results/<name>/``:
 * ``final_CV_hparam_search.csv`` — Full hyperparameter search results.
 * ``final_model.pkl`` — Best model refit on the full dataset.
 * ``final_hyperparameters.pkl`` — Optimal hyperparameters.
+* ``benchmark.log`` — Log of the benchmarking process.
 
 .. tip::
 

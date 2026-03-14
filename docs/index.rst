@@ -41,6 +41,14 @@
       Full documentation of the Python API.
 
    .. grid-item-card::
+      :link: tutorials/index
+      :link-type: doc
+
+      :octicon:`mortar-board;1.5em;sd-text-warning` **Tutorials**
+      ^^^
+      Step-by-step worked examples.
+
+   .. grid-item-card::
       :link: developer_guide
       :link-type: doc
 
@@ -55,6 +63,7 @@
    :titlesonly:
 
    getting_started
+   tutorials/index
    user_guide
    api
    developer_guide
