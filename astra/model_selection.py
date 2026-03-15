@@ -777,13 +777,18 @@ def get_optimised_cv_performance(
     parameters : dict[str, list] or dict[str, BaseDistribution]
         A dictionary of hyperparameters to search over.
     n_jobs : int
-        The number of jobs to run in parallel during grid search.
+        The number of jobs to run in parallel. For Optuna, this parallelises trials (not CV
+        folds within each trial). With n_jobs > 1, the timeout is a soft limit: new trials
+        stop being submitted once timeout elapses, but all in-flight trials run to completion.
+        The actual runtime can therefore exceed timeout by up to n_jobs * single_trial_duration.
     use_optuna : bool, default=False
         Whether to use Optuna for hyperparameter optimisation instead of grid search.
     n_trials : int, default=100
         The number of trials to run during Optuna hyperparameter optimisation.
     timeout : int, default=3600
-        The maximum time in seconds to run Optuna hyperparameter optimisation.
+        The maximum time in seconds to run Optuna hyperparameter optimisation. Note that this
+        is a soft timeout: when n_jobs > 1, up to n_jobs trials already in flight will be
+        allowed to finish, so the actual runtime may exceed this value.
     impute : str or float or int or None, default=None
         The imputation strategy to use for missing values. If None, no imputation is performed.
         Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.
@@ -850,6 +855,15 @@ def get_optimised_cv_performance(
         # perform hyperparameter search
         if use_optuna:
             optuna.logging.set_verbosity(optuna.logging.WARNING)
+            if n_jobs != 1 and timeout is not None:
+                warnings.warn(
+                    f"n_jobs={n_jobs} runs Optuna trials in parallel. The timeout={timeout}s "
+                    "is a soft limit: all in-flight trials will run to completion after it "
+                    "elapses, so actual runtime may exceed timeout by up to "
+                    "n_jobs * single_trial_duration.",
+                    UserWarning,
+                    stacklevel=2,
+                )
             clf = OptunaSearchCV(
                 estimator=model,
                 param_distributions=parameters,
@@ -951,13 +965,18 @@ def get_best_hparams(
     parameters : dict[str, list] or dict[str, BaseDistribution]
         A dictionary of hyperparameters to search over.
     n_jobs : int
-        The number of jobs to run in parallel during grid search.
+        The number of jobs to run in parallel. For Optuna, this parallelises trials (not CV
+        folds within each trial). With n_jobs > 1, the timeout is a soft limit: new trials
+        stop being submitted once timeout elapses, but all in-flight trials run to completion.
+        The actual runtime can therefore exceed timeout by up to n_jobs * single_trial_duration.
     use_optuna : bool, default=False
         Whether to use Optuna for hyperparameter optimisation instead of grid search.
     n_trials : int, default=100
         The number of trials to run during Optuna hyperparameter optimisation.
     timeout : int, default=3600
-        The maximum time in seconds to run Optuna hyperparameter optimisation.
+        The maximum time in seconds to run Optuna hyperparameter optimisation. Note that this
+        is a soft timeout: when n_jobs > 1, up to n_jobs trials already in flight will be
+        allowed to finish, so the actual runtime may exceed this value.
     impute : str or float or int or None, default=None
         The imputation strategy to use for missing values. If None, no imputation is performed.
         Valid choices are 'mean', 'median', 'knn', or a float or int value for constant imputation.
@@ -1009,6 +1028,15 @@ def get_best_hparams(
     # perform hyperparameter search
     if use_optuna:
         optuna.logging.set_verbosity(optuna.logging.WARNING)
+        if n_jobs != 1 and timeout is not None:
+            warnings.warn(
+                f"n_jobs={n_jobs} runs Optuna trials in parallel. The timeout={timeout}s "
+                "is a soft limit: all in-flight trials will run to completion after it "
+                "elapses, so actual runtime may exceed timeout by up to "
+                "n_jobs * single_trial_duration.",
+                UserWarning,
+                stacklevel=2,
+            )
         clf = OptunaSearchCV(
             estimator=model,
             param_distributions=parameters,
