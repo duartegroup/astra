@@ -9,7 +9,7 @@ import astra  # noqa: E402
 # -- Project information -----------------------------------------------------
 
 project = "ASTRA"
-copyright = "2025, Wojtek Treyde"
+copyright = "2026, Wojtek Treyde"
 author = "Wojtek Treyde"
 version = astra.__version__
 release = astra.__version__

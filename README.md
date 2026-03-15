@@ -89,7 +89,7 @@ Options:
 
 ### Copyright
 
-Copyright (c) 2025, Wojtek Treyde
+Copyright (c) 2026, Wojtek Treyde
 
 
 #### Acknowledgements
