@@ -7,3 +7,4 @@ Worked examples demonstrating how to use ASTRA.
    :maxdepth: 1
 
    synthetic_dataset
+   logd_case_study
