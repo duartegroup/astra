@@ -65,13 +65,13 @@ def run(
                 with open(CV_results_path + file, "rb") as f:
                     cv_results = pickle.load(f)
 
-                assert main_metric in cv_results, (
-                    f"{file} does not contain results for {main_metric}"
-                )
+                assert (
+                    main_metric in cv_results
+                ), f"{file} does not contain results for {main_metric}"
                 for metric in sec_metrics:
-                    assert metric in cv_results, (
-                        f"{file} does not contain results for {metric}"
-                    )
+                    assert (
+                        metric in cv_results
+                    ), f"{file} does not contain results for {metric}"
 
                 if all_in_one_dir:
                     model_name = file.split("final_CV.pkl")[0]
