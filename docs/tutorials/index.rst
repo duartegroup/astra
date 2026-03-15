@@ -6,4 +6,4 @@ Worked examples demonstrating how to use ASTRA.
 .. toctree::
    :maxdepth: 1
 
-   worked_example
+   synthetic_dataset
