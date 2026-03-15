@@ -1,0 +1,176 @@
+/* ============================================================
+   ASTRA Documentation — Dark Space Theme
+   ============================================================ */
+
+/* ── Starfield — sidebar only ───────────────────────────────── */
+
+[data-theme="dark"] .sidebar-drawer {
+    background-image:
+        radial-gradient(circle 1px at  8%  4%, white, transparent),
+        radial-gradient(circle 2px at 17% 11%, white, transparent),
+        radial-gradient(circle 1px at  4% 18%, white, transparent),
+        radial-gradient(circle 2px at 25%  8%, white, transparent),
+        radial-gradient(circle 1px at 73% 15%, white, transparent),
+        radial-gradient(circle 2px at 88%  6%, white, transparent),
+        radial-gradient(circle 1px at 55% 22%, white, transparent),
+        radial-gradient(circle 2px at 38% 19%, white, transparent),
+        radial-gradient(circle 1px at 12% 30%, white, transparent),
+        radial-gradient(circle 2px at 65% 33%, white, transparent),
+        radial-gradient(circle 1px at 82% 29%, white, transparent),
+        radial-gradient(circle 2px at 44% 40%, white, transparent),
+        radial-gradient(circle 1px at 20% 47%, white, transparent),
+        radial-gradient(circle 2px at 91% 44%, white, transparent),
+        radial-gradient(circle 1px at  7% 55%, white, transparent),
+        radial-gradient(circle 2px at 70% 51%, white, transparent),
+        radial-gradient(circle 1px at 33% 62%, white, transparent),
+        radial-gradient(circle 2px at 58% 68%, white, transparent),
+        radial-gradient(circle 1px at 15% 73%, white, transparent),
+        radial-gradient(circle 2px at 85% 70%, white, transparent),
+        radial-gradient(circle 1px at 47% 79%, white, transparent),
+        radial-gradient(circle 2px at 22% 84%, white, transparent),
+        radial-gradient(circle 1px at 78% 87%, white, transparent),
+        radial-gradient(circle 2px at  5% 92%, white, transparent),
+        radial-gradient(circle 1px at 60% 95%, white, transparent),
+        radial-gradient(circle 2px at 40% 97%, white, transparent),
+        radial-gradient(circle 1px at 63% 26%, white, transparent),
+        radial-gradient(circle 2px at 96% 57%, white, transparent),
+        radial-gradient(circle 1px at 10% 66%, white, transparent),
+        radial-gradient(circle 2px at 48% 72%, white, transparent),
+        radial-gradient(circle 1px at 35% 90%, white, transparent),
+        radial-gradient(circle 2px at 69% 76%, white, transparent),
+        radial-gradient(circle 1px at 52% 45%, white, transparent),
+        radial-gradient(circle 3px at 30% 14%, rgb(251, 191, 36), transparent),
+        radial-gradient(circle 3px at 77% 38%, rgb(251, 191, 36), transparent),
+        radial-gradient(circle 3px at 18% 61%, rgb(251, 191, 36), transparent),
+        radial-gradient(circle 3px at 92% 78%, rgb(251, 191, 36), transparent),
+        radial-gradient(circle 3px at 50% 88%, rgb(251, 191, 36), transparent),
+        radial-gradient(circle 3px at 65% 52%, rgb(251, 191, 36), transparent),
+        radial-gradient(circle 3px at 10% 43%, rgb(251, 191, 36), transparent) !important;
+    background-color: #0b0f1a !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    body:not([data-theme="light"]) .sidebar-drawer {
+        background-image:
+            radial-gradient(circle 1px at  8%  4%, white, transparent),
+            radial-gradient(circle 2px at 17% 11%, white, transparent),
+            radial-gradient(circle 1px at  4% 18%, white, transparent),
+            radial-gradient(circle 2px at 25%  8%, white, transparent),
+            radial-gradient(circle 1px at 73% 15%, white, transparent),
+            radial-gradient(circle 2px at 88%  6%, white, transparent),
+            radial-gradient(circle 1px at 55% 22%, white, transparent),
+            radial-gradient(circle 2px at 38% 19%, white, transparent),
+            radial-gradient(circle 1px at 12% 30%, white, transparent),
+            radial-gradient(circle 2px at 65% 33%, white, transparent),
+            radial-gradient(circle 1px at 82% 29%, white, transparent),
+            radial-gradient(circle 2px at 44% 40%, white, transparent),
+            radial-gradient(circle 1px at 20% 47%, white, transparent),
+            radial-gradient(circle 2px at 91% 44%, white, transparent),
+            radial-gradient(circle 1px at  7% 55%, white, transparent),
+            radial-gradient(circle 2px at 70% 51%, white, transparent),
+            radial-gradient(circle 1px at 33% 62%, white, transparent),
+            radial-gradient(circle 2px at 58% 68%, white, transparent),
+            radial-gradient(circle 1px at 15% 73%, white, transparent),
+            radial-gradient(circle 2px at 85% 70%, white, transparent),
+            radial-gradient(circle 1px at 47% 79%, white, transparent),
+            radial-gradient(circle 2px at 22% 84%, white, transparent),
+            radial-gradient(circle 1px at 78% 87%, white, transparent),
+            radial-gradient(circle 2px at  5% 92%, white, transparent),
+            radial-gradient(circle 1px at 60% 95%, white, transparent),
+            radial-gradient(circle 2px at 40% 97%, white, transparent),
+            radial-gradient(circle 1px at 63% 26%, white, transparent),
+            radial-gradient(circle 2px at 96% 57%, white, transparent),
+            radial-gradient(circle 1px at 10% 66%, white, transparent),
+            radial-gradient(circle 2px at 48% 72%, white, transparent),
+            radial-gradient(circle 1px at 35% 90%, white, transparent),
+            radial-gradient(circle 2px at 69% 76%, white, transparent),
+            radial-gradient(circle 1px at 52% 45%, white, transparent),
+            radial-gradient(circle 3px at 30% 14%, rgb(251, 191, 36), transparent),
+            radial-gradient(circle 3px at 77% 38%, rgb(251, 191, 36), transparent),
+            radial-gradient(circle 3px at 18% 61%, rgb(251, 191, 36), transparent),
+            radial-gradient(circle 3px at 92% 78%, rgb(251, 191, 36), transparent),
+            radial-gradient(circle 3px at 50% 88%, rgb(251, 191, 36), transparent),
+            radial-gradient(circle 3px at 65% 52%, rgb(251, 191, 36), transparent),
+            radial-gradient(circle 3px at 10% 43%, rgb(251, 191, 36), transparent) !important;
+        background-color: #0b0f1a !important;
+    }
+}
+
+/* ── Hero section ───────────────────────────────────────────── */
+
+.hero {
+    text-align: center;
+    padding: 3rem 1rem 2.5rem;
+}
+
+.hero-title {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 700;
+    color: #f59e0b;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.75rem;
+    line-height: 1.1;
+    text-shadow: 0 0 50px rgba(245, 158, 11, 0.3);
+}
+
+.hero-tagline {
+    font-size: 1.1rem;
+    color: var(--color-foreground-secondary);
+    max-width: 540px;
+    margin: 0 auto 1.75rem;
+    line-height: 1.6;
+}
+
+.hero .highlight {
+    display: inline-block;
+    text-align: left;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+}
+
+.hero p img {
+    margin: 0 0.2rem;
+    vertical-align: middle;
+}
+
+/* ── Star decorations flanking the sidebar logo ────────────── */
+
+[data-theme="dark"] .sidebar-brand-text::before {
+    content: "✦ ";
+    color: #f59e0b;
+}
+
+[data-theme="dark"] .sidebar-brand-text::after {
+    content: " ✦";
+    color: #f59e0b;
+}
+
+[data-theme="dark"] .sidebar-scroll {
+    background: transparent;
+}
+
+/* ── sphinx-design cards ────────────────────────────────────── */
+
+[data-theme="dark"] .sd-card {
+    background-color: #0f1729;
+    border-color: #1e2d4a;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme="dark"] .sd-card:hover {
+    border-color: #f59e0b;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.12);
+}
+
+/* ── Code blocks ────────────────────────────────────────────── */
+
+[data-theme="dark"] .highlight,
+[data-theme="dark"] code.literal {
+    border-radius: 5px;
+}
+
+/* ── Admonitions ────────────────────────────────────────────── */
+
+[data-theme="dark"] .admonition {
+    border-left-width: 3px;
+}

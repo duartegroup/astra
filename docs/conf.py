@@ -98,7 +98,7 @@ texinfo_documents = [
         "ASTRA Documentation",
         author,
         "astra",
-        "Automated model selection using statistical testing " "for robust algorithms",
+        "Automated model selection using statistical testing for robust algorithms",
         "Miscellaneous",
     ),
 ]
