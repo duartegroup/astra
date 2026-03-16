@@ -1,0 +1,1904 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "fe563431",
+   "metadata": {},
+   "source": [
+    "# Case study on real-life drug discovery data\n",
+    "\n",
+    "In this tutorial, we demonstrate the complete ASTRA workflow on real-life drug discovery data from the [ASAP Discovery x OpenADMET Antiviral Challenge](https://pubs.acs.org/doi/10.1021/acs.jcim.5c02106). A part of the challenge is predicting the LogD of several hundred chemical compounds. LogD is a measure of how a compound distributes between a lipid phase and water, and important for drug discovery because it affects membrane permeability, solubility, and bioavailability.\n",
+    "\n",
+    "The data were split by when they were tested, with compounds from early stages of the drug discovery campaign serving as the training data, and compounds from later stages serving as the test data. The test data were additionally stratified by chemical similarity, removing compounds that were deemed too chemically similar to training compounds. This challenge therefore tests ML models retrospectively in real-life drug discovery settings, where ML models can be trained on early data to guide further drug optimisation efforts.\n",
+    "\n",
+    "We split the training data using *k*-means clustering and calculated six standard cheminformatics fingerprints (see [ASTRA's benchmark repository](https://github.com/duartegroup/astra_benchmark)). We provide ASTRA-ready datasets [here](https://github.com/duartegroup/astra/docs/tutorials/features/).\n",
+    "\n",
+    "A typical ASTRA workflow consists of:\n",
+    "\n",
+    "1. running `astra benchmark` for every fingerprint, yielding a single model per fingerprint, and\n",
+    "2. running `astra compare` to compare models obtained for different fingerprints."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "31c65deb",
+   "metadata": {},
+   "source": [
+    "## Running `astra benchmark` for every fingerprint\n",
+    "\n",
+    "We run `astra benchmark` with MSE as the main metric for model selection, and R<sup>2</sup> and MAE as secondary metrics. ASTRA will evaluate all built-in regressors using 5-fold CV and automatically select the best one via statistical testing. Hyperparameter tuning of the final model is performed using Optuna (`--use_optuna`) with a timeout of 100 s."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "f6fd848b",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                                                                                \n",
+      "   \u001b[1;34m👋 Welcome to ASTRA - Automated model selection using statistical testing\u001b[0m    \n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                          _                       \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m              __ _  ___ | |_  _ __   __ _         \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |\u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m __|| __|| '__| \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m            | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |\\__ \\| |_ | |   | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \\__,_||___/ \\__||_|    \\__,_|        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "                         \u001b[1;36m🤔 For help, run: astra --help\u001b[0m                         \n",
+      "              \u001b[1;36m🧪 To benchmark models, run: astra benchmark --help\u001b[0m               \n",
+      "                \u001b[1;36m🏆 To compare models, run: astra compare --help\u001b[0m                 \n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:55 - INFO: Starting benchmark for LogD_atompair.\n",
+      "15-03 14:55 - INFO: Loading data.\n",
+      "15-03 14:55 - INFO: Starting benchmarking.\n",
+      "15-03 14:55 - INFO: Features column: Features\n",
+      "15-03 14:55 - INFO: Target column: Target\n",
+      "15-03 14:55 - INFO: Running 5-fold CV.\n",
+      "15-03 14:55 - INFO: Fold column: KMeans_Cluster_42\n",
+      "15-03 14:55 - INFO: Using Optuna for hyperparameter optimization, with 100 trials and a timeout of 100 seconds.\n",
+      "15-03 14:55 - INFO: Will check assumptions for parametric tests and use them if met.\n",
+      "15-03 14:55 - INFO: Getting models and parameters.\n",
+      "15-03 14:55 - INFO: Benchmarking regression models.\n",
+      "15-03 14:55 - INFO: Main metric: mse\n",
+      "15-03 14:55 - INFO: Secondary metrics: ['r2', 'mae']\n",
+      "15-03 14:55 - INFO: Starting CV for all models using default hyperparameters.\n",
+      "15-03 14:55 - INFO: Running CV.\n",
+      "15-03 14:55 - INFO: Running XGBRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for XGBRegressor:\n",
+      "                    mse: 0.956 ± 0.278 (median: 0.792)\n",
+      "                    r2: 0.248 ± 0.418 (median: 0.432)\n",
+      "                    mae: 0.737 ± 0.121 (median: 0.693)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:55 - INFO: Running RandomForestRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for RandomForestRegressor:\n",
+      "                    mse: 0.815 ± 0.125 (median: 0.834)\n",
+      "                    r2: 0.401 ± 0.153 (median: 0.467)\n",
+      "                    mae: 0.673 ± 0.076 (median: 0.694)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:56 - INFO: Running GradientBoostingRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for GradientBoostingRegressor:\n",
+      "                    mse: 0.856 ± 0.151 (median: 0.908)\n",
+      "                    r2: 0.371 ± 0.175 (median: 0.419)\n",
+      "                    mae: 0.705 ± 0.080 (median: 0.702)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:56 - INFO: Running HistGradientBoostingRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for HistGradientBoostingRegressor:\n",
+      "                    mse: 0.857 ± 0.129 (median: 0.875)\n",
+      "                    r2: 0.354 ± 0.235 (median: 0.472)\n",
+      "                    mae: 0.708 ± 0.082 (median: 0.728)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:56 - INFO: Running KNeighborsRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for KNeighborsRegressor:\n",
+      "                    mse: 0.932 ± 0.263 (median: 0.820)\n",
+      "                    r2: 0.321 ± 0.180 (median: 0.207)\n",
+      "                    mae: 0.713 ± 0.088 (median: 0.683)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:56 - INFO: Running SVR.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for SVR:\n",
+      "                    mse: 0.762 ± 0.192 (median: 0.634)\n",
+      "                    r2: 0.456 ± 0.096 (median: 0.450)\n",
+      "                    mae: 0.664 ± 0.096 (median: 0.665)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:56 - INFO: Running Ridge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for Ridge:\n",
+      "                    mse: 0.762 ± 0.105 (median: 0.725)\n",
+      "                    r2: 0.419 ± 0.213 (median: 0.523)\n",
+      "                    mae: 0.669 ± 0.054 (median: 0.686)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:56 - INFO: Running BayesianRidge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for BayesianRidge:\n",
+      "                    mse: 0.709 ± 0.097 (median: 0.729)\n",
+      "                    r2: 0.470 ± 0.163 (median: 0.537)\n",
+      "                    mae: 0.644 ± 0.052 (median: 0.648)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:56 - INFO: Running KernelRidge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for KernelRidge:\n",
+      "                    mse: 0.793 ± 0.161 (median: 0.739)\n",
+      "                    r2: 0.399 ± 0.235 (median: 0.457)\n",
+      "                    mae: 0.673 ± 0.071 (median: 0.651)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:56 - INFO: Running LGBMRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for LGBMRegressor:\n",
+      "                    mse: 0.857 ± 0.129 (median: 0.875)\n",
+      "                    r2: 0.354 ± 0.235 (median: 0.472)\n",
+      "                    mae: 0.708 ± 0.082 (median: 0.728)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:56 - INFO: Running CatBoostRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for CatBoostRegressor:\n",
+      "                    mse: 0.713 ± 0.138 (median: 0.645)\n",
+      "                    r2: 0.480 ± 0.115 (median: 0.480)\n",
+      "                    mae: 0.639 ± 0.086 (median: 0.658)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:57 - INFO: Done!\n",
+      "15-03 14:57 - INFO: Finished CV for all models.\n",
+      "15-03 14:57 - INFO: Checking assumptions for parametric tests.\n",
+      "15-03 14:57 - INFO: Assumptions of parametric tests met: False.\n",
+      "15-03 14:57 - INFO: Finding best model.\n",
+      "15-03 14:57 - INFO: Best model: SVR. Reason: median score.\n",
+      "15-03 14:57 - INFO: Starting final hyperparameter tuning.\n",
+      "15-03 14:57 - INFO: Done!\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    -------------\n",
+      "                    Final results\n",
+      "                    -------------\n",
+      "                    Final model: SVR\n",
+      "                    Hyperparameters:\n",
+      "                    kernel: sigmoid\n",
+      "                    C: 7.867745381977843\n",
+      "                    gamma: 0.001\n",
+      "                    Mean mse: 0.683 ± 0.158.\n",
+      "                    Median mse: 0.628.\n",
+      "                    Mean r2: 0.510 ± 0.100.\n",
+      "                    Median r2: 0.517.\n",
+      "                    Mean mae: 0.633 ± 0.085.\n",
+      "                    Median mae: 0.636.\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%bash\n",
+    "astra benchmark features/LogD_atompair_train.pkl \\\n",
+    "    --name LogD_atompair \\\n",
+    "    --use_optuna \\\n",
+    "    --fold_col KMeans_Cluster_42 \\\n",
+    "    --main_metric MSE \\\n",
+    "    --sec_metrics R2 MAE \\\n",
+    "    --timeout 100"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "ce7ade69",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                                                                                \n",
+      "   \u001b[1;34m👋 Welcome to ASTRA - Automated model selection using statistical testing\u001b[0m    \n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                          _                       \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m              __ _  ___ | |_  _ __   __ _         \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |\u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m __|| __|| '__| \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m            | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |\\__ \\| |_ | |   | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \\__,_||___/ \\__||_|    \\__,_|        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "                         \u001b[1;36m🤔 For help, run: astra --help\u001b[0m                         \n",
+      "              \u001b[1;36m🧪 To benchmark models, run: astra benchmark --help\u001b[0m               \n",
+      "                \u001b[1;36m🏆 To compare models, run: astra compare --help\u001b[0m                 \n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:57 - INFO: Starting benchmark for LogD_cats2d.\n",
+      "15-03 14:57 - INFO: Loading data.\n",
+      "15-03 14:57 - INFO: Starting benchmarking.\n",
+      "15-03 14:57 - INFO: Features column: Features\n",
+      "15-03 14:57 - INFO: Target column: Target\n",
+      "15-03 14:57 - INFO: Running 5-fold CV.\n",
+      "15-03 14:57 - INFO: Fold column: KMeans_Cluster_42\n",
+      "15-03 14:57 - INFO: Using Optuna for hyperparameter optimization, with 100 trials and a timeout of 100 seconds.\n",
+      "15-03 14:57 - INFO: Will check assumptions for parametric tests and use them if met.\n",
+      "15-03 14:57 - INFO: Getting models and parameters.\n",
+      "15-03 14:57 - INFO: Benchmarking regression models.\n",
+      "15-03 14:57 - INFO: Main metric: mse\n",
+      "15-03 14:57 - INFO: Secondary metrics: ['r2', 'mae']\n",
+      "15-03 14:57 - INFO: Starting CV for all models using default hyperparameters.\n",
+      "15-03 14:57 - INFO: Running CV.\n",
+      "15-03 14:57 - INFO: Running XGBRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for XGBRegressor:\n",
+      "                    mse: 1.110 ± 0.375 (median: 0.909)\n",
+      "                    r2: 0.224 ± 0.153 (median: 0.240)\n",
+      "                    mae: 0.779 ± 0.125 (median: 0.719)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:57 - INFO: Running RandomForestRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for RandomForestRegressor:\n",
+      "                    mse: 0.967 ± 0.258 (median: 0.873)\n",
+      "                    r2: 0.312 ± 0.126 (median: 0.353)\n",
+      "                    mae: 0.757 ± 0.089 (median: 0.732)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:57 - INFO: Running GradientBoostingRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for GradientBoostingRegressor:\n",
+      "                    mse: 0.929 ± 0.220 (median: 1.025)\n",
+      "                    r2: 0.341 ± 0.117 (median: 0.382)\n",
+      "                    mae: 0.754 ± 0.114 (median: 0.781)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:57 - INFO: Running HistGradientBoostingRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for HistGradientBoostingRegressor:\n",
+      "                    mse: 0.983 ± 0.308 (median: 0.843)\n",
+      "                    r2: 0.309 ± 0.124 (median: 0.309)\n",
+      "                    mae: 0.769 ± 0.109 (median: 0.702)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:57 - INFO: Running KNeighborsRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for KNeighborsRegressor:\n",
+      "                    mse: 1.015 ± 0.322 (median: 0.938)\n",
+      "                    r2: 0.293 ± 0.109 (median: 0.287)\n",
+      "                    mae: 0.748 ± 0.111 (median: 0.716)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:57 - INFO: Running SVR.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for SVR:\n",
+      "                    mse: 1.048 ± 0.133 (median: 1.001)\n",
+      "                    r2: 0.228 ± 0.181 (median: 0.308)\n",
+      "                    mae: 0.822 ± 0.051 (median: 0.812)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:57 - INFO: Running Ridge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for Ridge:\n",
+      "                    mse: 1.387 ± 0.327 (median: 1.269)\n",
+      "                    r2: -0.054 ± 0.474 (median: 0.113)\n",
+      "                    mae: 0.887 ± 0.095 (median: 0.887)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:57 - INFO: Running BayesianRidge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for BayesianRidge:\n",
+      "                    mse: 0.912 ± 0.208 (median: 0.850)\n",
+      "                    r2: 0.328 ± 0.193 (median: 0.288)\n",
+      "                    mae: 0.753 ± 0.073 (median: 0.714)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:57 - INFO: Running KernelRidge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for KernelRidge:\n",
+      "                    mse: 1.395 ± 0.324 (median: 1.283)\n",
+      "                    r2: -0.060 ± 0.474 (median: 0.109)\n",
+      "                    mae: 0.889 ± 0.094 (median: 0.894)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:57 - INFO: Running LGBMRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for LGBMRegressor:\n",
+      "                    mse: 0.988 ± 0.324 (median: 0.837)\n",
+      "                    r2: 0.311 ± 0.119 (median: 0.331)\n",
+      "                    mae: 0.771 ± 0.124 (median: 0.692)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:57 - INFO: Running CatBoostRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for CatBoostRegressor:\n",
+      "                    mse: 0.845 ± 0.142 (median: 0.914)\n",
+      "                    r2: 0.394 ± 0.070 (median: 0.435)\n",
+      "                    mae: 0.723 ± 0.052 (median: 0.739)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:57 - INFO: Done!\n",
+      "15-03 14:57 - INFO: Finished CV for all models.\n",
+      "15-03 14:57 - INFO: Checking assumptions for parametric tests.\n",
+      "15-03 14:57 - INFO: Assumptions of parametric tests met: False.\n",
+      "15-03 14:57 - INFO: Finding best model.\n",
+      "15-03 14:57 - INFO: Best model: CatBoostRegressor. Reason: Conover post-hoc test.\n",
+      "15-03 14:57 - INFO: Starting final hyperparameter tuning.\n",
+      "15-03 14:59 - INFO: Done!\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    -------------\n",
+      "                    Final results\n",
+      "                    -------------\n",
+      "                    Final model: CatBoostRegressor\n",
+      "                    Hyperparameters:\n",
+      "                    iterations: 556\n",
+      "                    learning_rate: 0.016511657063497182\n",
+      "                    depth: 4\n",
+      "                    l2_leaf_reg: 2.235048729002267\n",
+      "                    rsm: 0.3668787683669737\n",
+      "                    loss_function: RMSE\n",
+      "                    border_count: 134\n",
+      "                    feature_border_type: Median\n",
+      "                    random_strength: 1.3063759368181672e-06\n",
+      "                    bootstrap_type: Bayesian\n",
+      "                    Mean mse: 0.887 ± 0.156.\n",
+      "                    Median mse: 0.906.\n",
+      "                    Mean r2: 0.361 ± 0.102.\n",
+      "                    Median r2: 0.360.\n",
+      "                    Mean mae: 0.744 ± 0.053.\n",
+      "                    Median mae: 0.755.\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%bash\n",
+    "astra benchmark features/LogD_cats2d_train.pkl \\\n",
+    "    --name LogD_cats2d \\\n",
+    "    --use_optuna \\\n",
+    "    --fold_col KMeans_Cluster_42 \\\n",
+    "    --main_metric MSE \\\n",
+    "    --sec_metrics R2 MAE \\\n",
+    "    --timeout 100"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "c03e067d",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                                                                                \n",
+      "   \u001b[1;34m👋 Welcome to ASTRA - Automated model selection using statistical testing\u001b[0m    \n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                          _                       \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m              __ _  ___ | |_  _ __   __ _         \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |\u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m __|| __|| '__| \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m            | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |\\__ \\| |_ | |   | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \\__,_||___/ \\__||_|    \\__,_|        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "                         \u001b[1;36m🤔 For help, run: astra --help\u001b[0m                         \n",
+      "              \u001b[1;36m🧪 To benchmark models, run: astra benchmark --help\u001b[0m               \n",
+      "                \u001b[1;36m🏆 To compare models, run: astra compare --help\u001b[0m                 \n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:59 - INFO: Starting benchmark for LogD_desc2D.\n",
+      "15-03 14:59 - INFO: Loading data.\n",
+      "15-03 14:59 - INFO: Starting benchmarking.\n",
+      "15-03 14:59 - INFO: Features column: Features\n",
+      "15-03 14:59 - INFO: Target column: Target\n",
+      "15-03 14:59 - INFO: Running 5-fold CV.\n",
+      "15-03 14:59 - INFO: Fold column: KMeans_Cluster_42\n",
+      "15-03 14:59 - INFO: Using Optuna for hyperparameter optimization, with 100 trials and a timeout of 100 seconds.\n",
+      "15-03 14:59 - INFO: Will check assumptions for parametric tests and use them if met.\n",
+      "15-03 14:59 - INFO: Getting models and parameters.\n",
+      "15-03 14:59 - INFO: Benchmarking regression models.\n",
+      "15-03 14:59 - INFO: Main metric: mse\n",
+      "15-03 14:59 - INFO: Secondary metrics: ['r2', 'mae']\n",
+      "15-03 14:59 - INFO: Starting CV for all models using default hyperparameters.\n",
+      "15-03 14:59 - INFO: Running CV.\n",
+      "15-03 14:59 - INFO: Running XGBRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for XGBRegressor:\n",
+      "                    mse: 0.806 ± 0.158 (median: 0.839)\n",
+      "                    r2: 0.409 ± 0.170 (median: 0.491)\n",
+      "                    mae: 0.699 ± 0.059 (median: 0.739)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:59 - INFO: Running RandomForestRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for RandomForestRegressor:\n",
+      "                    mse: 0.775 ± 0.232 (median: 0.723)\n",
+      "                    r2: 0.452 ± 0.135 (median: 0.438)\n",
+      "                    mae: 0.676 ± 0.130 (median: 0.666)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:59 - INFO: Running GradientBoostingRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for GradientBoostingRegressor:\n",
+      "                    mse: 0.652 ± 0.179 (median: 0.690)\n",
+      "                    r2: 0.528 ± 0.148 (median: 0.598)\n",
+      "                    mae: 0.630 ± 0.088 (median: 0.643)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:59 - INFO: Running HistGradientBoostingRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for HistGradientBoostingRegressor:\n",
+      "                    mse: 0.609 ± 0.165 (median: 0.603)\n",
+      "                    r2: 0.564 ± 0.117 (median: 0.636)\n",
+      "                    mae: 0.598 ± 0.087 (median: 0.620)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:59 - INFO: Running KNeighborsRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for KNeighborsRegressor:\n",
+      "                    mse: 1.244 ± 0.296 (median: 1.266)\n",
+      "                    r2: 0.101 ± 0.226 (median: 0.253)\n",
+      "                    mae: 0.876 ± 0.122 (median: 0.895)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:59 - INFO: Running SVR.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for SVR:\n",
+      "                    mse: 1.423 ± 0.162 (median: 1.409)\n",
+      "                    r2: -0.049 ± 0.250 (median: 0.076)\n",
+      "                    mae: 0.972 ± 0.041 (median: 0.985)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:59 - INFO: Running Ridge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for Ridge:\n",
+      "                    mse: 0.774 ± 0.107 (median: 0.790)\n",
+      "                    r2: 0.425 ± 0.157 (median: 0.441)\n",
+      "                    mae: 0.676 ± 0.044 (median: 0.673)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:59 - INFO: Running BayesianRidge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for BayesianRidge:\n",
+      "                    mse: 0.677 ± 0.201 (median: 0.749)\n",
+      "                    r2: 0.506 ± 0.177 (median: 0.548)\n",
+      "                    mae: 0.632 ± 0.087 (median: 0.679)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:59 - INFO: Running KernelRidge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for KernelRidge:\n",
+      "                    mse: 0.774 ± 0.107 (median: 0.790)\n",
+      "                    r2: 0.425 ± 0.157 (median: 0.441)\n",
+      "                    mae: 0.676 ± 0.044 (median: 0.673)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:59 - INFO: Running LGBMRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for LGBMRegressor:\n",
+      "                    mse: 0.612 ± 0.207 (median: 0.598)\n",
+      "                    r2: 0.566 ± 0.135 (median: 0.639)\n",
+      "                    mae: 0.594 ± 0.099 (median: 0.606)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:59 - INFO: Running CatBoostRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for CatBoostRegressor:\n",
+      "                    mse: 0.653 ± 0.145 (median: 0.681)\n",
+      "                    r2: 0.527 ± 0.128 (median: 0.589)\n",
+      "                    mae: 0.622 ± 0.091 (median: 0.647)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 14:59 - INFO: Done!\n",
+      "15-03 14:59 - INFO: Finished CV for all models.\n",
+      "15-03 14:59 - INFO: Checking assumptions for parametric tests.\n",
+      "15-03 14:59 - INFO: Assumptions of parametric tests met: False.\n",
+      "15-03 14:59 - INFO: Finding best model.\n",
+      "15-03 14:59 - INFO: Best model: LGBMRegressor. Reason: Conover post-hoc test.\n",
+      "15-03 14:59 - INFO: Starting final hyperparameter tuning.\n",
+      "15-03 15:01 - INFO: Done!\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    -------------\n",
+      "                    Final results\n",
+      "                    -------------\n",
+      "                    Final model: LGBMRegressor\n",
+      "                    Hyperparameters:\n",
+      "                    boosting_type: dart\n",
+      "                    num_leaves: 510\n",
+      "                    max_depth: 11\n",
+      "                    learning_rate: 0.15869372433797996\n",
+      "                    n_estimators: 563\n",
+      "                    min_data_in_leaf: 23\n",
+      "                    subsample: 0.6769996225690526\n",
+      "                    subsample_freq: 4\n",
+      "                    colsample_bytree: 0.7557762135754856\n",
+      "                    reg_alpha: 0.6705738213879265\n",
+      "                    reg_lambda: 0.5707565631892096\n",
+      "                    bagging_freq: 10\n",
+      "                    min_split_gain: 0.03202064627142526\n",
+      "                    min_child_weight: 8.23573947779089\n",
+      "                    min_child_samples: 5\n",
+      "                    Mean mse: 0.609 ± 0.154.\n",
+      "                    Median mse: 0.624.\n",
+      "                    Mean r2: 0.563 ± 0.107.\n",
+      "                    Median r2: 0.613.\n",
+      "                    Mean mae: 0.599 ± 0.073.\n",
+      "                    Median mae: 0.610.\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%bash\n",
+    "astra benchmark features/LogD_desc2D_train.pkl \\\n",
+    "    --name LogD_desc2D \\\n",
+    "    --use_optuna \\\n",
+    "    --fold_col KMeans_Cluster_42 \\\n",
+    "    --main_metric MSE \\\n",
+    "    --sec_metrics R2 MAE \\\n",
+    "    --timeout 100"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "7aa8c33d",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                                                                                \n",
+      "   \u001b[1;34m👋 Welcome to ASTRA - Automated model selection using statistical testing\u001b[0m    \n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                          _                       \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m              __ _  ___ | |_  _ __   __ _         \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |\u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m __|| __|| '__| \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m            | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |\\__ \\| |_ | |   | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \\__,_||___/ \\__||_|    \\__,_|        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "                         \u001b[1;36m🤔 For help, run: astra --help\u001b[0m                         \n",
+      "              \u001b[1;36m🧪 To benchmark models, run: astra benchmark --help\u001b[0m               \n",
+      "                \u001b[1;36m🏆 To compare models, run: astra compare --help\u001b[0m                 \n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:01 - INFO: Starting benchmark for LogD_ecfp.\n",
+      "15-03 15:01 - INFO: Loading data.\n",
+      "15-03 15:01 - INFO: Starting benchmarking.\n",
+      "15-03 15:01 - INFO: Features column: Features\n",
+      "15-03 15:01 - INFO: Target column: Target\n",
+      "15-03 15:01 - INFO: Running 5-fold CV.\n",
+      "15-03 15:01 - INFO: Fold column: KMeans_Cluster_42\n",
+      "15-03 15:01 - INFO: Using Optuna for hyperparameter optimization, with 100 trials and a timeout of 100 seconds.\n",
+      "15-03 15:01 - INFO: Will check assumptions for parametric tests and use them if met.\n",
+      "15-03 15:01 - INFO: Getting models and parameters.\n",
+      "15-03 15:01 - INFO: Benchmarking regression models.\n",
+      "15-03 15:01 - INFO: Main metric: mse\n",
+      "15-03 15:01 - INFO: Secondary metrics: ['r2', 'mae']\n",
+      "15-03 15:01 - INFO: Starting CV for all models using default hyperparameters.\n",
+      "15-03 15:01 - INFO: Running CV.\n",
+      "15-03 15:01 - INFO: Running XGBRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for XGBRegressor:\n",
+      "                    mse: 1.003 ± 0.133 (median: 0.995)\n",
+      "                    r2: 0.260 ± 0.172 (median: 0.278)\n",
+      "                    mae: 0.760 ± 0.061 (median: 0.734)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:01 - INFO: Running RandomForestRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for RandomForestRegressor:\n",
+      "                    mse: 0.899 ± 0.070 (median: 0.878)\n",
+      "                    r2: 0.323 ± 0.197 (median: 0.403)\n",
+      "                    mae: 0.725 ± 0.031 (median: 0.723)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:01 - INFO: Running GradientBoostingRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for GradientBoostingRegressor:\n",
+      "                    mse: 1.039 ± 0.144 (median: 1.143)\n",
+      "                    r2: 0.229 ± 0.212 (median: 0.330)\n",
+      "                    mae: 0.778 ± 0.054 (median: 0.792)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:01 - INFO: Running HistGradientBoostingRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for HistGradientBoostingRegressor:\n",
+      "                    mse: 0.832 ± 0.079 (median: 0.795)\n",
+      "                    r2: 0.385 ± 0.140 (median: 0.431)\n",
+      "                    mae: 0.708 ± 0.047 (median: 0.694)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:01 - INFO: Running KNeighborsRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for KNeighborsRegressor:\n",
+      "                    mse: 0.816 ± 0.091 (median: 0.795)\n",
+      "                    r2: 0.402 ± 0.120 (median: 0.468)\n",
+      "                    mae: 0.681 ± 0.048 (median: 0.653)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:01 - INFO: Running SVR.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for SVR:\n",
+      "                    mse: 0.839 ± 0.160 (median: 0.752)\n",
+      "                    r2: 0.392 ± 0.114 (median: 0.418)\n",
+      "                    mae: 0.711 ± 0.077 (median: 0.677)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:01 - INFO: Running Ridge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for Ridge:\n",
+      "                    mse: 0.906 ± 0.260 (median: 0.836)\n",
+      "                    r2: 0.343 ± 0.177 (median: 0.352)\n",
+      "                    mae: 0.704 ± 0.091 (median: 0.678)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:01 - INFO: Running BayesianRidge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for BayesianRidge:\n",
+      "                    mse: 0.852 ± 0.237 (median: 0.722)\n",
+      "                    r2: 0.386 ± 0.143 (median: 0.362)\n",
+      "                    mae: 0.690 ± 0.079 (median: 0.648)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:01 - INFO: Running KernelRidge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for KernelRidge:\n",
+      "                    mse: 0.939 ± 0.279 (median: 0.898)\n",
+      "                    r2: 0.320 ± 0.194 (median: 0.370)\n",
+      "                    mae: 0.709 ± 0.098 (median: 0.703)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:01 - INFO: Running LGBMRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for LGBMRegressor:\n",
+      "                    mse: 0.832 ± 0.079 (median: 0.795)\n",
+      "                    r2: 0.385 ± 0.140 (median: 0.431)\n",
+      "                    mae: 0.708 ± 0.047 (median: 0.694)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:01 - INFO: Running CatBoostRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for CatBoostRegressor:\n",
+      "                    mse: 0.938 ± 0.208 (median: 0.977)\n",
+      "                    r2: 0.319 ± 0.164 (median: 0.291)\n",
+      "                    mae: 0.733 ± 0.090 (median: 0.729)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:01 - INFO: Done!\n",
+      "15-03 15:01 - INFO: Finished CV for all models.\n",
+      "15-03 15:01 - INFO: Checking assumptions for parametric tests.\n",
+      "15-03 15:01 - INFO: Assumptions of parametric tests met: True.\n",
+      "15-03 15:01 - INFO: Finding best model.\n",
+      "15-03 15:01 - INFO: Best model: KNeighborsRegressor. Reason: paired t-test.\n",
+      "15-03 15:01 - INFO: Starting final hyperparameter tuning.\n",
+      "15-03 15:01 - INFO: Done!\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    -------------\n",
+      "                    Final results\n",
+      "                    -------------\n",
+      "                    Final model: KNeighborsRegressor\n",
+      "                    Hyperparameters:\n",
+      "                    n_neighbors: 6\n",
+      "                    weights: distance\n",
+      "                    p: 1\n",
+      "                    Mean mse: 0.790 ± 0.095.\n",
+      "                    Median mse: 0.788.\n",
+      "                    Mean r2: 0.419 ± 0.126.\n",
+      "                    Median r2: 0.481.\n",
+      "                    Mean mae: 0.664 ± 0.051.\n",
+      "                    Median mae: 0.639.\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%bash\n",
+    "astra benchmark features/LogD_ecfp_train.pkl \\\n",
+    "    --name LogD_ecfp \\\n",
+    "    --use_optuna \\\n",
+    "    --fold_col KMeans_Cluster_42 \\\n",
+    "    --main_metric MSE \\\n",
+    "    --sec_metrics R2 MAE \\\n",
+    "    --timeout 100"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "844a9399",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                                                                                \n",
+      "   \u001b[1;34m👋 Welcome to ASTRA - Automated model selection using statistical testing\u001b[0m    \n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                          _                       \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m              __ _  ___ | |_  _ __   __ _         \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |\u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m __|| __|| '__| \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m            | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |\\__ \\| |_ | |   | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \\__,_||___/ \\__||_|    \\__,_|        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "                         \u001b[1;36m🤔 For help, run: astra --help\u001b[0m                         \n",
+      "              \u001b[1;36m🧪 To benchmark models, run: astra benchmark --help\u001b[0m               \n",
+      "                \u001b[1;36m🏆 To compare models, run: astra compare --help\u001b[0m                 \n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:02 - INFO: Starting benchmark for LogD_maccs.\n",
+      "15-03 15:02 - INFO: Loading data.\n",
+      "15-03 15:02 - INFO: Starting benchmarking.\n",
+      "15-03 15:02 - INFO: Features column: Features\n",
+      "15-03 15:02 - INFO: Target column: Target\n",
+      "15-03 15:02 - INFO: Running 5-fold CV.\n",
+      "15-03 15:02 - INFO: Fold column: KMeans_Cluster_42\n",
+      "15-03 15:02 - INFO: Using Optuna for hyperparameter optimization, with 100 trials and a timeout of 100 seconds.\n",
+      "15-03 15:02 - INFO: Will check assumptions for parametric tests and use them if met.\n",
+      "15-03 15:02 - INFO: Getting models and parameters.\n",
+      "15-03 15:02 - INFO: Benchmarking regression models.\n",
+      "15-03 15:02 - INFO: Main metric: mse\n",
+      "15-03 15:02 - INFO: Secondary metrics: ['r2', 'mae']\n",
+      "15-03 15:02 - INFO: Starting CV for all models using default hyperparameters.\n",
+      "15-03 15:02 - INFO: Running CV.\n",
+      "15-03 15:02 - INFO: Running XGBRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for XGBRegressor:\n",
+      "                    mse: 1.443 ± 0.132 (median: 1.412)\n",
+      "                    r2: -0.096 ± 0.377 (median: 0.094)\n",
+      "                    mae: 0.913 ± 0.060 (median: 0.916)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:02 - INFO: Running RandomForestRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for RandomForestRegressor:\n",
+      "                    mse: 1.076 ± 0.069 (median: 1.060)\n",
+      "                    r2: 0.192 ± 0.237 (median: 0.365)\n",
+      "                    mae: 0.779 ± 0.054 (median: 0.749)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:02 - INFO: Running GradientBoostingRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for GradientBoostingRegressor:\n",
+      "                    mse: 1.068 ± 0.219 (median: 1.157)\n",
+      "                    r2: 0.201 ± 0.307 (median: 0.337)\n",
+      "                    mae: 0.766 ± 0.095 (median: 0.758)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:02 - INFO: Running HistGradientBoostingRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for HistGradientBoostingRegressor:\n",
+      "                    mse: 0.974 ± 0.159 (median: 1.032)\n",
+      "                    r2: 0.299 ± 0.103 (median: 0.347)\n",
+      "                    mae: 0.736 ± 0.069 (median: 0.750)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:02 - INFO: Running KNeighborsRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for KNeighborsRegressor:\n",
+      "                    mse: 1.223 ± 0.425 (median: 1.044)\n",
+      "                    r2: 0.133 ± 0.212 (median: 0.191)\n",
+      "                    mae: 0.783 ± 0.128 (median: 0.751)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:02 - INFO: Running SVR.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for SVR:\n",
+      "                    mse: 0.890 ± 0.180 (median: 0.866)\n",
+      "                    r2: 0.357 ± 0.125 (median: 0.356)\n",
+      "                    mae: 0.734 ± 0.063 (median: 0.723)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:02 - INFO: Running Ridge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for Ridge:\n",
+      "                    mse: 1.270 ± 0.389 (median: 1.386)\n",
+      "                    r2: 0.072 ± 0.349 (median: 0.164)\n",
+      "                    mae: 0.833 ± 0.134 (median: 0.904)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:02 - INFO: Running BayesianRidge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for BayesianRidge:\n",
+      "                    mse: 0.984 ± 0.271 (median: 0.925)\n",
+      "                    r2: 0.300 ± 0.144 (median: 0.370)\n",
+      "                    mae: 0.757 ± 0.079 (median: 0.739)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:02 - INFO: Running KernelRidge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for KernelRidge:\n",
+      "                    mse: 1.265 ± 0.389 (median: 1.391)\n",
+      "                    r2: 0.073 ± 0.365 (median: 0.161)\n",
+      "                    mae: 0.833 ± 0.138 (median: 0.911)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:02 - INFO: Running LGBMRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for LGBMRegressor:\n",
+      "                    mse: 0.974 ± 0.159 (median: 1.032)\n",
+      "                    r2: 0.299 ± 0.103 (median: 0.347)\n",
+      "                    mae: 0.736 ± 0.069 (median: 0.750)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:02 - INFO: Running CatBoostRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for CatBoostRegressor:\n",
+      "                    mse: 0.932 ± 0.155 (median: 0.844)\n",
+      "                    r2: 0.300 ± 0.242 (median: 0.372)\n",
+      "                    mae: 0.735 ± 0.071 (median: 0.718)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:02 - INFO: Done!\n",
+      "15-03 15:02 - INFO: Finished CV for all models.\n",
+      "15-03 15:02 - INFO: Checking assumptions for parametric tests.\n",
+      "15-03 15:02 - INFO: Assumptions of parametric tests met: False.\n",
+      "15-03 15:02 - INFO: Finding best model.\n",
+      "15-03 15:02 - INFO: Best model: CatBoostRegressor. Reason: Conover post-hoc test.\n",
+      "15-03 15:02 - INFO: Starting final hyperparameter tuning.\n",
+      "15-03 15:04 - INFO: Done!\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    -------------\n",
+      "                    Final results\n",
+      "                    -------------\n",
+      "                    Final model: CatBoostRegressor\n",
+      "                    Hyperparameters:\n",
+      "                    iterations: 637\n",
+      "                    learning_rate: 0.07140177292623585\n",
+      "                    depth: 2\n",
+      "                    l2_leaf_reg: 0.10030457398605436\n",
+      "                    rsm: 0.5295608684611183\n",
+      "                    loss_function: RMSE\n",
+      "                    border_count: 33\n",
+      "                    feature_border_type: Median\n",
+      "                    random_strength: 0.0012590108285256113\n",
+      "                    bootstrap_type: Bayesian\n",
+      "                    Mean mse: 0.938 ± 0.221.\n",
+      "                    Median mse: 0.911.\n",
+      "                    Mean r2: 0.288 ± 0.307.\n",
+      "                    Median r2: 0.368.\n",
+      "                    Mean mae: 0.731 ± 0.087.\n",
+      "                    Median mae: 0.698.\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%bash\n",
+    "astra benchmark features/LogD_maccs_train.pkl \\\n",
+    "    --name LogD_maccs \\\n",
+    "    --use_optuna \\\n",
+    "    --fold_col KMeans_Cluster_42 \\\n",
+    "    --main_metric MSE \\\n",
+    "    --sec_metrics R2 MAE \\\n",
+    "    --timeout 100"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "4a54232b",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                                                                                \n",
+      "   \u001b[1;34m👋 Welcome to ASTRA - Automated model selection using statistical testing\u001b[0m    \n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                          _                       \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m              __ _  ___ | |_  _ __   __ _         \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |\u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m __|| __|| '__| \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m            | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |\\__ \\| |_ | |   | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \\__,_||___/ \\__||_|    \\__,_|        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "                         \u001b[1;36m🤔 For help, run: astra --help\u001b[0m                         \n",
+      "              \u001b[1;36m🧪 To benchmark models, run: astra benchmark --help\u001b[0m               \n",
+      "                \u001b[1;36m🏆 To compare models, run: astra compare --help\u001b[0m                 \n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:04 - INFO: Starting benchmark for LogD_topological.\n",
+      "15-03 15:04 - INFO: Loading data.\n",
+      "15-03 15:04 - INFO: Starting benchmarking.\n",
+      "15-03 15:04 - INFO: Features column: Features\n",
+      "15-03 15:04 - INFO: Target column: Target\n",
+      "15-03 15:04 - INFO: Running 5-fold CV.\n",
+      "15-03 15:04 - INFO: Fold column: KMeans_Cluster_42\n",
+      "15-03 15:04 - INFO: Using Optuna for hyperparameter optimization, with 100 trials and a timeout of 100 seconds.\n",
+      "15-03 15:04 - INFO: Will check assumptions for parametric tests and use them if met.\n",
+      "15-03 15:04 - INFO: Getting models and parameters.\n",
+      "15-03 15:04 - INFO: Benchmarking regression models.\n",
+      "15-03 15:04 - INFO: Main metric: mse\n",
+      "15-03 15:04 - INFO: Secondary metrics: ['r2', 'mae']\n",
+      "15-03 15:04 - INFO: Starting CV for all models using default hyperparameters.\n",
+      "15-03 15:04 - INFO: Running CV.\n",
+      "15-03 15:04 - INFO: Running XGBRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for XGBRegressor:\n",
+      "                    mse: 0.917 ± 0.227 (median: 0.990)\n",
+      "                    r2: 0.320 ± 0.256 (median: 0.422)\n",
+      "                    mae: 0.730 ± 0.095 (median: 0.756)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:04 - INFO: Running RandomForestRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for RandomForestRegressor:\n",
+      "                    mse: 0.920 ± 0.191 (median: 0.885)\n",
+      "                    r2: 0.290 ± 0.326 (median: 0.465)\n",
+      "                    mae: 0.728 ± 0.076 (median: 0.694)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:04 - INFO: Running GradientBoostingRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for GradientBoostingRegressor:\n",
+      "                    mse: 0.968 ± 0.136 (median: 1.045)\n",
+      "                    r2: 0.275 ± 0.240 (median: 0.390)\n",
+      "                    mae: 0.758 ± 0.063 (median: 0.763)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:04 - INFO: Running HistGradientBoostingRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for HistGradientBoostingRegressor:\n",
+      "                    mse: 0.824 ± 0.128 (median: 0.788)\n",
+      "                    r2: 0.397 ± 0.127 (median: 0.414)\n",
+      "                    mae: 0.694 ± 0.086 (median: 0.684)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:04 - INFO: Running KNeighborsRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for KNeighborsRegressor:\n",
+      "                    mse: 0.825 ± 0.106 (median: 0.860)\n",
+      "                    r2: 0.397 ± 0.125 (median: 0.465)\n",
+      "                    mae: 0.679 ± 0.045 (median: 0.682)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:04 - INFO: Running SVR.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for SVR:\n",
+      "                    mse: 0.823 ± 0.162 (median: 0.764)\n",
+      "                    r2: 0.401 ± 0.128 (median: 0.404)\n",
+      "                    mae: 0.698 ± 0.078 (median: 0.683)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:04 - INFO: Running Ridge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for Ridge:\n",
+      "                    mse: 0.929 ± 0.181 (median: 0.953)\n",
+      "                    r2: 0.319 ± 0.182 (median: 0.366)\n",
+      "                    mae: 0.726 ± 0.065 (median: 0.711)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:04 - INFO: Running BayesianRidge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for BayesianRidge:\n",
+      "                    mse: 0.853 ± 0.167 (median: 0.791)\n",
+      "                    r2: 0.380 ± 0.135 (median: 0.382)\n",
+      "                    mae: 0.704 ± 0.069 (median: 0.668)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:04 - INFO: Running KernelRidge.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for KernelRidge:\n",
+      "                    mse: 0.925 ± 0.183 (median: 0.966)\n",
+      "                    r2: 0.320 ± 0.193 (median: 0.370)\n",
+      "                    mae: 0.725 ± 0.065 (median: 0.720)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:04 - INFO: Running LGBMRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for LGBMRegressor:\n",
+      "                    mse: 0.824 ± 0.128 (median: 0.788)\n",
+      "                    r2: 0.397 ± 0.127 (median: 0.414)\n",
+      "                    mae: 0.694 ± 0.086 (median: 0.684)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:04 - INFO: Running CatBoostRegressor.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    Performance for CatBoostRegressor:\n",
+      "                    mse: 0.858 ± 0.116 (median: 0.853)\n",
+      "                    r2: 0.366 ± 0.161 (median: 0.443)\n",
+      "                    mae: 0.710 ± 0.055 (median: 0.735)\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:04 - INFO: Done!\n",
+      "15-03 15:04 - INFO: Finished CV for all models.\n",
+      "15-03 15:04 - INFO: Checking assumptions for parametric tests.\n",
+      "15-03 15:04 - INFO: Assumptions of parametric tests met: False.\n",
+      "15-03 15:04 - INFO: Finding best model.\n",
+      "15-03 15:04 - INFO: Best model: SVR. Reason: median score.\n",
+      "15-03 15:04 - INFO: Starting final hyperparameter tuning.\n",
+      "15-03 15:05 - INFO: Done!\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    -------------\n",
+      "                    Final results\n",
+      "                    -------------\n",
+      "                    Final model: SVR\n",
+      "                    Hyperparameters:\n",
+      "                    kernel: linear\n",
+      "                    C: 0.035459424622562255\n",
+      "                    gamma: scale\n",
+      "                    Mean mse: 0.778 ± 0.144.\n",
+      "                    Median mse: 0.675.\n",
+      "                    Mean r2: 0.436 ± 0.104.\n",
+      "                    Median r2: 0.445.\n",
+      "                    Mean mae: 0.677 ± 0.065.\n",
+      "                    Median mae: 0.652.\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%bash\n",
+    "astra benchmark features/LogD_topological_train.pkl \\\n",
+    "    --name LogD_topological \\\n",
+    "    --use_optuna \\\n",
+    "    --fold_col KMeans_Cluster_42 \\\n",
+    "    --main_metric MSE \\\n",
+    "    --sec_metrics R2 MAE \\\n",
+    "    --timeout 100"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f583876e",
+   "metadata": {},
+   "source": [
+    "## Running `astra compare` to compare models obtained for different fingerprints\n",
+    "\n",
+    "Now we can run `astra compare` on the results. Again, we use MSE as the main metric, and R<sup>2</sup> and MAE as secondary metrics. ASTRA will compare the models trained on different fingerprints and select the best one via statistical testing."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "b279d227",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                                                                                \n",
+      "   \u001b[1;34m👋 Welcome to ASTRA - Automated model selection using statistical testing\u001b[0m    \n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                          _                       \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m              __ _  ___ | |_  _ __   __ _         \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |\u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m __|| __|| '__| \u001b[0m\u001b[1;35m/\u001b[0m\u001b[1;34m _` |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m            | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |\\__ \\| |_ | |   | \u001b[0m\u001b[1;34m(\u001b[0m\u001b[1;34m_| |        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m             \\__,_||___/ \\__||_|    \\__,_|        \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m    ----------------------------------------------\u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "\u001b[1;34m               \u001b[0m\u001b[1;34m                                                  \u001b[0m\u001b[1;34m               \u001b[0m\n",
+      "                         \u001b[1;36m🤔 For help, run: astra --help\u001b[0m                         \n",
+      "              \u001b[1;36m🧪 To benchmark models, run: astra benchmark --help\u001b[0m               \n",
+      "                \u001b[1;36m🏆 To compare models, run: astra compare --help\u001b[0m                 \n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:05 - INFO: Starting comparison of CV results.\n",
+      "15-03 15:05 - INFO: Will check assumptions for parametric tests and use them if met.\n",
+      "15-03 15:05 - INFO: 6 CV results found.\n",
+      "15-03 15:05 - INFO: Checking assumptions for parametric tests.\n",
+      "15-03 15:05 - INFO: Assumptions of parametric tests met: True.\n",
+      "15-03 15:05 - INFO: Best models based on mse:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                    LogD_atompair\n",
+      "                    LogD_cats2d\n",
+      "                    LogD_desc2D\n",
+      "                    LogD_ecfp\n",
+      "                    LogD_maccs\n",
+      "                    LogD_topological\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "15-03 15:05 - INFO: Best model overall: LogD_desc2D. Reason: Tukey's HSD test.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "--------------------------------------------------\n",
+      "Results:\n",
+      "--------------------------------------------------\n",
+      "Mean mse: 0.609 ± 0.154.\n",
+      "Median mse: 0.624.\n",
+      "Mean r2: 0.563 ± 0.107.\n",
+      " Median r2: 0.613.\n",
+      "Mean mae: 0.599 ± 0.073.\n",
+      " Median mae: 0.610.\n",
+      "--------------------------------------------------\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%bash\n",
+    "astra compare results/LogD_atompair results/LogD_cats2d results/LogD_desc2D results/LogD_ecfp results/LogD_maccs results/LogD_topological --main_metric MSE --sec_metrics R2 MAE"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c7c1c0df",
+   "metadata": {},
+   "source": [
+    "The output tells us that the best model is `LogD_desc2D`, the model trained on `desc2D` fingerprints, based on Tukey's HSD test."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6b81e772",
+   "metadata": {},
+   "source": [
+    "## Evaluation on test data\n",
+    "\n",
+    "Finally we can evaluate the final model on the test set:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "ead5933b",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pickle\n",
+    "\n",
+    "import pandas as pd\n",
+    "from sklearn.metrics import (\n",
+    "    mean_absolute_error,\n",
+    "    mean_squared_error,\n",
+    "    r2_score,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "ee0ca41e",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Test MSE: 0.3143\n",
+      "Test R2: 0.6151\n",
+      "Test MAE: 0.4422\n"
+     ]
+    }
+   ],
+   "source": [
+    "with open(\"results/LogD_desc2D/final_model.pkl\", \"rb\") as f:\n",
+    "    final_model = pickle.load(f)\n",
+    "test_data = pd.read_pickle(\"features/LogD_desc2D_test.pkl\")\n",
+    "X_test = pd.DataFrame(test_data[\"Features\"].to_list())\n",
+    "y_test = test_data[\"Target\"].values\n",
+    "\n",
+    "predictions = final_model.predict(X_test)\n",
+    "mse = mean_squared_error(y_test, predictions)\n",
+    "r2 = r2_score(y_test, predictions)\n",
+    "mae = mean_absolute_error(y_test, predictions)\n",
+    "print(f\"Test MSE: {mse:.4f}\")\n",
+    "print(f\"Test R2: {r2:.4f}\")\n",
+    "print(f\"Test MAE: {mae:.4f}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "yyeuyugfe1b",
+   "metadata": {},
+   "source": [
+    "## Conclusion\n",
+    "\n",
+    "In this tutorial we demonstrated the complete ASTRA workflow on real drug discovery data from the ASAP Discovery x OpenADMET Antiviral Challenge by:\n",
+    "\n",
+    "1. running `astra benchmark` for each of six cheminformatics fingerprints to select the best model per fingerprint, and\n",
+    "2. running `astra compare` to identify the best fingerprint overall.\n",
+    "\n",
+    "ASTRA selected `desc2D` with an `LGBMRegressor` as the best combination, achieving a test MSE of 0.314, R² of 0.615, and MAE of 0.442 on held-out compounds from later stages of the drug discovery campaign.\n",
+    "\n",
+    "For more detail on the available options, see the [User Guide](https://duartegroup.github.io/astra/user_guide.html)."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "astra_test",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.15"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

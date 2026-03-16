@@ -1,0 +1,1552 @@
+<!doctype html>
+<html class="no-js" lang="English" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="User Guide" href="../user_guide.html"><link rel="prev" title="Running astra benchmark on a synthetic dataset" href="synthetic_dataset.html">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>Case study on real-life drug discovery data - ASTRA</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c2321745" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-brand-primary: #b45309;
+  --color-brand-content: #d97706;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #272822;
+  --color-code-foreground: #f8f8f2;
+  --color-brand-primary: #f59e0b;
+  --color-brand-content: #fbbf24;
+  --color-background-primary: #0b0f1a;
+  --color-background-secondary: #0f1729;
+  --color-sidebar-background: #0b0f1a;
+  --color-foreground-primary: #e2e8f0;
+  --color-foreground-secondary: #94a3b8;
+  --color-highlighted-background: #1e293b;
+  --color-admonition-background: #101f3a;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #272822;
+  --color-code-foreground: #f8f8f2;
+  --color-brand-primary: #f59e0b;
+  --color-brand-content: #fbbf24;
+  --color-background-primary: #0b0f1a;
+  --color-background-secondary: #0f1729;
+  --color-sidebar-background: #0b0f1a;
+  --color-foreground-primary: #e2e8f0;
+  --color-foreground-secondary: #94a3b8;
+  --color-highlighted-background: #1e293b;
+  --color-admonition-background: #101f3a;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">ASTRA</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">ASTRA</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Tutorials</a><input aria-label="Toggle navigation of Tutorials" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="synthetic_dataset.html">Running <code class="docutils literal notranslate"><span class="pre">astra</span> <span class="pre">benchmark</span></code> on a synthetic dataset</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Case study on real-life drug discovery data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide.html">User Guide</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../autosummary/astra.benchmark.html">astra.benchmark</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../autosummary/astra.cli.html">astra.cli</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../autosummary/astra.compare.html">astra.compare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../autosummary/astra.data.processing.html">astra.data.processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../autosummary/astra.metrics.html">astra.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../autosummary/astra.model_selection.html">astra.model_selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../autosummary/astra.models.classification.html">astra.models.classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../autosummary/astra.models.regression.html">astra.models.regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../autosummary/astra.utils.html">astra.utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer Guide</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/tutorials/logd_case_study.ipynb.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="case-study-on-real-life-drug-discovery-data">
+<h1>Case study on real-life drug discovery data<a class="headerlink" href="#case-study-on-real-life-drug-discovery-data" title="Link to this heading">¶</a></h1>
+<p>In this tutorial, we demonstrate the complete ASTRA workflow on real-life drug discovery data from the <a class="reference external" href="https://pubs.acs.org/doi/10.1021/acs.jcim.5c02106">ASAP Discovery x OpenADMET Antiviral Challenge</a>. A part of the challenge is predicting the LogD of several hundred chemical compounds. LogD is a measure of how a compound distributes between a lipid phase and water, and important for drug discovery because it affects membrane permeability, solubility, and bioavailability.</p>
+<p>The data were split by when they were tested, with compounds from early stages of the drug discovery campaign serving as the training data, and compounds from later stages serving as the test data. The test data were additionally stratified by chemical similarity, removing compounds that were deemed too chemically similar to training compounds. This challenge therefore tests ML models retrospectively in real-life drug discovery settings, where ML models can be trained on early data to guide further drug optimisation efforts.</p>
+<p>We split the training data using <em>k</em>-means clustering and calculated six standard cheminformatics fingerprints (see <a class="reference external" href="https://github.com/duartegroup/astra_benchmark">ASTRA's benchmark repository</a>). We provide ASTRA-ready datasets <a class="reference external" href="https://github.com/duartegroup/astra/docs/tutorials/features/">here</a>.</p>
+<p>A typical ASTRA workflow consists of:</p>
+<ol class="arabic simple">
+<li><p>running <code class="docutils literal notranslate"><span class="pre">astra</span> <span class="pre">benchmark</span></code> for every fingerprint, yielding a single model per fingerprint, and</p></li>
+<li><p>running <code class="docutils literal notranslate"><span class="pre">astra</span> <span class="pre">compare</span></code> to compare models obtained for different fingerprints.</p></li>
+</ol>
+<section id="running-astra-benchmark-for-every-fingerprint">
+<h2>Running <code class="docutils literal notranslate"><span class="pre">astra</span> <span class="pre">benchmark</span></code> for every fingerprint<a class="headerlink" href="#running-astra-benchmark-for-every-fingerprint" title="Link to this heading">¶</a></h2>
+<p>We run <code class="docutils literal notranslate"><span class="pre">astra</span> <span class="pre">benchmark</span></code> with MSE as the main metric for model selection, and R<sup>2</sup> and MAE as secondary metrics. ASTRA will evaluate all built-in regressors using 5-fold CV and automatically select the best one via statistical testing. Hyperparameter tuning of the final model is performed using Optuna (<code class="docutils literal notranslate"><span class="pre">--use_optuna</span></code>) with a timeout of 100 s.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="k">bash</span>
+astra benchmark features/LogD_atompair_train.pkl \
+    --name LogD_atompair \
+    --use_optuna \
+    --fold_col KMeans_Cluster_42 \
+    --main_metric MSE \
+    --sec_metrics R2 MAE \
+    --timeout 100
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                
+   <span class=" -Color -Color-Bold -Color-Bold-Blue">👋 Welcome to ASTRA - Automated model selection using statistical testing</span>    
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                         _                                      </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                             __ _  ___ | |_  _ __   __ _                        </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |</span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> __|| __|| &#39;__| </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                           | (_| |\__ \| |_ | |   | (_| |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            \__,_||___/ \__||_|    \__,_|                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+                         <span class=" -Color -Color-Bold -Color-Bold-Cyan">🤔 For help, run: astra --help</span>                         
+              <span class=" -Color -Color-Bold -Color-Bold-Cyan">🧪 To benchmark models, run: astra benchmark --help</span>               
+                <span class=" -Color -Color-Bold -Color-Bold-Cyan">🏆 To compare models, run: astra compare --help</span>                 
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:55 - INFO: Starting benchmark for LogD_atompair.
+15-03 14:55 - INFO: Loading data.
+15-03 14:55 - INFO: Starting benchmarking.
+15-03 14:55 - INFO: Features column: Features
+15-03 14:55 - INFO: Target column: Target
+15-03 14:55 - INFO: Running 5-fold CV.
+15-03 14:55 - INFO: Fold column: KMeans_Cluster_42
+15-03 14:55 - INFO: Using Optuna for hyperparameter optimization, with 100 trials and a timeout of 100 seconds.
+15-03 14:55 - INFO: Will check assumptions for parametric tests and use them if met.
+15-03 14:55 - INFO: Getting models and parameters.
+15-03 14:55 - INFO: Benchmarking regression models.
+15-03 14:55 - INFO: Main metric: mse
+15-03 14:55 - INFO: Secondary metrics: [&#39;r2&#39;, &#39;mae&#39;]
+15-03 14:55 - INFO: Starting CV for all models using default hyperparameters.
+15-03 14:55 - INFO: Running CV.
+15-03 14:55 - INFO: Running XGBRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for XGBRegressor:
+                    mse: 0.956 ± 0.278 (median: 0.792)
+                    r2: 0.248 ± 0.418 (median: 0.432)
+                    mae: 0.737 ± 0.121 (median: 0.693)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:55 - INFO: Running RandomForestRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for RandomForestRegressor:
+                    mse: 0.815 ± 0.125 (median: 0.834)
+                    r2: 0.401 ± 0.153 (median: 0.467)
+                    mae: 0.673 ± 0.076 (median: 0.694)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:56 - INFO: Running GradientBoostingRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for GradientBoostingRegressor:
+                    mse: 0.856 ± 0.151 (median: 0.908)
+                    r2: 0.371 ± 0.175 (median: 0.419)
+                    mae: 0.705 ± 0.080 (median: 0.702)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:56 - INFO: Running HistGradientBoostingRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for HistGradientBoostingRegressor:
+                    mse: 0.857 ± 0.129 (median: 0.875)
+                    r2: 0.354 ± 0.235 (median: 0.472)
+                    mae: 0.708 ± 0.082 (median: 0.728)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:56 - INFO: Running KNeighborsRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for KNeighborsRegressor:
+                    mse: 0.932 ± 0.263 (median: 0.820)
+                    r2: 0.321 ± 0.180 (median: 0.207)
+                    mae: 0.713 ± 0.088 (median: 0.683)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:56 - INFO: Running SVR.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for SVR:
+                    mse: 0.762 ± 0.192 (median: 0.634)
+                    r2: 0.456 ± 0.096 (median: 0.450)
+                    mae: 0.664 ± 0.096 (median: 0.665)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:56 - INFO: Running Ridge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for Ridge:
+                    mse: 0.762 ± 0.105 (median: 0.725)
+                    r2: 0.419 ± 0.213 (median: 0.523)
+                    mae: 0.669 ± 0.054 (median: 0.686)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:56 - INFO: Running BayesianRidge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for BayesianRidge:
+                    mse: 0.709 ± 0.097 (median: 0.729)
+                    r2: 0.470 ± 0.163 (median: 0.537)
+                    mae: 0.644 ± 0.052 (median: 0.648)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:56 - INFO: Running KernelRidge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for KernelRidge:
+                    mse: 0.793 ± 0.161 (median: 0.739)
+                    r2: 0.399 ± 0.235 (median: 0.457)
+                    mae: 0.673 ± 0.071 (median: 0.651)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:56 - INFO: Running LGBMRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for LGBMRegressor:
+                    mse: 0.857 ± 0.129 (median: 0.875)
+                    r2: 0.354 ± 0.235 (median: 0.472)
+                    mae: 0.708 ± 0.082 (median: 0.728)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:56 - INFO: Running CatBoostRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for CatBoostRegressor:
+                    mse: 0.713 ± 0.138 (median: 0.645)
+                    r2: 0.480 ± 0.115 (median: 0.480)
+                    mae: 0.639 ± 0.086 (median: 0.658)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:57 - INFO: Done!
+15-03 14:57 - INFO: Finished CV for all models.
+15-03 14:57 - INFO: Checking assumptions for parametric tests.
+15-03 14:57 - INFO: Assumptions of parametric tests met: False.
+15-03 14:57 - INFO: Finding best model.
+15-03 14:57 - INFO: Best model: SVR. Reason: median score.
+15-03 14:57 - INFO: Starting final hyperparameter tuning.
+15-03 14:57 - INFO: Done!
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    -------------
+                    Final results
+                    -------------
+                    Final model: SVR
+                    Hyperparameters:
+                    kernel: sigmoid
+                    C: 7.867745381977843
+                    gamma: 0.001
+                    Mean mse: 0.683 ± 0.158.
+                    Median mse: 0.628.
+                    Mean r2: 0.510 ± 0.100.
+                    Median r2: 0.517.
+                    Mean mae: 0.633 ± 0.085.
+                    Median mae: 0.636.
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="k">bash</span>
+astra benchmark features/LogD_cats2d_train.pkl \
+    --name LogD_cats2d \
+    --use_optuna \
+    --fold_col KMeans_Cluster_42 \
+    --main_metric MSE \
+    --sec_metrics R2 MAE \
+    --timeout 100
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                
+   <span class=" -Color -Color-Bold -Color-Bold-Blue">👋 Welcome to ASTRA - Automated model selection using statistical testing</span>    
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                         _                                      </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                             __ _  ___ | |_  _ __   __ _                        </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |</span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> __|| __|| &#39;__| </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                           | (_| |\__ \| |_ | |   | (_| |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            \__,_||___/ \__||_|    \__,_|                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+                         <span class=" -Color -Color-Bold -Color-Bold-Cyan">🤔 For help, run: astra --help</span>                         
+              <span class=" -Color -Color-Bold -Color-Bold-Cyan">🧪 To benchmark models, run: astra benchmark --help</span>               
+                <span class=" -Color -Color-Bold -Color-Bold-Cyan">🏆 To compare models, run: astra compare --help</span>                 
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:57 - INFO: Starting benchmark for LogD_cats2d.
+15-03 14:57 - INFO: Loading data.
+15-03 14:57 - INFO: Starting benchmarking.
+15-03 14:57 - INFO: Features column: Features
+15-03 14:57 - INFO: Target column: Target
+15-03 14:57 - INFO: Running 5-fold CV.
+15-03 14:57 - INFO: Fold column: KMeans_Cluster_42
+15-03 14:57 - INFO: Using Optuna for hyperparameter optimization, with 100 trials and a timeout of 100 seconds.
+15-03 14:57 - INFO: Will check assumptions for parametric tests and use them if met.
+15-03 14:57 - INFO: Getting models and parameters.
+15-03 14:57 - INFO: Benchmarking regression models.
+15-03 14:57 - INFO: Main metric: mse
+15-03 14:57 - INFO: Secondary metrics: [&#39;r2&#39;, &#39;mae&#39;]
+15-03 14:57 - INFO: Starting CV for all models using default hyperparameters.
+15-03 14:57 - INFO: Running CV.
+15-03 14:57 - INFO: Running XGBRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for XGBRegressor:
+                    mse: 1.110 ± 0.375 (median: 0.909)
+                    r2: 0.224 ± 0.153 (median: 0.240)
+                    mae: 0.779 ± 0.125 (median: 0.719)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:57 - INFO: Running RandomForestRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for RandomForestRegressor:
+                    mse: 0.967 ± 0.258 (median: 0.873)
+                    r2: 0.312 ± 0.126 (median: 0.353)
+                    mae: 0.757 ± 0.089 (median: 0.732)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:57 - INFO: Running GradientBoostingRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for GradientBoostingRegressor:
+                    mse: 0.929 ± 0.220 (median: 1.025)
+                    r2: 0.341 ± 0.117 (median: 0.382)
+                    mae: 0.754 ± 0.114 (median: 0.781)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:57 - INFO: Running HistGradientBoostingRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for HistGradientBoostingRegressor:
+                    mse: 0.983 ± 0.308 (median: 0.843)
+                    r2: 0.309 ± 0.124 (median: 0.309)
+                    mae: 0.769 ± 0.109 (median: 0.702)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:57 - INFO: Running KNeighborsRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for KNeighborsRegressor:
+                    mse: 1.015 ± 0.322 (median: 0.938)
+                    r2: 0.293 ± 0.109 (median: 0.287)
+                    mae: 0.748 ± 0.111 (median: 0.716)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:57 - INFO: Running SVR.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for SVR:
+                    mse: 1.048 ± 0.133 (median: 1.001)
+                    r2: 0.228 ± 0.181 (median: 0.308)
+                    mae: 0.822 ± 0.051 (median: 0.812)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:57 - INFO: Running Ridge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for Ridge:
+                    mse: 1.387 ± 0.327 (median: 1.269)
+                    r2: -0.054 ± 0.474 (median: 0.113)
+                    mae: 0.887 ± 0.095 (median: 0.887)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:57 - INFO: Running BayesianRidge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for BayesianRidge:
+                    mse: 0.912 ± 0.208 (median: 0.850)
+                    r2: 0.328 ± 0.193 (median: 0.288)
+                    mae: 0.753 ± 0.073 (median: 0.714)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:57 - INFO: Running KernelRidge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for KernelRidge:
+                    mse: 1.395 ± 0.324 (median: 1.283)
+                    r2: -0.060 ± 0.474 (median: 0.109)
+                    mae: 0.889 ± 0.094 (median: 0.894)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:57 - INFO: Running LGBMRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for LGBMRegressor:
+                    mse: 0.988 ± 0.324 (median: 0.837)
+                    r2: 0.311 ± 0.119 (median: 0.331)
+                    mae: 0.771 ± 0.124 (median: 0.692)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:57 - INFO: Running CatBoostRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for CatBoostRegressor:
+                    mse: 0.845 ± 0.142 (median: 0.914)
+                    r2: 0.394 ± 0.070 (median: 0.435)
+                    mae: 0.723 ± 0.052 (median: 0.739)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:57 - INFO: Done!
+15-03 14:57 - INFO: Finished CV for all models.
+15-03 14:57 - INFO: Checking assumptions for parametric tests.
+15-03 14:57 - INFO: Assumptions of parametric tests met: False.
+15-03 14:57 - INFO: Finding best model.
+15-03 14:57 - INFO: Best model: CatBoostRegressor. Reason: Conover post-hoc test.
+15-03 14:57 - INFO: Starting final hyperparameter tuning.
+15-03 14:59 - INFO: Done!
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    -------------
+                    Final results
+                    -------------
+                    Final model: CatBoostRegressor
+                    Hyperparameters:
+                    iterations: 556
+                    learning_rate: 0.016511657063497182
+                    depth: 4
+                    l2_leaf_reg: 2.235048729002267
+                    rsm: 0.3668787683669737
+                    loss_function: RMSE
+                    border_count: 134
+                    feature_border_type: Median
+                    random_strength: 1.3063759368181672e-06
+                    bootstrap_type: Bayesian
+                    Mean mse: 0.887 ± 0.156.
+                    Median mse: 0.906.
+                    Mean r2: 0.361 ± 0.102.
+                    Median r2: 0.360.
+                    Mean mae: 0.744 ± 0.053.
+                    Median mae: 0.755.
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="k">bash</span>
+astra benchmark features/LogD_desc2D_train.pkl \
+    --name LogD_desc2D \
+    --use_optuna \
+    --fold_col KMeans_Cluster_42 \
+    --main_metric MSE \
+    --sec_metrics R2 MAE \
+    --timeout 100
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                
+   <span class=" -Color -Color-Bold -Color-Bold-Blue">👋 Welcome to ASTRA - Automated model selection using statistical testing</span>    
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                         _                                      </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                             __ _  ___ | |_  _ __   __ _                        </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |</span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> __|| __|| &#39;__| </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                           | (_| |\__ \| |_ | |   | (_| |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            \__,_||___/ \__||_|    \__,_|                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+                         <span class=" -Color -Color-Bold -Color-Bold-Cyan">🤔 For help, run: astra --help</span>                         
+              <span class=" -Color -Color-Bold -Color-Bold-Cyan">🧪 To benchmark models, run: astra benchmark --help</span>               
+                <span class=" -Color -Color-Bold -Color-Bold-Cyan">🏆 To compare models, run: astra compare --help</span>                 
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:59 - INFO: Starting benchmark for LogD_desc2D.
+15-03 14:59 - INFO: Loading data.
+15-03 14:59 - INFO: Starting benchmarking.
+15-03 14:59 - INFO: Features column: Features
+15-03 14:59 - INFO: Target column: Target
+15-03 14:59 - INFO: Running 5-fold CV.
+15-03 14:59 - INFO: Fold column: KMeans_Cluster_42
+15-03 14:59 - INFO: Using Optuna for hyperparameter optimization, with 100 trials and a timeout of 100 seconds.
+15-03 14:59 - INFO: Will check assumptions for parametric tests and use them if met.
+15-03 14:59 - INFO: Getting models and parameters.
+15-03 14:59 - INFO: Benchmarking regression models.
+15-03 14:59 - INFO: Main metric: mse
+15-03 14:59 - INFO: Secondary metrics: [&#39;r2&#39;, &#39;mae&#39;]
+15-03 14:59 - INFO: Starting CV for all models using default hyperparameters.
+15-03 14:59 - INFO: Running CV.
+15-03 14:59 - INFO: Running XGBRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for XGBRegressor:
+                    mse: 0.806 ± 0.158 (median: 0.839)
+                    r2: 0.409 ± 0.170 (median: 0.491)
+                    mae: 0.699 ± 0.059 (median: 0.739)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:59 - INFO: Running RandomForestRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for RandomForestRegressor:
+                    mse: 0.775 ± 0.232 (median: 0.723)
+                    r2: 0.452 ± 0.135 (median: 0.438)
+                    mae: 0.676 ± 0.130 (median: 0.666)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:59 - INFO: Running GradientBoostingRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for GradientBoostingRegressor:
+                    mse: 0.652 ± 0.179 (median: 0.690)
+                    r2: 0.528 ± 0.148 (median: 0.598)
+                    mae: 0.630 ± 0.088 (median: 0.643)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:59 - INFO: Running HistGradientBoostingRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for HistGradientBoostingRegressor:
+                    mse: 0.609 ± 0.165 (median: 0.603)
+                    r2: 0.564 ± 0.117 (median: 0.636)
+                    mae: 0.598 ± 0.087 (median: 0.620)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:59 - INFO: Running KNeighborsRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for KNeighborsRegressor:
+                    mse: 1.244 ± 0.296 (median: 1.266)
+                    r2: 0.101 ± 0.226 (median: 0.253)
+                    mae: 0.876 ± 0.122 (median: 0.895)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:59 - INFO: Running SVR.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for SVR:
+                    mse: 1.423 ± 0.162 (median: 1.409)
+                    r2: -0.049 ± 0.250 (median: 0.076)
+                    mae: 0.972 ± 0.041 (median: 0.985)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:59 - INFO: Running Ridge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for Ridge:
+                    mse: 0.774 ± 0.107 (median: 0.790)
+                    r2: 0.425 ± 0.157 (median: 0.441)
+                    mae: 0.676 ± 0.044 (median: 0.673)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:59 - INFO: Running BayesianRidge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for BayesianRidge:
+                    mse: 0.677 ± 0.201 (median: 0.749)
+                    r2: 0.506 ± 0.177 (median: 0.548)
+                    mae: 0.632 ± 0.087 (median: 0.679)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:59 - INFO: Running KernelRidge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for KernelRidge:
+                    mse: 0.774 ± 0.107 (median: 0.790)
+                    r2: 0.425 ± 0.157 (median: 0.441)
+                    mae: 0.676 ± 0.044 (median: 0.673)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:59 - INFO: Running LGBMRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for LGBMRegressor:
+                    mse: 0.612 ± 0.207 (median: 0.598)
+                    r2: 0.566 ± 0.135 (median: 0.639)
+                    mae: 0.594 ± 0.099 (median: 0.606)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:59 - INFO: Running CatBoostRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for CatBoostRegressor:
+                    mse: 0.653 ± 0.145 (median: 0.681)
+                    r2: 0.527 ± 0.128 (median: 0.589)
+                    mae: 0.622 ± 0.091 (median: 0.647)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 14:59 - INFO: Done!
+15-03 14:59 - INFO: Finished CV for all models.
+15-03 14:59 - INFO: Checking assumptions for parametric tests.
+15-03 14:59 - INFO: Assumptions of parametric tests met: False.
+15-03 14:59 - INFO: Finding best model.
+15-03 14:59 - INFO: Best model: LGBMRegressor. Reason: Conover post-hoc test.
+15-03 14:59 - INFO: Starting final hyperparameter tuning.
+15-03 15:01 - INFO: Done!
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    -------------
+                    Final results
+                    -------------
+                    Final model: LGBMRegressor
+                    Hyperparameters:
+                    boosting_type: dart
+                    num_leaves: 510
+                    max_depth: 11
+                    learning_rate: 0.15869372433797996
+                    n_estimators: 563
+                    min_data_in_leaf: 23
+                    subsample: 0.6769996225690526
+                    subsample_freq: 4
+                    colsample_bytree: 0.7557762135754856
+                    reg_alpha: 0.6705738213879265
+                    reg_lambda: 0.5707565631892096
+                    bagging_freq: 10
+                    min_split_gain: 0.03202064627142526
+                    min_child_weight: 8.23573947779089
+                    min_child_samples: 5
+                    Mean mse: 0.609 ± 0.154.
+                    Median mse: 0.624.
+                    Mean r2: 0.563 ± 0.107.
+                    Median r2: 0.613.
+                    Mean mae: 0.599 ± 0.073.
+                    Median mae: 0.610.
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="k">bash</span>
+astra benchmark features/LogD_ecfp_train.pkl \
+    --name LogD_ecfp \
+    --use_optuna \
+    --fold_col KMeans_Cluster_42 \
+    --main_metric MSE \
+    --sec_metrics R2 MAE \
+    --timeout 100
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                
+   <span class=" -Color -Color-Bold -Color-Bold-Blue">👋 Welcome to ASTRA - Automated model selection using statistical testing</span>    
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                         _                                      </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                             __ _  ___ | |_  _ __   __ _                        </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |</span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> __|| __|| &#39;__| </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                           | (_| |\__ \| |_ | |   | (_| |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            \__,_||___/ \__||_|    \__,_|                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+                         <span class=" -Color -Color-Bold -Color-Bold-Cyan">🤔 For help, run: astra --help</span>                         
+              <span class=" -Color -Color-Bold -Color-Bold-Cyan">🧪 To benchmark models, run: astra benchmark --help</span>               
+                <span class=" -Color -Color-Bold -Color-Bold-Cyan">🏆 To compare models, run: astra compare --help</span>                 
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:01 - INFO: Starting benchmark for LogD_ecfp.
+15-03 15:01 - INFO: Loading data.
+15-03 15:01 - INFO: Starting benchmarking.
+15-03 15:01 - INFO: Features column: Features
+15-03 15:01 - INFO: Target column: Target
+15-03 15:01 - INFO: Running 5-fold CV.
+15-03 15:01 - INFO: Fold column: KMeans_Cluster_42
+15-03 15:01 - INFO: Using Optuna for hyperparameter optimization, with 100 trials and a timeout of 100 seconds.
+15-03 15:01 - INFO: Will check assumptions for parametric tests and use them if met.
+15-03 15:01 - INFO: Getting models and parameters.
+15-03 15:01 - INFO: Benchmarking regression models.
+15-03 15:01 - INFO: Main metric: mse
+15-03 15:01 - INFO: Secondary metrics: [&#39;r2&#39;, &#39;mae&#39;]
+15-03 15:01 - INFO: Starting CV for all models using default hyperparameters.
+15-03 15:01 - INFO: Running CV.
+15-03 15:01 - INFO: Running XGBRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for XGBRegressor:
+                    mse: 1.003 ± 0.133 (median: 0.995)
+                    r2: 0.260 ± 0.172 (median: 0.278)
+                    mae: 0.760 ± 0.061 (median: 0.734)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:01 - INFO: Running RandomForestRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for RandomForestRegressor:
+                    mse: 0.899 ± 0.070 (median: 0.878)
+                    r2: 0.323 ± 0.197 (median: 0.403)
+                    mae: 0.725 ± 0.031 (median: 0.723)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:01 - INFO: Running GradientBoostingRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for GradientBoostingRegressor:
+                    mse: 1.039 ± 0.144 (median: 1.143)
+                    r2: 0.229 ± 0.212 (median: 0.330)
+                    mae: 0.778 ± 0.054 (median: 0.792)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:01 - INFO: Running HistGradientBoostingRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for HistGradientBoostingRegressor:
+                    mse: 0.832 ± 0.079 (median: 0.795)
+                    r2: 0.385 ± 0.140 (median: 0.431)
+                    mae: 0.708 ± 0.047 (median: 0.694)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:01 - INFO: Running KNeighborsRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for KNeighborsRegressor:
+                    mse: 0.816 ± 0.091 (median: 0.795)
+                    r2: 0.402 ± 0.120 (median: 0.468)
+                    mae: 0.681 ± 0.048 (median: 0.653)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:01 - INFO: Running SVR.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for SVR:
+                    mse: 0.839 ± 0.160 (median: 0.752)
+                    r2: 0.392 ± 0.114 (median: 0.418)
+                    mae: 0.711 ± 0.077 (median: 0.677)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:01 - INFO: Running Ridge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for Ridge:
+                    mse: 0.906 ± 0.260 (median: 0.836)
+                    r2: 0.343 ± 0.177 (median: 0.352)
+                    mae: 0.704 ± 0.091 (median: 0.678)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:01 - INFO: Running BayesianRidge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for BayesianRidge:
+                    mse: 0.852 ± 0.237 (median: 0.722)
+                    r2: 0.386 ± 0.143 (median: 0.362)
+                    mae: 0.690 ± 0.079 (median: 0.648)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:01 - INFO: Running KernelRidge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for KernelRidge:
+                    mse: 0.939 ± 0.279 (median: 0.898)
+                    r2: 0.320 ± 0.194 (median: 0.370)
+                    mae: 0.709 ± 0.098 (median: 0.703)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:01 - INFO: Running LGBMRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for LGBMRegressor:
+                    mse: 0.832 ± 0.079 (median: 0.795)
+                    r2: 0.385 ± 0.140 (median: 0.431)
+                    mae: 0.708 ± 0.047 (median: 0.694)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:01 - INFO: Running CatBoostRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for CatBoostRegressor:
+                    mse: 0.938 ± 0.208 (median: 0.977)
+                    r2: 0.319 ± 0.164 (median: 0.291)
+                    mae: 0.733 ± 0.090 (median: 0.729)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:01 - INFO: Done!
+15-03 15:01 - INFO: Finished CV for all models.
+15-03 15:01 - INFO: Checking assumptions for parametric tests.
+15-03 15:01 - INFO: Assumptions of parametric tests met: True.
+15-03 15:01 - INFO: Finding best model.
+15-03 15:01 - INFO: Best model: KNeighborsRegressor. Reason: paired t-test.
+15-03 15:01 - INFO: Starting final hyperparameter tuning.
+15-03 15:01 - INFO: Done!
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    -------------
+                    Final results
+                    -------------
+                    Final model: KNeighborsRegressor
+                    Hyperparameters:
+                    n_neighbors: 6
+                    weights: distance
+                    p: 1
+                    Mean mse: 0.790 ± 0.095.
+                    Median mse: 0.788.
+                    Mean r2: 0.419 ± 0.126.
+                    Median r2: 0.481.
+                    Mean mae: 0.664 ± 0.051.
+                    Median mae: 0.639.
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="k">bash</span>
+astra benchmark features/LogD_maccs_train.pkl \
+    --name LogD_maccs \
+    --use_optuna \
+    --fold_col KMeans_Cluster_42 \
+    --main_metric MSE \
+    --sec_metrics R2 MAE \
+    --timeout 100
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                
+   <span class=" -Color -Color-Bold -Color-Bold-Blue">👋 Welcome to ASTRA - Automated model selection using statistical testing</span>    
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                         _                                      </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                             __ _  ___ | |_  _ __   __ _                        </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |</span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> __|| __|| &#39;__| </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                           | (_| |\__ \| |_ | |   | (_| |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            \__,_||___/ \__||_|    \__,_|                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+                         <span class=" -Color -Color-Bold -Color-Bold-Cyan">🤔 For help, run: astra --help</span>                         
+              <span class=" -Color -Color-Bold -Color-Bold-Cyan">🧪 To benchmark models, run: astra benchmark --help</span>               
+                <span class=" -Color -Color-Bold -Color-Bold-Cyan">🏆 To compare models, run: astra compare --help</span>                 
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:02 - INFO: Starting benchmark for LogD_maccs.
+15-03 15:02 - INFO: Loading data.
+15-03 15:02 - INFO: Starting benchmarking.
+15-03 15:02 - INFO: Features column: Features
+15-03 15:02 - INFO: Target column: Target
+15-03 15:02 - INFO: Running 5-fold CV.
+15-03 15:02 - INFO: Fold column: KMeans_Cluster_42
+15-03 15:02 - INFO: Using Optuna for hyperparameter optimization, with 100 trials and a timeout of 100 seconds.
+15-03 15:02 - INFO: Will check assumptions for parametric tests and use them if met.
+15-03 15:02 - INFO: Getting models and parameters.
+15-03 15:02 - INFO: Benchmarking regression models.
+15-03 15:02 - INFO: Main metric: mse
+15-03 15:02 - INFO: Secondary metrics: [&#39;r2&#39;, &#39;mae&#39;]
+15-03 15:02 - INFO: Starting CV for all models using default hyperparameters.
+15-03 15:02 - INFO: Running CV.
+15-03 15:02 - INFO: Running XGBRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for XGBRegressor:
+                    mse: 1.443 ± 0.132 (median: 1.412)
+                    r2: -0.096 ± 0.377 (median: 0.094)
+                    mae: 0.913 ± 0.060 (median: 0.916)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:02 - INFO: Running RandomForestRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for RandomForestRegressor:
+                    mse: 1.076 ± 0.069 (median: 1.060)
+                    r2: 0.192 ± 0.237 (median: 0.365)
+                    mae: 0.779 ± 0.054 (median: 0.749)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:02 - INFO: Running GradientBoostingRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for GradientBoostingRegressor:
+                    mse: 1.068 ± 0.219 (median: 1.157)
+                    r2: 0.201 ± 0.307 (median: 0.337)
+                    mae: 0.766 ± 0.095 (median: 0.758)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:02 - INFO: Running HistGradientBoostingRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for HistGradientBoostingRegressor:
+                    mse: 0.974 ± 0.159 (median: 1.032)
+                    r2: 0.299 ± 0.103 (median: 0.347)
+                    mae: 0.736 ± 0.069 (median: 0.750)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:02 - INFO: Running KNeighborsRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for KNeighborsRegressor:
+                    mse: 1.223 ± 0.425 (median: 1.044)
+                    r2: 0.133 ± 0.212 (median: 0.191)
+                    mae: 0.783 ± 0.128 (median: 0.751)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:02 - INFO: Running SVR.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for SVR:
+                    mse: 0.890 ± 0.180 (median: 0.866)
+                    r2: 0.357 ± 0.125 (median: 0.356)
+                    mae: 0.734 ± 0.063 (median: 0.723)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:02 - INFO: Running Ridge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for Ridge:
+                    mse: 1.270 ± 0.389 (median: 1.386)
+                    r2: 0.072 ± 0.349 (median: 0.164)
+                    mae: 0.833 ± 0.134 (median: 0.904)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:02 - INFO: Running BayesianRidge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for BayesianRidge:
+                    mse: 0.984 ± 0.271 (median: 0.925)
+                    r2: 0.300 ± 0.144 (median: 0.370)
+                    mae: 0.757 ± 0.079 (median: 0.739)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:02 - INFO: Running KernelRidge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for KernelRidge:
+                    mse: 1.265 ± 0.389 (median: 1.391)
+                    r2: 0.073 ± 0.365 (median: 0.161)
+                    mae: 0.833 ± 0.138 (median: 0.911)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:02 - INFO: Running LGBMRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for LGBMRegressor:
+                    mse: 0.974 ± 0.159 (median: 1.032)
+                    r2: 0.299 ± 0.103 (median: 0.347)
+                    mae: 0.736 ± 0.069 (median: 0.750)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:02 - INFO: Running CatBoostRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for CatBoostRegressor:
+                    mse: 0.932 ± 0.155 (median: 0.844)
+                    r2: 0.300 ± 0.242 (median: 0.372)
+                    mae: 0.735 ± 0.071 (median: 0.718)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:02 - INFO: Done!
+15-03 15:02 - INFO: Finished CV for all models.
+15-03 15:02 - INFO: Checking assumptions for parametric tests.
+15-03 15:02 - INFO: Assumptions of parametric tests met: False.
+15-03 15:02 - INFO: Finding best model.
+15-03 15:02 - INFO: Best model: CatBoostRegressor. Reason: Conover post-hoc test.
+15-03 15:02 - INFO: Starting final hyperparameter tuning.
+15-03 15:04 - INFO: Done!
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    -------------
+                    Final results
+                    -------------
+                    Final model: CatBoostRegressor
+                    Hyperparameters:
+                    iterations: 637
+                    learning_rate: 0.07140177292623585
+                    depth: 2
+                    l2_leaf_reg: 0.10030457398605436
+                    rsm: 0.5295608684611183
+                    loss_function: RMSE
+                    border_count: 33
+                    feature_border_type: Median
+                    random_strength: 0.0012590108285256113
+                    bootstrap_type: Bayesian
+                    Mean mse: 0.938 ± 0.221.
+                    Median mse: 0.911.
+                    Mean r2: 0.288 ± 0.307.
+                    Median r2: 0.368.
+                    Mean mae: 0.731 ± 0.087.
+                    Median mae: 0.698.
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="k">bash</span>
+astra benchmark features/LogD_topological_train.pkl \
+    --name LogD_topological \
+    --use_optuna \
+    --fold_col KMeans_Cluster_42 \
+    --main_metric MSE \
+    --sec_metrics R2 MAE \
+    --timeout 100
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                
+   <span class=" -Color -Color-Bold -Color-Bold-Blue">👋 Welcome to ASTRA - Automated model selection using statistical testing</span>    
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                         _                                      </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                             __ _  ___ | |_  _ __   __ _                        </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |</span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> __|| __|| &#39;__| </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                           | (_| |\__ \| |_ | |   | (_| |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            \__,_||___/ \__||_|    \__,_|                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+                         <span class=" -Color -Color-Bold -Color-Bold-Cyan">🤔 For help, run: astra --help</span>                         
+              <span class=" -Color -Color-Bold -Color-Bold-Cyan">🧪 To benchmark models, run: astra benchmark --help</span>               
+                <span class=" -Color -Color-Bold -Color-Bold-Cyan">🏆 To compare models, run: astra compare --help</span>                 
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:04 - INFO: Starting benchmark for LogD_topological.
+15-03 15:04 - INFO: Loading data.
+15-03 15:04 - INFO: Starting benchmarking.
+15-03 15:04 - INFO: Features column: Features
+15-03 15:04 - INFO: Target column: Target
+15-03 15:04 - INFO: Running 5-fold CV.
+15-03 15:04 - INFO: Fold column: KMeans_Cluster_42
+15-03 15:04 - INFO: Using Optuna for hyperparameter optimization, with 100 trials and a timeout of 100 seconds.
+15-03 15:04 - INFO: Will check assumptions for parametric tests and use them if met.
+15-03 15:04 - INFO: Getting models and parameters.
+15-03 15:04 - INFO: Benchmarking regression models.
+15-03 15:04 - INFO: Main metric: mse
+15-03 15:04 - INFO: Secondary metrics: [&#39;r2&#39;, &#39;mae&#39;]
+15-03 15:04 - INFO: Starting CV for all models using default hyperparameters.
+15-03 15:04 - INFO: Running CV.
+15-03 15:04 - INFO: Running XGBRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for XGBRegressor:
+                    mse: 0.917 ± 0.227 (median: 0.990)
+                    r2: 0.320 ± 0.256 (median: 0.422)
+                    mae: 0.730 ± 0.095 (median: 0.756)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:04 - INFO: Running RandomForestRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for RandomForestRegressor:
+                    mse: 0.920 ± 0.191 (median: 0.885)
+                    r2: 0.290 ± 0.326 (median: 0.465)
+                    mae: 0.728 ± 0.076 (median: 0.694)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:04 - INFO: Running GradientBoostingRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for GradientBoostingRegressor:
+                    mse: 0.968 ± 0.136 (median: 1.045)
+                    r2: 0.275 ± 0.240 (median: 0.390)
+                    mae: 0.758 ± 0.063 (median: 0.763)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:04 - INFO: Running HistGradientBoostingRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for HistGradientBoostingRegressor:
+                    mse: 0.824 ± 0.128 (median: 0.788)
+                    r2: 0.397 ± 0.127 (median: 0.414)
+                    mae: 0.694 ± 0.086 (median: 0.684)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:04 - INFO: Running KNeighborsRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for KNeighborsRegressor:
+                    mse: 0.825 ± 0.106 (median: 0.860)
+                    r2: 0.397 ± 0.125 (median: 0.465)
+                    mae: 0.679 ± 0.045 (median: 0.682)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:04 - INFO: Running SVR.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for SVR:
+                    mse: 0.823 ± 0.162 (median: 0.764)
+                    r2: 0.401 ± 0.128 (median: 0.404)
+                    mae: 0.698 ± 0.078 (median: 0.683)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:04 - INFO: Running Ridge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for Ridge:
+                    mse: 0.929 ± 0.181 (median: 0.953)
+                    r2: 0.319 ± 0.182 (median: 0.366)
+                    mae: 0.726 ± 0.065 (median: 0.711)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:04 - INFO: Running BayesianRidge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for BayesianRidge:
+                    mse: 0.853 ± 0.167 (median: 0.791)
+                    r2: 0.380 ± 0.135 (median: 0.382)
+                    mae: 0.704 ± 0.069 (median: 0.668)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:04 - INFO: Running KernelRidge.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for KernelRidge:
+                    mse: 0.925 ± 0.183 (median: 0.966)
+                    r2: 0.320 ± 0.193 (median: 0.370)
+                    mae: 0.725 ± 0.065 (median: 0.720)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:04 - INFO: Running LGBMRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for LGBMRegressor:
+                    mse: 0.824 ± 0.128 (median: 0.788)
+                    r2: 0.397 ± 0.127 (median: 0.414)
+                    mae: 0.694 ± 0.086 (median: 0.684)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:04 - INFO: Running CatBoostRegressor.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    Performance for CatBoostRegressor:
+                    mse: 0.858 ± 0.116 (median: 0.853)
+                    r2: 0.366 ± 0.161 (median: 0.443)
+                    mae: 0.710 ± 0.055 (median: 0.735)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:04 - INFO: Done!
+15-03 15:04 - INFO: Finished CV for all models.
+15-03 15:04 - INFO: Checking assumptions for parametric tests.
+15-03 15:04 - INFO: Assumptions of parametric tests met: False.
+15-03 15:04 - INFO: Finding best model.
+15-03 15:04 - INFO: Best model: SVR. Reason: median score.
+15-03 15:04 - INFO: Starting final hyperparameter tuning.
+15-03 15:05 - INFO: Done!
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    -------------
+                    Final results
+                    -------------
+                    Final model: SVR
+                    Hyperparameters:
+                    kernel: linear
+                    C: 0.035459424622562255
+                    gamma: scale
+                    Mean mse: 0.778 ± 0.144.
+                    Median mse: 0.675.
+                    Mean r2: 0.436 ± 0.104.
+                    Median r2: 0.445.
+                    Mean mae: 0.677 ± 0.065.
+                    Median mae: 0.652.
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="running-astra-compare-to-compare-models-obtained-for-different-fingerprints">
+<h2>Running <code class="docutils literal notranslate"><span class="pre">astra</span> <span class="pre">compare</span></code> to compare models obtained for different fingerprints<a class="headerlink" href="#running-astra-compare-to-compare-models-obtained-for-different-fingerprints" title="Link to this heading">¶</a></h2>
+<p>Now we can run <code class="docutils literal notranslate"><span class="pre">astra</span> <span class="pre">compare</span></code> on the results. Again, we use MSE as the main metric, and R<sup>2</sup> and MAE as secondary metrics. ASTRA will compare the models trained on different fingerprints and select the best one via statistical testing.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="k">bash</span>
+astra compare results/LogD_atompair results/LogD_cats2d results/LogD_desc2D results/LogD_ecfp results/LogD_maccs results/LogD_topological --main_metric MSE --sec_metrics R2 MAE
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                
+   <span class=" -Color -Color-Bold -Color-Bold-Blue">👋 Welcome to ASTRA - Automated model selection using statistical testing</span>    
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                         _                                      </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                             __ _  ___ | |_  _ __   __ _                        </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |</span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> __|| __|| &#39;__| </span><span class=" -Color -Color-Bold -Color-Bold-Magenta">/</span><span class=" -Color -Color-Bold -Color-Bold-Blue"> _` |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                           | (_| |\__ \| |_ | |   | (_| |                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                            \__,_||___/ \__||_|    \__,_|                       </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                   ----------------------------------------------               </span>
+<span class=" -Color -Color-Bold -Color-Bold-Blue">                                                                                </span>
+                         <span class=" -Color -Color-Bold -Color-Bold-Cyan">🤔 For help, run: astra --help</span>                         
+              <span class=" -Color -Color-Bold -Color-Bold-Cyan">🧪 To benchmark models, run: astra benchmark --help</span>               
+                <span class=" -Color -Color-Bold -Color-Bold-Cyan">🏆 To compare models, run: astra compare --help</span>                 
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:05 - INFO: Starting comparison of CV results.
+15-03 15:05 - INFO: Will check assumptions for parametric tests and use them if met.
+15-03 15:05 - INFO: 6 CV results found.
+15-03 15:05 - INFO: Checking assumptions for parametric tests.
+15-03 15:05 - INFO: Assumptions of parametric tests met: True.
+15-03 15:05 - INFO: Best models based on mse:
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                    LogD_atompair
+                    LogD_cats2d
+                    LogD_desc2D
+                    LogD_ecfp
+                    LogD_maccs
+                    LogD_topological
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15-03 15:05 - INFO: Best model overall: LogD_desc2D. Reason: Tukey&#39;s HSD test.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>--------------------------------------------------
+Results:
+--------------------------------------------------
+Mean mse: 0.609 ± 0.154.
+Median mse: 0.624.
+Mean r2: 0.563 ± 0.107.
+ Median r2: 0.613.
+Mean mae: 0.599 ± 0.073.
+ Median mae: 0.610.
+--------------------------------------------------
+</pre></div>
+</div>
+</div>
+</div>
+<p>The output tells us that the best model is <code class="docutils literal notranslate"><span class="pre">LogD_desc2D</span></code>, the model trained on <code class="docutils literal notranslate"><span class="pre">desc2D</span></code> fingerprints, based on Tukey's HSD test.</p>
+</section>
+<section id="evaluation-on-test-data">
+<h2>Evaluation on test data<a class="headerlink" href="#evaluation-on-test-data" title="Link to this heading">¶</a></h2>
+<p>Finally we can evaluate the final model on the test set:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">mean_absolute_error</span><span class="p">,</span>
+    <span class="n">mean_squared_error</span><span class="p">,</span>
+    <span class="n">r2_score</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;results/LogD_desc2D/final_model.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">final_model</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="n">test_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s2">&quot;features/LogD_desc2D_test.pkl&quot;</span><span class="p">)</span>
+<span class="n">X_test</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">test_data</span><span class="p">[</span><span class="s2">&quot;Features&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_list</span><span class="p">())</span>
+<span class="n">y_test</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">[</span><span class="s2">&quot;Target&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">final_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+<span class="n">mse</span> <span class="o">=</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">predictions</span><span class="p">)</span>
+<span class="n">r2</span> <span class="o">=</span> <span class="n">r2_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">predictions</span><span class="p">)</span>
+<span class="n">mae</span> <span class="o">=</span> <span class="n">mean_absolute_error</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">predictions</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Test MSE: </span><span class="si">{</span><span class="n">mse</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Test R2: </span><span class="si">{</span><span class="n">r2</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Test MAE: </span><span class="si">{</span><span class="n">mae</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Test MSE: 0.3143
+Test R2: 0.6151
+Test MAE: 0.4422
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Link to this heading">¶</a></h2>
+<p>In this tutorial we demonstrated the complete ASTRA workflow on real drug discovery data from the ASAP Discovery x OpenADMET Antiviral Challenge by:</p>
+<ol class="arabic simple">
+<li><p>running <code class="docutils literal notranslate"><span class="pre">astra</span> <span class="pre">benchmark</span></code> for each of six cheminformatics fingerprints to select the best model per fingerprint, and</p></li>
+<li><p>running <code class="docutils literal notranslate"><span class="pre">astra</span> <span class="pre">compare</span></code> to identify the best fingerprint overall.</p></li>
+</ol>
+<p>ASTRA selected <code class="docutils literal notranslate"><span class="pre">desc2D</span></code> with an <code class="docutils literal notranslate"><span class="pre">LGBMRegressor</span></code> as the best combination, achieving a test MSE of 0.314, R² of 0.615, and MAE of 0.442 on held-out compounds from later stages of the drug discovery campaign.</p>
+<p>For more detail on the available options, see the <a class="reference external" href="https://duartegroup.github.io/astra/user_guide.html">User Guide</a>.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../user_guide.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">User Guide</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="synthetic_dataset.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Running <code class="docutils literal notranslate"><span class="pre">astra</span> <span class="pre">benchmark</span></code> on a synthetic dataset</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Wojtek Treyde
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Case study on real-life drug discovery data</a><ul>
+<li><a class="reference internal" href="#running-astra-benchmark-for-every-fingerprint">Running <code class="docutils literal notranslate"><span class="pre">astra</span> <span class="pre">benchmark</span></code> for every fingerprint</a></li>
+<li><a class="reference internal" href="#running-astra-compare-to-compare-models-obtained-for-different-fingerprints">Running <code class="docutils literal notranslate"><span class="pre">astra</span> <span class="pre">compare</span></code> to compare models obtained for different fingerprints</a></li>
+<li><a class="reference internal" href="#evaluation-on-test-data">Evaluation on test data</a></li>
+<li><a class="reference internal" href="#conclusion">Conclusion</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=80cc54d1"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    </body>
+</html>
