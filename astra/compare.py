@@ -135,9 +135,7 @@ def run(
             logging.info("No significant difference found between the models")
 
     else:
-        logging.info(
-            f"{len(all_results)} CV results found, comparing them using Friedman test"
-        )
+        logging.info(f"{len(all_results)} CV results found.")
 
         if parametric == "auto":
             logging.info("Checking assumptions for parametric tests.")
@@ -166,6 +164,16 @@ def run(
             bf_corr=True,
         )
         logging.info(f"Best model overall: {best_model}. Reason: {reason}.")
+        if reason not in [
+            "Repeated measure ANOVA",
+            "Friedman test",
+            "Tukey's HSD test",
+            "Conover post-hoc test",
+        ]:
+            logging.warning(
+                "The best model was determined using a fallback method. "
+                "Please consider whether it is appropriate for your use case."
+            )
 
         if all_in_one_dir:
             with open(CV_results[0] + best_model + "final_CV.pkl", "rb") as f:

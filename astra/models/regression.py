@@ -126,7 +126,6 @@ REGRESSOR_PARAMS_OPTUNA = {
         min_child_weight=IntDistribution(1, 10),
         gamma=FloatDistribution(0.0, 5.0),
         subsample=FloatDistribution(0.4, 1.0),
-        sampling_method=CategoricalDistribution(["uniform", "gradient_based"]),
         colsample_bytree=FloatDistribution(0.3, 1.0),
         reg_alpha=FloatDistribution(1e-6, 10.0, log=True),
         reg_lambda=FloatDistribution(1e-3, 10.0, log=True),
@@ -159,15 +158,13 @@ REGRESSOR_PARAMS_OPTUNA = {
         n_iter_no_change=IntDistribution(1, 50),
     ),
     "HistGradientBoostingRegressor": dict(
-        loss=CategoricalDistribution(
-            ["squared_error", "absolute_error", "gamma", "poisson", "quantile"]
-        ),
+        loss=CategoricalDistribution(["squared_error", "absolute_error"]),
         learning_rate=FloatDistribution(1e-4, 1e-0, log=True),
         max_iter=IntDistribution(10, 500),
         max_leaf_nodes=IntDistribution(5, 125),
         min_samples_leaf=IntDistribution(1, 50),
         l2_regularization=FloatDistribution(0.0, 1.0),
-        max_bins=IntDistribution(32, 256),
+        max_bins=IntDistribution(32, 255),
         early_stopping=CategoricalDistribution([True, False]),
         max_depth=IntDistribution(1, 30),
         max_features=FloatDistribution(0.3, 1.0),

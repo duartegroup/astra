@@ -1,4 +1,6 @@
 sphinx
-pydata-sphinx-theme
+furo
+myst-nb
+sphinx-notfound-page
 sphinx-design
 sphinx-copybutton

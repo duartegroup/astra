@@ -113,7 +113,12 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         "--timeout",
         type=int,
         default=3600,
-        help="Time limit (in seconds) for Optuna hyperparameter search. Default: 3600.",
+        help=(
+            "Time limit (in seconds) for Optuna hyperparameter search."
+            " Default: 3600. When n_jobs > 1 this is a soft limit:"
+            " in-flight trials complete after the timeout elapses, so"
+            " actual runtime may exceed this value."
+        ),
     )
     benchmark_parser.add_argument(
         "--fold_col",

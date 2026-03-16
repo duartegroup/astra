@@ -73,7 +73,9 @@ def run(
     n_trials : int, default=100
         Number of trials for Optuna hyperparameter search.
     timeout : int, default=3600
-        Time limit (in seconds) for Optuna hyperparameter search.
+        Time limit (in seconds) for Optuna hyperparameter search. This is a soft timeout:
+        when n_jobs > 1, trials already in flight when the timeout elapses will run to
+        completion, so actual runtime may exceed this value.
     fold_col : str or list[str], default='Fold'
         Name(s) of the column(s) containing the CV fold number(s). If a list is provided,
         models will be benchmarked in an nxk-fold CV, where n is the number of repeats
