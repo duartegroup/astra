@@ -347,45 +347,47 @@ def check_best_model(
         metric in KNOWN_METRICS
     ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
 
-    # get model ranking according to median score
+    # get dictionary of models that have significantly worse performing models,
+    # sorted according to how many models they significantly beat
     scores = [np.median(results_dic[model][metric]) for model in results_dic]
     names = [model for model in results_dic]
-    if metric in HIGHER_BETTER:
-        best_models = [names[i] for i in np.argsort(scores)[::-1]]
-    else:
-        best_models = [names[i] for i in np.argsort(scores)]
-
-    # get dictionary of models that are significantly different from the others,
-    # sorted according to how many models perform significantly different
-    sig_diff_models = (
-        test_statistics.where(test_statistics < 0.05)
-        .dropna(axis=0, how="all")
-        .dropna(axis=1, how="all")
-        .count()
-        .sort_values(ascending=False)
-        .to_dict()
+    score_dic = dict(zip(names, scores))
+    sig_worse_models = {}
+    for model in names:
+        n_sig_worse = 0
+        for other_model in names:
+            if other_model == model:
+                continue
+            if test_statistics.loc[model, other_model] < 0.05:
+                if metric in HIGHER_BETTER:
+                    if score_dic[model] > score_dic[other_model]:
+                        n_sig_worse += 1
+                else:
+                    if score_dic[model] < score_dic[other_model]:
+                        n_sig_worse += 1
+        if n_sig_worse > 0:
+            sig_worse_models[model] = n_sig_worse
+    sig_worse_models = dict(
+        sorted(sig_worse_models.items(), key=lambda item: item[1], reverse=True)
     )
 
-    # if no models are significantly different, return None
-    if len(sig_diff_models) == 0:
+    # if no models are significantly better, return None
+    if len(sig_worse_models) == 0:
         return None
 
-    # loop over these models, and check if they are particularly
-    # good (top half) or bad
+    # get the model(s) that are significantly better than the most other models
     final_models = []
-    models = list(sig_diff_models.keys())
+    models = list(sig_worse_models.keys())
     for model in models:
-        rank = best_models.index(model)
-        if rank < 0.5 * len(names):
-            final_models.append(model)
-            # handle case if more than one model is significantly
-            # better than the same number of models
-            done = True
-            for other_model in models[models.index(model) + 1 :]:
-                if sig_diff_models[other_model] == sig_diff_models[model]:
-                    done = False
-            if done:
-                break
+        final_models.append(model)
+        # handle case if more than one model has the same number of
+        # significantly worse models
+        done = True
+        for other_model in models[models.index(model) + 1 :]:
+            if sig_worse_models[other_model] == sig_worse_models[model]:
+                done = False
+        if done:
+            break
 
     # if more than one model is significantly better than the others,
     # choose the one with the lowest sum of p-values.
@@ -419,13 +421,12 @@ def check_best_model(
                 final_model_idx = best_model_idxs[np.argmin(best_model_scores)]
             final_model = final_models[final_model_idx]
 
-    # if none of the models are in top half, return None
-    elif len(final_models) == 0:
-        final_model = None
-
     # if only one model is significantly better than the others, return that model
-    else:
+    elif len(final_models) == 1:
         final_model = final_models[0]
+    
+    else:
+        raise ValueError("Unexpected error in check_best_model function.")
 
     return final_model
 
