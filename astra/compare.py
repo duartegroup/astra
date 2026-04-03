@@ -123,7 +123,9 @@ def run(
 
         else:
             for metric in sec_metrics:
-                _, naive_stats = perform_statistical_tests(all_results, metric)
+                _, naive_stats = perform_statistical_tests(
+                    all_results, metric, parametric
+                )
                 better_model = check_best_model(all_results, naive_stats, metric)
                 if better_model:
                     logging.info(
