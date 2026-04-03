@@ -870,7 +870,7 @@ def get_optimised_cv_performance(
                 param_distributions=parameters,
                 cv=cv,
                 n_jobs=n_jobs,
-                scoring=scoring[main_metric],
+                scoring=scoring,
                 n_trials=n_trials,
                 timeout=timeout,
                 refit=True,
