@@ -159,7 +159,6 @@ HIGHER_BETTER = [
     "balanced_accuracy",
     "brier_score",
     "recall",
-    "roc_auc",
     "f1",
     "pr_auc",
     "roc_auc",
