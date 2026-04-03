@@ -105,6 +105,15 @@ def check_assumptions(
         fold_variances = True
 
     # Run Shapiro-Wilk test for normality
+    # With fewer than 8 folds the test has too little power to distinguish
+    # "genuinely normal" from "not enough data to detect non-normality".
+    n_folds = len(next(iter(next(iter(results_dict.values())).values())))
+    if n_folds < 8 and verbose:
+        print(
+            f"Warning: Only {n_folds} folds. Shapiro-Wilk has low power at this sample "
+            "size; a non-rejection of normality should not be taken as confirmation."
+        )
+
     pvals_shapiro = []
     for metric in metrics:
         for model in results_dict:
