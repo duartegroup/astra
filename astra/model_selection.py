@@ -19,6 +19,7 @@ from scipy.stats import levene, shapiro, ttest_rel, wilcoxon
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import GridSearchCV
 from statsmodels.stats.libqsturng import psturng
+from statsmodels.stats.multitest import multipletests
 
 from .metrics import (
     CLASSIFICATION_METRICS,
@@ -347,17 +348,23 @@ def perform_statistical_tests(
     else:
         # Perform Wilcoxon signed-rank test
         test = wilcoxon
-    naive_p_values = np.empty((len(stat_for_test.columns), len(stat_for_test.columns)))
-    for n, col1 in enumerate(stat_for_test):
-        for m, col2 in enumerate(stat_for_test):
-            # Skip self-comparisons
-            if col1 == col2:
-                naive_p_values[n, m] = 1.0
-                continue
-            naive_p_values[n, m] = test(
-                stat_for_test[col1],
-                stat_for_test[col2],
-            ).pvalue
+    # Collect raw p-values
+    raw_pvals = []
+    n_cols = len(stat_for_test.columns)
+    cols = list(stat_for_test.columns)
+    off_diag = [(n, m) for n in range(n_cols) for m in range(n_cols) if n != m]
+    for n, m in off_diag:
+        a = stat_for_test[cols[n]].to_numpy(dtype=float)
+        b = stat_for_test[cols[m]].to_numpy(dtype=float)
+        result = test(a, b)
+        raw_pvals.append(result.pvalue)
+
+    naive_p_values = np.ones((n_cols, n_cols))
+    # Apply Holm-Bonferroni correction across all pairwise comparisons
+    _, corrected, _, _ = multipletests(raw_pvals, method="holm")
+    for (n, m), pval in zip(off_diag, corrected):
+        naive_p_values[n, m] = pval
+
     naive_stats = pd.DataFrame(
         naive_p_values, columns=stat_for_test.columns, index=stat_for_test.columns
     )
