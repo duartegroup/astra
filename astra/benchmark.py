@@ -275,7 +275,7 @@ def run(
                 pickle.dump(results, f)
         else:
             logging.info("Loading existing results.")
-            with open(f"results/{name}/default_CV_all_folds.pkl", "br") as f:
+            with open(f"results/{name}/default_CV_all_folds.pkl", "rb") as f:
                 results = pickle.load(f)
     else:
         results = run_CV(
@@ -309,7 +309,7 @@ def run(
         )
         if os.path.exists(f"results/{name}/nested_CV.pkl"):
             logging.info("Loading existing results.")
-            with open(f"results/{name}/nested_CV.pkl", "br") as f:
+            with open(f"results/{name}/nested_CV.pkl", "rb") as f:
                 results = pickle.load(f)
         else:
             logging.info("Selecting best models.")
@@ -331,7 +331,7 @@ def run(
                 )
 
             try:
-                with open(f"cache/{name}_nested_CV_ckpt.pkl", "br") as f:
+                with open(f"cache/{name}_nested_CV_ckpt.pkl", "rb") as f:
                     results = pickle.load(f)
                 logging.info("Loaded checkpoint.")
             except FileNotFoundError:

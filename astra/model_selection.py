@@ -202,9 +202,9 @@ def find_n_best_models(
     list[str]
         A list of the n best models.
     """
-    assert (
-        metric in KNOWN_METRICS
-    ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
+    assert metric in KNOWN_METRICS, (
+        f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
+    )
     maximise = True if metric in HIGHER_BETTER else False
 
     # Create a dataframe from the results dictionary
@@ -271,9 +271,9 @@ def perform_statistical_tests(
     tuple[pd.DataFrame, pd.DataFrame]
         A tuple containing the test results for the two statistical tests.
     """
-    assert (
-        metric in KNOWN_METRICS
-    ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
+    assert metric in KNOWN_METRICS, (
+        f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
+    )
 
     # Create a dataframe from the results dictionary
     results_df = pd.DataFrame.from_dict(results_dic)
@@ -343,9 +343,9 @@ def check_best_model(
     str or None
         The name of the best model, or None if no model is significantly better.
     """
-    assert (
-        metric in KNOWN_METRICS
-    ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
+    assert metric in KNOWN_METRICS, (
+        f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
+    )
 
     # get dictionary of models that have significantly worse performing models,
     # sorted according to how many models they significantly beat
@@ -424,7 +424,7 @@ def check_best_model(
     # if only one model is significantly better than the others, return that model
     elif len(final_models) == 1:
         final_model = final_models[0]
-    
+
     else:
         raise ValueError("Unexpected error in check_best_model function.")
 
@@ -567,9 +567,9 @@ def get_cv_performance(
         A dictionary mapping metrics to lists of scores.
     """
     for metric in metric_list:
-        assert (
-            metric in KNOWN_METRICS.keys()
-        ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+        assert metric in KNOWN_METRICS.keys(), (
+            f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+        )
     metrics_dict = {metric: [] for metric in metric_list}
 
     classification = True if metric_list[0] in CLASSIFICATION_METRICS else False
@@ -681,12 +681,12 @@ def run_CV(
 
     if os.path.exists(f"results/{name}/{results_name}.pkl"):
         logging.info("Loading existing results.")
-        with open(f"results/{name}/{results_name}.pkl", "br") as f:
+        with open(f"results/{name}/{results_name}.pkl", "rb") as f:
             results = pickle.load(f)
 
     else:
         try:
-            with open(f"cache/{ckpt_name}.pkl", "br") as f:
+            with open(f"cache/{ckpt_name}.pkl", "rb") as f:
                 results = pickle.load(f)
             logging.info("Loaded checkpoint.")
         except FileNotFoundError:
@@ -808,14 +808,14 @@ def get_optimised_cv_performance(
         A dictionary mapping metrics to lists of scores.
     """
     for metric in metric_list:
-        assert (
-            metric in KNOWN_METRICS.keys()
-        ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+        assert metric in KNOWN_METRICS.keys(), (
+            f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+        )
     metrics_dict = {metric: [] for metric in metric_list}
 
-    assert (
-        main_metric in KNOWN_METRICS.keys()
-    ), f"Unknown main metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+    assert main_metric in KNOWN_METRICS.keys(), (
+        f"Unknown main metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+    )
     scoring = SCORING[main_metric]
 
     classification = True if metric_list[0] in CLASSIFICATION_METRICS else False
@@ -995,13 +995,13 @@ def get_best_hparams(
     GridSearchCV or OptunaSearchCV
         A GridSearchCV or OptunaSearchCV object containing the best hyperparameters.
     """
-    assert (
-        main_metric in KNOWN_METRICS.keys()
-    ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+    assert main_metric in KNOWN_METRICS.keys(), (
+        f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+    )
     for metric in sec_metrics:
-        assert (
-            metric in KNOWN_METRICS.keys()
-        ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+        assert metric in KNOWN_METRICS.keys(), (
+            f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
+        )
     scoring = {metric: SCORING[metric] for metric in [main_metric] + sec_metrics}
 
     df = df.copy().reset_index()
