@@ -441,17 +441,26 @@ def check_best_model(
             break
 
     # if more than one model is significantly better than the others,
-    # choose the one with the lowest sum of p-values.
-    # This is likely better than choosing the model with the best
-    # median score, because it takes the distribution of scores into account.
+    # choose the one with the lowest sum of p-values for comparisons where it wins
     if len(final_models) > 1:
-        model_pvalues = (
-            test_statistics.where(test_statistics < 0.05)
-            .dropna(axis=0, how="all")
-            .dropna(axis=1, how="all")
-            .to_dict(orient="list")
-        )
-        pvalue_scores = [np.nansum(model_pvalues[model]) for model in final_models]
+        def win_pvalue_sum(model):
+            total = 0.0
+            for other in score_dic:
+                if other == model:
+                    continue
+                p = test_statistics.loc[model, other]
+                if p >= 0.05:
+                    continue
+                is_win = (
+                    score_dic[model] > score_dic[other]
+                    if metric in HIGHER_BETTER
+                    else score_dic[model] < score_dic[other]
+                )
+                if is_win:
+                    total += p
+            return total
+
+        pvalue_scores = [win_pvalue_sum(model) for model in final_models]
         smallest_pvalue = min(pvalue_scores)
         if pvalue_scores.count(smallest_pvalue) == 1:
             final_model = final_models[np.argmin(pvalue_scores)]
