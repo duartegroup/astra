@@ -70,3 +70,6 @@ def test_metric_dictionaries():
 
     # Check for no overlap between HIGHER_BETTER and LOWER_BETTER
     assert len(set(HIGHER_BETTER) & set(LOWER_BETTER)) == 0
+
+    # Check that every known metric is classified as higher- or lower-is-better
+    assert set(KNOWN_METRICS) == set(HIGHER_BETTER) | set(LOWER_BETTER)
