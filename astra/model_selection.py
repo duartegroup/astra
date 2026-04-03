@@ -244,12 +244,46 @@ def find_n_best_models(
 
         # Check if there is a statistically significant difference
         if pvalue < threshold:  # significant difference
-            # Remove model with the worst median score
-            model_labels = stat_for_test.columns
+            # Use post-hoc pairwise tests to identify the model that is significantly
+            # worse than the most others
+            if parametric:
+                anova = pg.rm_anova(stat_for_test, detailed=True)
+                mse = float(anova.loc[1, "MS"])
+                residual_dof = int(anova.loc[1, "DF"])
+                post_hoc_p = tukey_hsd(
+                    mse, residual_dof, stat_for_test.mean(axis=0), stat_for_test.shape[0]
+                )
+            else:
+                post_hoc_p = sp.posthoc_conover_friedman(stat_for_test, p_adjust="holm")
+
             median_scores = stat_for_test.median()
-            combined = list(zip(median_scores, model_labels))
-            sorted_scores = sorted(combined, key=lambda x: x[0], reverse=maximise)
-            worst_model = sorted_scores[-1][1]
+            score_dic = median_scores.to_dict()
+            model_labels = list(stat_for_test.columns)
+
+            n_sig_losses = {}
+            for model in model_labels:
+                losses = 0
+                for other in model_labels:
+                    if other == model:
+                        continue
+                    if post_hoc_p.loc[model, other] < 0.05:
+                        if maximise and score_dic[model] < score_dic[other]:
+                            losses += 1
+                        elif not maximise and score_dic[model] > score_dic[other]:
+                            losses += 1
+                n_sig_losses[model] = losses
+
+            max_losses = max(n_sig_losses.values())
+            worst_candidates = [m for m, l in n_sig_losses.items() if l == max_losses]
+
+            if len(worst_candidates) == 1 and max_losses > 0:
+                worst_model = worst_candidates[0]
+            else:
+                # No clear loser from post-hoc, fall back to worst median
+                combined = list(zip(median_scores, model_labels))
+                sorted_scores = sorted(combined, key=lambda x: x[0], reverse=maximise)
+                worst_model = sorted_scores[-1][1]
+
             stat_for_test = stat_for_test.drop(worst_model, axis=1)
         else:  # no significant difference
             best_models = list(stat_for_test.columns)
@@ -294,7 +328,7 @@ def perform_statistical_tests(
 
     if parametric:
         # perform repeated measures ANOVA
-        anova = pg.rm_anova(data=stat_for_test, detailed=True)
+        anova = pg.rm_anova(stat_for_test, detailed=True)
         # extract mean squared error and residual degrees of freedom
         mse = float(anova.loc[1, "MS"])
         residual_dof = int(anova.loc[1, "DF"])
