@@ -223,8 +223,9 @@ def find_n_best_models(
     ).T
     stat_for_test = stat_df.dropna(axis=1)
 
+    original_n_models = len(stat_for_test.columns)
     best_models = []
-    for n_models in range(len(stat_for_test.columns), 0, -1):
+    for n_models in range(original_n_models, 0, -1):
         if n_models == 1:  # only one model left, no need to test
             best_models = list(stat_for_test.columns)
             break
@@ -237,7 +238,7 @@ def find_n_best_models(
 
         # Bonferroni correction of significance level
         if bf_corr:
-            threshold = 0.05 / n_models
+            threshold = 0.05 / original_n_models
         else:
             threshold = 0.05
 
