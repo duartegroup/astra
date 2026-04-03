@@ -210,6 +210,7 @@ def get_CLI_parser() -> argparse.ArgumentParser:
     compare_parser.add_argument(
         "--sec_metrics",
         type=str,
+        required=True,
         nargs="+",
         help="Secondary metrics to use for comparison",
     )
