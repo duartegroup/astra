@@ -303,6 +303,11 @@ def run(
         logging.info("Checking assumptions for parametric tests.")
         _ = check_assumptions(results_dict=results, verbose=True)
 
+    if run_nested_CV and repeated_CV:
+        logging.warning(
+            "run_nested_CV=True is not supported with repeated CV and will be skipped."
+        )
+
     if run_nested_CV and not repeated_CV:
         logging.info(
             "Starting nested CV with hyperparameter tuning for the best models."
