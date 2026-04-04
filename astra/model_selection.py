@@ -447,9 +447,12 @@ def check_best_model(
     results_dic: dict[str, dict[str, list[float]]],
     test_statistics: pd.DataFrame,
     metric: str,
+    min_effect_size: float = 0.2,
 ) -> str | None:
     """
-    Check if there is a model that is significantly better than the others.
+    Check if there is a model that is significantly better than the others,
+    only counting pairwise wins that are statistically significant (p < 0.05)
+    and practically meaningful (Cohen's d >= min_effect_size).
 
     Parameters
     ----------
@@ -459,6 +462,8 @@ def check_best_model(
         A dataframe containing the results of the statistical test.
     metric : str
         The metric to use for model comparison.
+    min_effect_size : float, default=0.2
+        Minimum Cohen's d required to count a pairwise difference as meaningful.
 
     Returns
     -------
@@ -481,6 +486,10 @@ def check_best_model(
             if other_model == model:
                 continue
             if test_statistics.loc[model, other_model] < 0.05:
+                a = np.array(results_dic[model][metric])
+                b = np.array(results_dic[other_model][metric])
+                if _cohens_d(a, b) < min_effect_size:
+                    continue
                 if metric in HIGHER_BETTER:
                     if score_dic[model] > score_dic[other_model]:
                         n_sig_worse += 1
@@ -514,6 +523,7 @@ def check_best_model(
     # if more than one model is significantly better than the others,
     # choose the one with the lowest sum of p-values for comparisons where it wins
     if len(final_models) > 1:
+
         def win_pvalue_sum(model):
             total = 0.0
             for other in score_dic:
@@ -521,6 +531,10 @@ def check_best_model(
                     continue
                 p = test_statistics.loc[model, other]
                 if p >= 0.05:
+                    continue
+                a = np.array(results_dic[model][metric])
+                b = np.array(results_dic[other][metric])
+                if _cohens_d(a, b) < min_effect_size:
                     continue
                 is_win = (
                     score_dic[model] > score_dic[other]
