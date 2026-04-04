@@ -569,24 +569,37 @@ def check_best_model(
 
         pvalue_scores = [win_pvalue_sum(model) for model in final_models]
         smallest_pvalue = min(pvalue_scores)
+
         if pvalue_scores.count(smallest_pvalue) == 1:
             final_model = final_models[np.argmin(pvalue_scores)]
-        else:
-            # If there is more than one model with the same sum of p-values,
-            # choose the one with the best median score.
-            best_model_idxs = np.where(np.array(pvalue_scores) == smallest_pvalue)[
-                0
-            ].tolist()
-            best_model_scores = [
-                np.median(results_dic[model][metric])
-                for i, model in enumerate(final_models)
-                if i in best_model_idxs
-            ]
-            if metric in HIGHER_BETTER:
-                final_model_idx = best_model_idxs[np.argmax(best_model_scores)]
+
+        else:  # More than one model with the same sum of p-values
+            # Tiebreaker 1: sum of pairwise fold-level win rates against all other models
+            tied_idxs = np.where(np.array(pvalue_scores) == smallest_pvalue)[0].tolist()
+            tied_models = [final_models[i] for i in tied_idxs]
+            win_rates = []
+            for model in tied_models:
+                a = np.array(results_dic[model][metric])
+                rate = sum(
+                    float(np.mean(a > np.array(results_dic[other][metric])))
+                    if metric in HIGHER_BETTER
+                    else float(np.mean(a < np.array(results_dic[other][metric])))
+                    for other in score_dic
+                    if other != model
+                )
+                win_rates.append(rate)
+            best_wr = max(win_rates)
+            wr_tied = [tied_models[i] for i, w in enumerate(win_rates) if w == best_wr]
+
+            if len(wr_tied) == 1:
+                final_model = wr_tied[0]
             else:
-                final_model_idx = best_model_idxs[np.argmin(best_model_scores)]
-            final_model = final_models[final_model_idx]
+                # Tiebreaker 2: best median score among remaining ties
+                wr_scores = [np.median(results_dic[m][metric]) for m in wr_tied]
+                if metric in HIGHER_BETTER:
+                    final_model = wr_tied[int(np.argmax(wr_scores))]
+                else:
+                    final_model = wr_tied[int(np.argmin(wr_scores))]
 
     # if only one model is significantly better than the others, return that model
     elif len(final_models) == 1:
