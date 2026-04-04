@@ -306,8 +306,12 @@ def find_n_best_models(
             # Perform repeated measures ANOVA
             pvalue = pg.rm_anova(stat_for_test)["p_unc"].values[0]
         else:
-            # Perform Friedman test
-            pvalue = pg.friedman(stat_for_test)["p_unc"].values[0]
+            # Perform Friedman test with Iman-Davenport correction
+            friedman = pg.friedman(stat_for_test)
+            chi2 = float(friedman["Q"].values[0])
+            n_f, k = stat_for_test.shape
+            ff = ((n_f - 1) * chi2) / (n_f * (k - 1) - chi2)
+            pvalue = float(f_dist.sf(ff, dfn=k - 1, dfd=(k - 1) * (n_f - 1)))
 
         # Bonferroni correction of significance level
         if bf_corr:
