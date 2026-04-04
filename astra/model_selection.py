@@ -80,7 +80,8 @@ def _min_detectable_effect(n_folds: int, alpha: float, power: float = 0.8) -> fl
 
     Derived from the corrected test's non-centrality parameter:
     lambda = d / sqrt(1/n + rho/(1-rho)), where rho = 1/n for k-fold CV.
-    Setting lambda = z_{alpha/2} + z_{power} and solving for d gives the MDES.
+    Setting lambda = z_{alpha/2} + z_{power} and solving for d gives the
+    minimum detectable effect size.
 
     Parameters
     ----------
@@ -729,6 +730,21 @@ def get_best_model(
     tuple[str, str]
         A tuple containing the name of the best model and the reason for its selection.
     """
+    if parametric:
+        # Warn if the corrected t-test cannot reliably detect a meaningful effect
+        # given the available number of folds.
+        n_folds = len(next(iter(next(iter(results_dict.values())).values())))
+        alpha = 0.05 / len(results_dict) if bf_corr else 0.05
+        mdes = _min_detectable_effect(n_folds, alpha)
+        if mdes > 0.8:
+            logging.warning(
+                f"Low statistical power: with {n_folds} folds and alpha={alpha:.4f} the "
+                f"corrected t-test can only detect effects of d >= {mdes:.2f} at 80% power "
+                "(Cohen's large-effect threshold is 0.8). Statistical tests may not "
+                "differentiate models reliably; selection will fall back to Sharpe ratio "
+                "and robustness criteria."
+            )
+
     # Perform tests to find the n best models
     n_best_models = find_n_best_models(results_dict, main_metric, parametric, bf_corr)
     results_dict_best = {model: results_dict[model] for model in n_best_models}
