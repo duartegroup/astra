@@ -15,7 +15,9 @@ import scikit_posthocs as sp
 from optuna.distributions import BaseDistribution
 from optuna.exceptions import ExperimentalWarning
 from optuna.integration import OptunaSearchCV
-from scipy.stats import levene, shapiro, ttest_rel, wilcoxon
+from scipy.stats import f as f_dist
+from scipy.stats import levene, shapiro, wilcoxon
+from scipy.stats import t as t_dist
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import GridSearchCV
 from statsmodels.stats.libqsturng import psturng
@@ -31,6 +33,76 @@ from .models.classification import NON_PROBABILISTIC_MODELS
 from .utils import build_model, print_performance
 
 warnings.filterwarnings("ignore", category=ExperimentalWarning)
+
+
+def corrected_ttest(a: np.ndarray, b: np.ndarray) -> float:
+    """
+    Nadeau-Bengio corrected repeated cross-validation t-test.
+
+    Adjusts the variance estimate for the correlation between CV fold scores arising
+    from overlapping training sets. The correction factor is (1/n + rho/(1-rho)),
+    where rho = 1/n is the fraction of data used for testing in each fold of k-fold CV.
+
+    Parameters
+    ----------
+    a : np.ndarray
+        Fold scores for the first model.
+    b : np.ndarray
+        Fold scores for the second model.
+
+    Returns
+    -------
+    float
+        Two-tailed p-value.
+    """
+    diff = a - b
+    n = len(diff)
+    rho = 1.0 / n  # test fraction per fold for k-fold CV
+    var = np.var(diff, ddof=1) * (1.0 / n + rho / (1.0 - rho))
+    if var <= 0:
+        return 1.0
+    t_stat = np.mean(diff) / np.sqrt(var)
+    return float(t_dist.sf(np.abs(t_stat), df=n - 1) * 2)
+
+
+def _cohens_d(a: np.ndarray, b: np.ndarray) -> float:
+    """Cohen's d effect size for a paired comparison of fold scores."""
+    diff = a - b
+    sd = np.std(diff, ddof=1)
+    if sd == 0:
+        return 0.0
+    return float(np.abs(np.mean(diff)) / sd)
+
+
+def _min_detectable_effect(n_folds: int, alpha: float, power: float = 0.8) -> float:
+    """
+    Minimum Cohen's d detectable by the Nadeau-Bengio corrected t-test.
+
+    Derived from the corrected test's non-centrality parameter:
+    lambda = d / sqrt(1/n + rho/(1-rho)), where rho = 1/n for k-fold CV.
+    Setting lambda = z_{alpha/2} + z_{power} and solving for d gives the MDES.
+
+    Parameters
+    ----------
+    n_folds : int
+        Number of CV folds.
+    alpha : float
+        Significance level (possibly Bonferroni-corrected).
+    power : float, default=0.8
+        Desired statistical power.
+
+    Returns
+    -------
+    float
+        Minimum detectable Cohen's d at the given alpha and power.
+    """
+    from scipy.stats import norm
+
+    z_alpha = norm.ppf(1 - alpha / 2)
+    z_power = norm.ppf(power)
+    rho = 1.0 / n_folds
+    correction_factor = np.sqrt(1.0 / n_folds + rho / (1.0 - rho))
+    return float((z_alpha + z_power) * correction_factor)
 
 
 def check_assumptions(
@@ -299,8 +371,11 @@ def perform_statistical_tests(
     parametric: bool = False,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Perform Tukey's HSD and paired t-test (if parametric=True) or Conover post-hoc and
-    Wilcoxon signed-rank tests (if parametric=False) on the performance of models.
+    Perform Tukey's HSD and Nadeau-Bengio corrected pairwise t-tests (if parametric=True)
+    or Conover post-hoc and Wilcoxon signed-rank tests (if parametric=False) tests on
+    the performance of models. Note that Wilcoxon is anti-conservative under CV fold
+    dependency, but no established non-parametric analogue of the Nadeau-Bengio correction
+    exists.
 
     Parameters
     ----------
@@ -342,12 +417,6 @@ def perform_statistical_tests(
         # perform Conover post-hoc test with Holm-Bonferroni adjustment
         post_hoc_stats = sp.posthoc_conover_friedman(stat_for_test, p_adjust="holm")
 
-    if parametric:
-        # Perform paired t-test
-        test = ttest_rel
-    else:
-        # Perform Wilcoxon signed-rank test
-        test = wilcoxon
     # Collect raw p-values
     raw_pvals = []
     n_cols = len(stat_for_test.columns)
@@ -356,8 +425,10 @@ def perform_statistical_tests(
     for n, m in off_diag:
         a = stat_for_test[cols[n]].to_numpy(dtype=float)
         b = stat_for_test[cols[m]].to_numpy(dtype=float)
-        result = test(a, b)
-        raw_pvals.append(result.pvalue)
+        if parametric:  # Nadeau-Bengio corrected t-test
+            raw_pvals.append(corrected_ttest(a, b))
+        else:  # Wilcoxon signed-rank test
+            raw_pvals.append(wilcoxon(a, b).pvalue)
 
     naive_p_values = np.ones((n_cols, n_cols))
     # Apply Holm-Bonferroni correction across all pairwise comparisons
@@ -541,7 +612,7 @@ def get_best_model(
     # Fall back to naive test
     if not best_model:
         best_model = check_best_model(results_dict_best, naive_stats, main_metric)
-        reason = "paired t-test" if parametric else "Wilcoxon signed-rank test"
+        reason = "corrected t-test" if parametric else "Wilcoxon signed-rank test"
 
     # Fall back to secondary metrics if the main one doesn't yield a best model
     if not best_model:
