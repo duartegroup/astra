@@ -777,19 +777,20 @@ def get_best_model(
         if best_model:
             reason = "Pareto dominance across metrics"
 
-    # If there are no statistically significant differences between the models using any of the metrics,
-    # select the model with the best median score.
+    # If there are no statistically significant differences between the models using any
+    # of the metrics, select the model with the best CV Sharpe ratio (mean / std of fold
+    # scores). This rewards consistent performance across folds over a high but volatile
+    # mean, and is more predictive of out-of-sample performance than median alone.
     if not best_model:
-        scores = [
-            np.median(results_dict_best[model][main_metric])
-            for model in results_dict_best
-        ]
-        names = [model for model in results_dict_best]
-        if main_metric in HIGHER_BETTER:
-            best_model = names[np.argmax(scores)]
-        else:
-            best_model = names[np.argmin(scores)]
-        reason = "median score"
+        names = list(results_dict_best.keys())
+        sharpe_scores = []
+        for model in names:
+            s = np.array(results_dict_best[model][main_metric])
+            # Negate mean for lower-is-better metrics so argmax always picks the best.
+            signed_mean = np.mean(s) if main_metric in HIGHER_BETTER else -np.mean(s)
+            sharpe_scores.append(signed_mean / (np.std(s, ddof=1) + 1e-9))
+        best_model = names[int(np.argmax(sharpe_scores))]
+        reason = "CV Sharpe ratio"
 
     return best_model, reason
 
