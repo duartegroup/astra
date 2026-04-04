@@ -611,6 +611,96 @@ def check_best_model(
     return final_model
 
 
+def check_pareto_dominant(
+    results_dict: dict[str, dict[str, list[float]]],
+    main_metric: str,
+    secondary_metrics: list[str],
+    parametric: bool,
+    min_effect_size: float = 0.2,
+) -> str | None:
+    """
+    Find a model that is Pareto-dominant across all metrics (not significantly worse
+    than any other model on any metric, significantly better than at least one other
+    model on at least one metric, using p < 0.05 and Cohen's d >= min_effect_size).
+
+    Parameters
+    ----------
+    results_dict : dict[str, dict[str, list[float]]]
+        A dictionary mapping model names to dictionaries of metric names and scores.
+    main_metric : str
+        The primary metric.
+    secondary_metrics : list[str]
+        Secondary metrics to consider.
+    parametric : bool
+        Whether to use parametric post-hoc tests.
+    min_effect_size : float, default=0.2
+        Minimum Cohen's d required to count a pairwise difference as meaningful.
+
+    Returns
+    -------
+    str or None
+        The name of the Pareto-dominant model, or None if none exists.
+    """
+    available_metrics = set(next(iter(results_dict.values())).keys())
+    all_metrics = [
+        m for m in [main_metric] + secondary_metrics if m in available_metrics
+    ]
+    models = list(results_dict.keys())
+
+    # Gather corrected pairwise p-values for each metric
+    naive_stats_per_metric: dict[str, pd.DataFrame] = {}
+    for metric in all_metrics:
+        try:
+            _, naive_stats = perform_statistical_tests(results_dict, metric, parametric)
+            naive_stats_per_metric[metric] = naive_stats
+        except Exception:
+            pass
+
+    if not naive_stats_per_metric:
+        return None
+
+    pareto_models = []
+    for model in models:
+        is_significantly_worse = False
+        better_on_any = False
+
+        for other in models:
+            if other == model or is_significantly_worse:
+                continue
+            for metric, stats in naive_stats_per_metric.items():
+                p = stats.loc[model, other]
+                a = np.array(results_dict[model][metric])
+                b = np.array(results_dict[other][metric])
+                if p >= 0.05 or _cohens_d(a, b) < min_effect_size:
+                    continue
+                median_a = np.median(a)
+                median_b = np.median(b)
+                if metric in HIGHER_BETTER:
+                    if median_a < median_b:
+                        is_significantly_worse = True
+                    elif median_a > median_b:
+                        better_on_any = True
+                else:
+                    if median_a > median_b:
+                        is_significantly_worse = True
+                    elif median_a < median_b:
+                        better_on_any = True
+
+        if not is_significantly_worse and better_on_any:
+            pareto_models.append(model)
+
+    if not pareto_models:
+        return None
+    if len(pareto_models) == 1:
+        return pareto_models[0]
+
+    # Multiple Pareto-dominant models: pick the one with the best main metric median
+    scores = [np.median(results_dict[m][main_metric]) for m in pareto_models]
+    if main_metric in HIGHER_BETTER:
+        return pareto_models[int(np.argmax(scores))]
+    return pareto_models[int(np.argmin(scores))]
+
+
 def get_best_model(
     results_dict: dict[str, dict[str, list[float]]],
     main_metric: str,
@@ -663,22 +753,13 @@ def get_best_model(
         best_model = check_best_model(results_dict_best, naive_stats, main_metric)
         reason = "corrected t-test" if parametric else "Wilcoxon signed-rank test"
 
-    # Fall back to secondary metrics if the main one doesn't yield a best model
+    # Fall back to Pareto dominance across all metrics jointly
     if not best_model:
-        for metric in secondary_metrics:
-            post_hoc_stats, naive_stats = perform_statistical_tests(
-                results_dict_best, metric, parametric
-            )
-            best_model = check_best_model(results_dict_best, post_hoc_stats, metric)
-            test_used = "Tukey's HSD test" if parametric else "Conover post-hoc test"
-            reason = f"{test_used} using {metric}"
-            if best_model:
-                break
-            best_model = check_best_model(results_dict_best, naive_stats, metric)
-            test_used = "paired t-test" if parametric else "Wilcoxon signed-rank test"
-            reason = f"{test_used} using {metric}"
-            if best_model:
-                break
+        best_model = check_pareto_dominant(
+            results_dict_best, main_metric, secondary_metrics, parametric
+        )
+        if best_model:
+            reason = "Pareto dominance across metrics"
 
     # If there are no statistically significant differences between the models using any of the metrics,
     # select the model with the best median score.
