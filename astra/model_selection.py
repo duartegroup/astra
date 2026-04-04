@@ -356,10 +356,28 @@ def find_n_best_models(
             if len(worst_candidates) == 1 and max_losses > 0:
                 worst_model = worst_candidates[0]
             else:
-                # No clear loser from post-hoc, fall back to worst median
-                combined = list(zip(median_scores, model_labels))
-                sorted_scores = sorted(combined, key=lambda x: x[0], reverse=maximise)
-                worst_model = sorted_scores[-1][1]
+                # No clear loser from post-hoc: use worst-fold score as primary
+                # tiebreaker (eliminate the least robust model), falling back to
+                # worst median only when worst-fold scores are also tied.
+                candidates = worst_candidates if max_losses > 0 else model_labels
+                if maximise:
+                    min_fold = {m: stat_for_test[m].min() for m in candidates}
+                    worst_min = min(min_fold.values())
+                    tied = [m for m, v in min_fold.items() if v == worst_min]
+                    worst_model = (
+                        tied[0]
+                        if len(tied) == 1
+                        else min(tied, key=lambda m: median_scores[m])
+                    )
+                else:
+                    max_fold = {m: stat_for_test[m].max() for m in candidates}
+                    worst_max = max(max_fold.values())
+                    tied = [m for m, v in max_fold.items() if v == worst_max]
+                    worst_model = (
+                        tied[0]
+                        if len(tied) == 1
+                        else max(tied, key=lambda m: median_scores[m])
+                    )
 
             stat_for_test = stat_for_test.drop(worst_model, axis=1)
         else:  # no significant difference
