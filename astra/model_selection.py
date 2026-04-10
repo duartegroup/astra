@@ -311,8 +311,15 @@ def find_n_best_models(
             friedman = pg.friedman(stat_for_test)
             chi2 = float(friedman["Q"].values[0])
             n_f, k = stat_for_test.shape
-            ff = ((n_f - 1) * chi2) / (n_f * (k - 1) - chi2)
-            pvalue = float(f_dist.sf(ff, dfn=k - 1, dfd=(k - 1) * (n_f - 1)))
+            denom = n_f * (k - 1) - chi2
+            if denom <= 0:
+                # chi2 is at (or beyond) its theoretical maximum n_f*(k-1),
+                # meaning models are ranked identically across all folds,
+                # so p-value is exactly 0.
+                pvalue = 0.0
+            else:
+                ff = ((n_f - 1) * chi2) / denom
+                pvalue = float(f_dist.sf(ff, dfn=k - 1, dfd=(k - 1) * (n_f - 1)))
 
         # Bonferroni correction of significance level
         if bf_corr:
