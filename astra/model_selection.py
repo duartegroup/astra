@@ -351,7 +351,7 @@ def find_n_best_models(
                 for other in model_labels:
                     if other == model:
                         continue
-                    if post_hoc_p.loc[model, other] < threshold:
+                    if post_hoc_p.loc[model, other] < 0.05:
                         if maximise and score_dic[model] < score_dic[other]:
                             losses += 1
                         elif not maximise and score_dic[model] > score_dic[other]:
