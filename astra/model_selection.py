@@ -323,7 +323,7 @@ def find_n_best_models(
 
         # Bonferroni correction of significance level
         if bf_corr:
-            threshold = 0.05 / original_n_models
+            threshold = 0.05 / n_models
         else:
             threshold = 0.05
 
