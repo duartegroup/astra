@@ -828,10 +828,6 @@ def get_best_model(
         if best_model:
             reason = "Pareto dominance across metrics"
 
-    # If there are no statistically significant differences between the models using any
-    # of the metrics, select the model with the best CV Sharpe ratio (mean / std of fold
-    # scores). This rewards consistent performance across folds over a high but volatile
-    # mean, and is more predictive of out-of-sample performance than median alone.
     if not best_model:
         # No statistically significant differences found by any test: fall back to the model
         # with the best mean fold score
