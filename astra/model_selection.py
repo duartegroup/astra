@@ -780,10 +780,6 @@ def get_best_model(
     if parametric:
         # Warn if the corrected t-test cannot reliably detect a meaningful effect
         # given the available number of folds.
-    if parametric:
-        # Warn if the corrected t-test cannot reliably detect a meaningful effect
-        # given the available number of folds.
-        n_folds = len(next(iter(next(iter(results_dict.values())).values())))
         alpha = 0.05 / len(results_dict) if bf_corr else 0.05
         mdes = _min_detectable_effect(n_total, n_folds_per_repeat, alpha)
         if mdes > 0.8:
@@ -811,14 +807,18 @@ def get_best_model(
         results_dict_best, main_metric, parametric, n_folds=n_folds_per_repeat
     )
 
-    # Check if Tukey's HSD test/Conover post-hoc test yield a best model
-    best_model = check_best_model(results_dict_best, post_hoc_stats, main_metric)
+    # Check if Tukey's HSD test/Conover post-hoc test yield a best model.
+    best_model = check_best_model(
+        results_dict_best, post_hoc_stats, main_metric, use_mean=parametric
+    )
     reason = "Tukey's HSD test" if parametric else "Conover post-hoc test"
 
     # Fall back to naive test
     if not best_model:
-        best_model = check_best_model(results_dict_best, naive_stats, main_metric)
-        reason = "corrected t-test" if parametric else "Wilcoxon signed-rank test"
+        best_model = check_best_model(
+            results_dict_best, naive_stats, main_metric, use_mean=parametric
+        )
+        reason = "Corrected t-test" if parametric else "Wilcoxon signed-rank test"
 
     # Fall back to Pareto dominance across all metrics jointly
     if not best_model:
