@@ -638,8 +638,8 @@ def check_best_model(
             if len(wr_tied) == 1:
                 final_model = wr_tied[0]
             else:
-                # Tiebreaker 2: best median score among remaining ties
-                wr_scores = [np.median(results_dic[m][metric]) for m in wr_tied]
+                # Tiebreaker 2: best mean score among remaining ties
+                wr_scores = [np.mean(results_dic[m][metric]) for m in wr_tied]
                 if metric in HIGHER_BETTER:
                     final_model = wr_tied[int(np.argmax(wr_scores))]
                 else:
@@ -738,8 +738,8 @@ def check_pareto_dominant(
     if len(pareto_models) == 1:
         return pareto_models[0]
 
-    # Multiple Pareto-dominant models: pick the one with the best main metric median
-    scores = [np.median(results_dict[m][main_metric]) for m in pareto_models]
+    # Multiple Pareto-dominant models: pick the one with the best main metric mean
+    scores = [np.mean(results_dict[m][main_metric]) for m in pareto_models]
     if main_metric in HIGHER_BETTER:
         return pareto_models[int(np.argmax(scores))]
     return pareto_models[int(np.argmin(scores))]
@@ -833,15 +833,17 @@ def get_best_model(
     # scores). This rewards consistent performance across folds over a high but volatile
     # mean, and is more predictive of out-of-sample performance than median alone.
     if not best_model:
+        # No statistically significant differences found by any test: fall back to the model
+        # with the best mean fold score
         names = list(results_dict_best.keys())
-        sharpe_scores = []
-        for model in names:
-            s = np.array(results_dict_best[model][main_metric])
-            # Negate mean for lower-is-better metrics so argmax always picks the best.
-            signed_mean = np.mean(s) if main_metric in HIGHER_BETTER else -np.mean(s)
-            sharpe_scores.append(signed_mean / (np.std(s, ddof=1) + 1e-9))
-        best_model = names[int(np.argmax(sharpe_scores))]
-        reason = "CV Sharpe ratio"
+        mean_scores = [
+            np.mean(results_dict_best[model][main_metric]) for model in names
+        ]
+        if main_metric in HIGHER_BETTER:
+            best_model = names[int(np.argmax(mean_scores))]
+        else:
+            best_model = names[int(np.argmin(mean_scores))]
+        reason = "mean CV score"
 
     return best_model, reason
 
