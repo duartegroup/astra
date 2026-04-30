@@ -375,28 +375,34 @@ def find_n_best_models(
             if len(worst_candidates) == 1 and max_losses > 0:
                 worst_model = worst_candidates[0]
             else:
-                # No clear loser from post-hoc: use worst-fold score as primary
-                # tiebreaker (eliminate the least robust model), falling back to
-                # worst median only when worst-fold scores are also tied.
+                # No clear loser from post-hoc: use worst central score as
+                # primary tiebreaker, falling back to worst single-fold score
+                # only when central scores are exactly tied.
                 candidates = worst_candidates if max_losses > 0 else model_labels
                 if maximise:
-                    min_fold = {m: stat_for_test[m].min() for m in candidates}
-                    worst_min = min(min_fold.values())
-                    tied = [m for m, v in min_fold.items() if v == worst_min]
-                    worst_model = (
-                        tied[0]
-                        if len(tied) == 1
-                        else min(tied, key=lambda m: median_scores[m])
-                    )
+                    tied = [
+                        m
+                        for m in candidates
+                        if central_scores[m]
+                        == min(central_scores[c] for c in candidates)
+                    ]
+                    if len(tied) == 1:
+                        worst_model = tied[0]
+                    else:
+                        min_fold = {m: stat_for_test[m].min() for m in tied}
+                        worst_model = min(tied, key=lambda m: min_fold[m])
                 else:
-                    max_fold = {m: stat_for_test[m].max() for m in candidates}
-                    worst_max = max(max_fold.values())
-                    tied = [m for m, v in max_fold.items() if v == worst_max]
-                    worst_model = (
-                        tied[0]
-                        if len(tied) == 1
-                        else max(tied, key=lambda m: median_scores[m])
-                    )
+                    tied = [
+                        m
+                        for m in candidates
+                        if central_scores[m]
+                        == max(central_scores[c] for c in candidates)
+                    ]
+                    if len(tied) == 1:
+                        worst_model = tied[0]
+                    else:
+                        max_fold = {m: stat_for_test[m].max() for m in tied}
+                        worst_model = max(tied, key=lambda m: max_fold[m])
 
             stat_for_test = stat_for_test.drop(worst_model, axis=1)
         else:  # no significant difference
