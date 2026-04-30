@@ -472,20 +472,25 @@ def perform_statistical_tests(
     raw_pvals = []
     n_cols = len(stat_for_test.columns)
     cols = list(stat_for_test.columns)
-    off_diag = [(n, m) for n in range(n_cols) for m in range(n_cols) if n != m]
-    for n, m in off_diag:
+    unique_pairs = [(n, m) for n in range(n_cols) for m in range(n + 1, n_cols)]
+    for n, m in unique_pairs:
         a = stat_for_test[cols[n]].to_numpy(dtype=float)
         b = stat_for_test[cols[m]].to_numpy(dtype=float)
         if parametric:  # Nadeau-Bengio corrected t-test
             raw_pvals.append(corrected_ttest(a, b, n_folds=n_folds))
         else:  # Wilcoxon signed-rank test
-            raw_pvals.append(wilcoxon(a, b).pvalue)
+            # avoid ValueError when all differences are zero
+            if np.all(a == b):
+                raw_pvals.append(1.0)
+            else:
+                raw_pvals.append(wilcoxon(a, b).pvalue)
 
     naive_p_values = np.ones((n_cols, n_cols))
     # Apply Holm-Bonferroni correction across all pairwise comparisons
     _, corrected, _, _ = multipletests(raw_pvals, method="holm")
-    for (n, m), pval in zip(off_diag, corrected):
+    for (n, m), pval in zip(unique_pairs, corrected):
         naive_p_values[n, m] = pval
+        naive_p_values[m, n] = pval  # matrix is symmetric
 
     naive_stats = pd.DataFrame(
         naive_p_values, columns=stat_for_test.columns, index=stat_for_test.columns
