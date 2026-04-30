@@ -504,6 +504,7 @@ def check_best_model(
     test_statistics: pd.DataFrame,
     metric: str,
     min_effect_size: float = 0.2,
+    use_mean: bool = True,
 ) -> str | None:
     """
     Check if there is a model that is significantly better than the others,
@@ -520,6 +521,10 @@ def check_best_model(
         The metric to use for model comparison.
     min_effect_size : float, default=0.2
         Minimum Cohen's d required to count a pairwise difference as meaningful.
+    use_mean : bool, default=True
+        If True, use mean fold scores to determine the direction of pairwise
+        comparisons; if False, use median. Should be True for mean-based
+        (parametric) tests and False for rank-based (non-parametric) tests.
 
     Returns
     -------
@@ -532,7 +537,12 @@ def check_best_model(
 
     # get dictionary of models that have significantly worse performing models,
     # sorted according to how many models they significantly beat
-    scores = [np.median(results_dic[model][metric]) for model in results_dic]
+    scores = [
+        np.mean(results_dic[model][metric])
+        if use_mean
+        else np.median(results_dic[model][metric])
+        for model in results_dic
+    ]
     names = [model for model in results_dic]
     score_dic = dict(zip(names, scores))
     sig_worse_models = {}
