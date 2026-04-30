@@ -349,8 +349,11 @@ def find_n_best_models(
             else:
                 post_hoc_p = sp.posthoc_conover_friedman(stat_for_test, p_adjust="holm")
 
-            median_scores = stat_for_test.median()
-            score_dic = median_scores.to_dict()
+            # Use mean for parametric test and median for non-parametric test
+            central_scores = (
+                stat_for_test.mean() if parametric else stat_for_test.median()
+            )
+            score_dic = central_scores.to_dict()
             model_labels = list(stat_for_test.columns)
 
             n_sig_losses = {}
