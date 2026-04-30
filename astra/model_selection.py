@@ -35,13 +35,13 @@ from .utils import build_model, print_performance
 warnings.filterwarnings("ignore", category=ExperimentalWarning)
 
 
-def corrected_ttest(a: np.ndarray, b: np.ndarray) -> float:
+def corrected_ttest(a: np.ndarray, b: np.ndarray, n_folds: int | None = None) -> float:
     """
     Nadeau-Bengio corrected repeated cross-validation t-test.
 
     Adjusts the variance estimate for the correlation between CV fold scores arising
     from overlapping training sets. The correction factor is (1/n + rho/(1-rho)),
-    where rho = 1/n is the fraction of data used for testing in each fold of k-fold CV.
+    where rho = 1/k is the fraction of data used for testing in each fold of k-fold CV.
 
     Parameters
     ----------
@@ -49,6 +49,9 @@ def corrected_ttest(a: np.ndarray, b: np.ndarray) -> float:
         Fold scores for the first model.
     b : np.ndarray
         Fold scores for the second model.
+    n_folds : int or None, default=None
+        Number of folds per repeat, when using repeated CV. For standard k-fold CV this
+        equals len(a). If None, len(a) is used.
 
     Returns
     -------
@@ -57,7 +60,8 @@ def corrected_ttest(a: np.ndarray, b: np.ndarray) -> float:
     """
     diff = a - b
     n = len(diff)
-    rho = 1.0 / n  # test fraction per fold for k-fold CV
+    k = n_folds if n_folds is not None else n
+    rho = 1.0 / k
     var = np.var(diff, ddof=1) * (1.0 / n + rho / (1.0 - rho))
     if var <= 0:
         return 1.0
@@ -74,19 +78,23 @@ def _cohens_d(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.abs(np.mean(diff)) / sd)
 
 
-def _min_detectable_effect(n_folds: int, alpha: float, power: float = 0.8) -> float:
+def _min_detectable_effect(
+    n_total: int, n_folds: int, alpha: float, power: float = 0.8
+) -> float:
     """
     Minimum Cohen's d detectable by the Nadeau-Bengio corrected t-test.
 
     Derived from the corrected test's non-centrality parameter:
-    lambda = d / sqrt(1/n + rho/(1-rho)), where rho = 1/n for k-fold CV.
+    lambda = d / sqrt(1/n + rho/(1-rho)), where rho = 1/k for k-fold CV.
     Setting lambda = z_{alpha/2} + z_{power} and solving for d gives the
     minimum detectable effect size.
 
     Parameters
     ----------
+    n_total : int
+        Total number of fold scores (repeats × k for repeated CV, k otherwise).
     n_folds : int
-        Number of CV folds.
+        Number of folds per repeat k.
     alpha : float
         Significance level (possibly Bonferroni-corrected).
     power : float, default=0.8
@@ -102,7 +110,7 @@ def _min_detectable_effect(n_folds: int, alpha: float, power: float = 0.8) -> fl
     z_alpha = norm.ppf(1 - alpha / 2)
     z_power = norm.ppf(power)
     rho = 1.0 / n_folds
-    correction_factor = np.sqrt(1.0 / n_folds + rho / (1.0 - rho))
+    correction_factor = np.sqrt(1.0 / n_total + rho / (1.0 - rho))
     return float((z_alpha + z_power) * correction_factor)
 
 
@@ -399,6 +407,7 @@ def perform_statistical_tests(
     results_dic: dict[str, dict[str, list[float]]],
     metric: str,
     parametric: bool = False,
+    n_folds: int | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Perform Tukey's HSD and Nadeau-Bengio corrected pairwise t-tests (if parametric=True)
@@ -415,6 +424,9 @@ def perform_statistical_tests(
         The metric to use for model comparison.
     parametric : bool, default=False
         Whether to use parametric tests instead of non-parametric tests.
+    n_folds : int or None, default=None
+        Number of folds per repeat, passed through to corrected_ttest for rho.
+        See corrected_ttest for details. Ignored when parametric=False.
 
     Returns
     -------
@@ -440,9 +452,9 @@ def perform_statistical_tests(
         residual_dof = int(anova.loc[1, "DF"])
         # calculate mean scores per model
         means = stat_for_test.mean(axis=0)
-        n_folds = stat_for_test.shape[0]
+        n_obs = stat_for_test.shape[0]
         # perform Tukey's HSD test
-        post_hoc_stats = tukey_hsd(mse, residual_dof, means, n_folds)
+        post_hoc_stats = tukey_hsd(mse, residual_dof, means, n_obs)
     else:
         # perform Conover post-hoc test with Holm-Bonferroni adjustment
         post_hoc_stats = sp.posthoc_conover_friedman(stat_for_test, p_adjust="holm")
@@ -456,7 +468,7 @@ def perform_statistical_tests(
         a = stat_for_test[cols[n]].to_numpy(dtype=float)
         b = stat_for_test[cols[m]].to_numpy(dtype=float)
         if parametric:  # Nadeau-Bengio corrected t-test
-            raw_pvals.append(corrected_ttest(a, b))
+            raw_pvals.append(corrected_ttest(a, b, n_folds=n_folds))
         else:  # Wilcoxon signed-rank test
             raw_pvals.append(wilcoxon(a, b).pvalue)
 
@@ -715,6 +727,7 @@ def get_best_model(
     secondary_metrics: list[str],
     parametric: bool = False,
     bf_corr: bool = True,
+    n_folds: int | None = None,
 ) -> tuple[str, str]:
     """
     Get the best model from a dictionary of model results.
@@ -737,19 +750,26 @@ def get_best_model(
     tuple[str, str]
         A tuple containing the name of the best model and the reason for its selection.
     """
+    n_total = len(next(iter(next(iter(results_dict.values())).values())))
+    n_folds_per_repeat = n_folds if n_folds is not None else n_total
+
+    if parametric:
+        # Warn if the corrected t-test cannot reliably detect a meaningful effect
+        # given the available number of folds.
     if parametric:
         # Warn if the corrected t-test cannot reliably detect a meaningful effect
         # given the available number of folds.
         n_folds = len(next(iter(next(iter(results_dict.values())).values())))
         alpha = 0.05 / len(results_dict) if bf_corr else 0.05
-        mdes = _min_detectable_effect(n_folds, alpha)
+        mdes = _min_detectable_effect(n_total, n_folds_per_repeat, alpha)
         if mdes > 0.8:
             logging.warning(
-                f"Low statistical power: with {n_folds} folds and alpha={alpha:.4f} the "
-                f"corrected t-test can only detect effects of d >= {mdes:.2f} at 80% power "
-                "(Cohen's large-effect threshold is 0.8). Statistical tests may not "
-                "differentiate models reliably; selection will fall back to Sharpe ratio "
-                "and robustness criteria."
+                f"Low statistical power: with {n_total} fold scores "
+                f"({n_folds_per_repeat} folds/repeat) and alpha={alpha:.4f} the "
+                f"corrected t-test can only detect effects of d >= {mdes:.2f} at 80% "
+                "power (Cohen's large-effect threshold is 0.8). Statistical tests may "
+                "not differentiate models reliably; selection will fall back to mean "
+                "CV score."
             )
 
     # Perform tests to find the n best models
@@ -764,7 +784,7 @@ def get_best_model(
 
     # Perform statistical tests on the best models
     post_hoc_stats, naive_stats = perform_statistical_tests(
-        results_dict_best, main_metric, parametric
+        results_dict_best, main_metric, parametric, n_folds=n_folds_per_repeat
     )
 
     # Check if Tukey's HSD test/Conover post-hoc test yield a best model
