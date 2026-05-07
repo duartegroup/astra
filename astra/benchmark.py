@@ -127,6 +127,18 @@ def run(
     os.makedirs("results", exist_ok=True)
     os.makedirs(f"results/{name}", exist_ok=True)
 
+    if parametric == "auto":
+        parametric_suffix = ""
+    elif parametric is True:
+        parametric_suffix = "parametric"
+    elif parametric is False:
+        parametric_suffix = "nonparametric"
+    else:
+        raise ValueError(
+            "`parametric` must be one of [True, False, 'auto']. "
+            f"Got {parametric} instead."
+        )
+
     logging.basicConfig(
         level=logging.INFO,
         datefmt="%d-%m %H:%M",
@@ -389,6 +401,7 @@ def run(
         secondary_metrics=sec_metrics,
         parametric=parametric,
         bf_corr=True,
+        n_folds=n_folds,
     )
     logging.info(f"Best model: {best_model}. Reason: {reason}.")
 
@@ -402,6 +415,11 @@ def run(
                 else f"results/{name}/unit_test.log"
             ),
         )
+        with open(
+            f"results/{name}/best_model{parametric_suffix}.txt",
+            "w",
+        ) as f:
+            f.write(f"{best_model}")
     else:
         logging.info("Starting final hyperparameter tuning.")
         model = get_best_hparams(
@@ -465,13 +483,24 @@ def run(
                 median_score_main,
                 sec_metrics_scores,
             ) = get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
-        with open(f"results/{name}/final_CV.pkl", "wb") as f:
+        with open(
+            f"results/{name}/final_CV{parametric_suffix}.pkl",
+            "wb",
+        ) as f:
             pickle.dump(final_results_dict, f)
-        with open(f"results/{name}/final_model.pkl", "wb") as f:
+        with open(
+            f"results/{name}/final_model{parametric_suffix}.pkl",
+            "wb",
+        ) as f:
             pickle.dump(final_model, f)
-        with open(f"results/{name}/final_hyperparameters.pkl", "wb") as f:
+        with open(
+            f"results/{name}/final_hyperparameters_{parametric_suffix}.pkl",
+            "wb",
+        ) as f:
             pickle.dump(final_hyperparameters, f)
-        cv_results_df.to_csv(f"results/{name}/final_CV_hparam_search.csv")
+        cv_results_df.to_csv(
+            f"results/{name}/final_CV_hparam_search_{parametric_suffix}.csv"
+        )
 
         print_final_results(
             final_model_name=final_model_name,
