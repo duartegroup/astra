@@ -307,9 +307,9 @@ def find_n_best_models(
     list[str]
         A list of the n best models.
     """
-    assert metric in KNOWN_METRICS, (
-        f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
-    )
+    assert (
+        metric in KNOWN_METRICS
+    ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
     maximise = True if metric in HIGHER_BETTER else False
 
     # Create a dataframe from the results dictionary
@@ -358,7 +358,10 @@ def find_n_best_models(
                 mse = float(anova.loc[1, "MS"])
                 residual_dof = int(anova.loc[1, "DF"])
                 post_hoc_p = tukey_hsd(
-                    mse, residual_dof, stat_for_test.mean(axis=0), stat_for_test.shape[0]
+                    mse,
+                    residual_dof,
+                    stat_for_test.mean(axis=0),
+                    stat_for_test.shape[0],
                 )
             else:
                 post_hoc_p = sp.posthoc_conover_friedman(stat_for_test, p_adjust="holm")
@@ -458,9 +461,9 @@ def perform_statistical_tests(
     tuple[pd.DataFrame, pd.DataFrame]
         A tuple containing the test results for the two statistical tests.
     """
-    assert metric in KNOWN_METRICS, (
-        f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
-    )
+    assert (
+        metric in KNOWN_METRICS
+    ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
 
     # Create a dataframe from the results dictionary
     results_df = pd.DataFrame.from_dict(results_dic)
@@ -547,16 +550,18 @@ def check_best_model(
     str or None
         The name of the best model, or None if no model is significantly better.
     """
-    assert metric in KNOWN_METRICS, (
-        f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
-    )
+    assert (
+        metric in KNOWN_METRICS
+    ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
 
     # get dictionary of models that have significantly worse performing models,
     # sorted according to how many models they significantly beat
     scores = [
-        np.mean(results_dic[model][metric])
-        if use_mean
-        else np.median(results_dic[model][metric])
+        (
+            np.mean(results_dic[model][metric])
+            if use_mean
+            else np.median(results_dic[model][metric])
+        )
         for model in results_dic
     ]
     names = [model for model in results_dic]
@@ -641,9 +646,11 @@ def check_best_model(
             for model in tied_models:
                 a = np.array(results_dic[model][metric])
                 rate = sum(
-                    float(np.mean(a > np.array(results_dic[other][metric])))
-                    if metric in HIGHER_BETTER
-                    else float(np.mean(a < np.array(results_dic[other][metric])))
+                    (
+                        float(np.mean(a > np.array(results_dic[other][metric])))
+                        if metric in HIGHER_BETTER
+                        else float(np.mean(a < np.array(results_dic[other][metric])))
+                    )
                     for other in score_dic
                     if other != model
                 )
@@ -910,9 +917,9 @@ def get_cv_performance(
         A dictionary mapping metrics to lists of scores.
     """
     for metric in metric_list:
-        assert metric in KNOWN_METRICS.keys(), (
-            f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
-        )
+        assert (
+            metric in KNOWN_METRICS.keys()
+        ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
     metrics_dict = {metric: [] for metric in metric_list}
 
     classification = True if metric_list[0] in CLASSIFICATION_METRICS else False
@@ -1151,14 +1158,14 @@ def get_optimised_cv_performance(
         A dictionary mapping metrics to lists of scores.
     """
     for metric in metric_list:
-        assert metric in KNOWN_METRICS.keys(), (
-            f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
-        )
+        assert (
+            metric in KNOWN_METRICS.keys()
+        ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
     metrics_dict = {metric: [] for metric in metric_list}
 
-    assert main_metric in KNOWN_METRICS.keys(), (
-        f"Unknown main metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
-    )
+    assert (
+        main_metric in KNOWN_METRICS.keys()
+    ), f"Unknown main metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
     scoring = SCORING[main_metric]
 
     classification = True if metric_list[0] in CLASSIFICATION_METRICS else False
@@ -1338,13 +1345,13 @@ def get_best_hparams(
     GridSearchCV or OptunaSearchCV
         A GridSearchCV or OptunaSearchCV object containing the best hyperparameters.
     """
-    assert main_metric in KNOWN_METRICS.keys(), (
-        f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
-    )
+    assert (
+        main_metric in KNOWN_METRICS.keys()
+    ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
     for metric in sec_metrics:
-        assert metric in KNOWN_METRICS.keys(), (
-            f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
-        )
+        assert (
+            metric in KNOWN_METRICS.keys()
+        ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS.keys())}"
     scoring = {metric: SCORING[metric] for metric in [main_metric] + sec_metrics}
 
     df = df.copy().reset_index()
