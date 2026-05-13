@@ -384,7 +384,9 @@ def find_n_best_models(
                 n_sig_losses[model] = losses
 
             max_losses = max(n_sig_losses.values())
-            worst_candidates = [m for m, l in n_sig_losses.items() if l == max_losses]
+            worst_candidates = [
+                model for model, loss in n_sig_losses.items() if loss == max_losses
+            ]
 
             if len(worst_candidates) == 1 and max_losses > 0:
                 worst_model = worst_candidates[0]
@@ -395,9 +397,9 @@ def find_n_best_models(
                 candidates = worst_candidates if max_losses > 0 else model_labels
                 if maximise:
                     tied = [
-                        m
-                        for m in candidates
-                        if central_scores[m]
+                        model
+                        for model in candidates
+                        if central_scores[model]
                         == min(central_scores[c] for c in candidates)
                     ]
                     if len(tied) == 1:
