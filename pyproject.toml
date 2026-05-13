@@ -24,17 +24,17 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Chemistry",
     "Topic :: Scientific/Engineering :: Physics",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 dependencies = [
     "numpy",
     "pandas",
     "pyarrow",
     "fastparquet",
     "lightgbm>=4.6.0",
-    "pingouin",
+    "pingouin>=0.6.0",
     "xgboost>=2.1.4",
-    "catboost",
-    "scikit-learn>=1.7,<1.8",  # CatBoost incompatibility with 1.8 (https://github.com/catboost/catboost/issues/2955)
+    "catboost>=1.2.9",
+    "scikit-learn>=1.7",
     "scikit-posthocs",
     "rich",
     "pyyaml",
