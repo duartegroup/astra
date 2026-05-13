@@ -70,7 +70,21 @@ def corrected_ttest(a: np.ndarray, b: np.ndarray, n_folds: int | None = None) ->
 
 
 def _cohens_d(a: np.ndarray, b: np.ndarray) -> float:
-    """Cohen's d effect size for a paired comparison of fold scores."""
+    """
+    Calculate Cohen's d effect size for the difference between two sets of scores.
+
+    Parameters
+    ----------
+    a : np.ndarray
+        Fold scores for the first model.
+    b : np.ndarray
+        Fold scores for the second model.
+
+    Returns
+    -------
+    float
+        Cohen's d effect size.
+    """
     diff = a - b
     sd = np.std(diff, ddof=1)
     if sd == 0:
