@@ -56,7 +56,7 @@ def get_data(data: str, features: str) -> pd.DataFrame:
                 data_df[features] = data_df[features].apply(
                     lambda x: ast.literal_eval(x)
                 )
-            except (ValueError, SyntaxError):
+            except ValueError, SyntaxError:
                 try:
                     data_df[features] = data_df[features].apply(
                         lambda x: np.fromstring(x.strip("[]"), sep=" ")
@@ -278,7 +278,7 @@ def build_model(
     """
     pipeline_steps = []
 
-    if impute:
+    if impute is not None:
         if isinstance(impute, str):
             if impute == "mean":
                 imputer = SimpleImputer(strategy="mean")
@@ -288,7 +288,7 @@ def build_model(
                 imputer = KNNImputer()
             else:
                 raise ValueError(
-                    "Unknown imputation strategy. Must be 'mean' or 'median'"
+                    "Unknown imputation strategy. Must be 'mean', 'median', or 'knn'"
                 )
         elif isinstance(impute, (int, float)):
             imputer = SimpleImputer(strategy="constant", fill_value=impute)
@@ -296,7 +296,7 @@ def build_model(
             raise ValueError("Imputation strategy must be a string or a numeric value")
         pipeline_steps.append(imputer)
 
-    if remove_constant:
+    if remove_constant is not None:
         if not isinstance(remove_constant, float):
             raise ValueError(
                 "remove_constant must be a numeric value (a threshold for variance)."
@@ -304,7 +304,7 @@ def build_model(
         selector = VarianceThreshold(threshold=remove_constant)
         pipeline_steps.append(selector)
 
-    if remove_correlated:
+    if remove_correlated is not None:
         if not isinstance(remove_correlated, float):
             raise ValueError(
                 "remove_correlated must be a numeric value (a threshold for correlation)."

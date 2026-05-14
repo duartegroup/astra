@@ -4,6 +4,10 @@ from sklearn.utils.validation import NotFittedError
 
 from astra.data.processing import CorrelationFilter
 
+# ---------------------------------------------------------------------------
+# CorrelationFilter
+# ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def correlated_data():
@@ -69,3 +73,20 @@ def test_correlation_filter_get_feature_names_out_not_fitted():
     cf = CorrelationFilter()
     with pytest.raises(NotFittedError):
         cf.get_feature_names_out(["A", "B", "C"])
+
+
+def test_correlation_filter_fit_with_list():
+    X_list = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 2, 3]]
+    cf = CorrelationFilter(threshold=0.9)
+    cf.fit(X_list)
+    assert hasattr(cf, "to_drop")
+    assert len(cf.to_drop) > 0
+
+
+def test_correlation_filter_transform_with_list():
+    X_list = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 2, 3]]
+    cf = CorrelationFilter(threshold=0.9)
+    cf.fit(X_list)
+    result = cf.transform(X_list)
+    assert isinstance(result, np.ndarray)
+    assert result.shape[1] < 3

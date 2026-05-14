@@ -15,10 +15,13 @@ import scikit_posthocs as sp
 from optuna.distributions import BaseDistribution
 from optuna.exceptions import ExperimentalWarning
 from optuna.integration import OptunaSearchCV
-from scipy.stats import levene, shapiro, ttest_rel, wilcoxon
+from scipy.stats import f as f_dist
+from scipy.stats import levene, shapiro, wilcoxon
+from scipy.stats import t as t_dist
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import GridSearchCV
 from statsmodels.stats.libqsturng import psturng
+from statsmodels.stats.multitest import multipletests
 
 from .metrics import (
     CLASSIFICATION_METRICS,
@@ -30,6 +33,99 @@ from .models.classification import NON_PROBABILISTIC_MODELS
 from .utils import build_model, print_performance
 
 warnings.filterwarnings("ignore", category=ExperimentalWarning)
+
+
+def corrected_ttest(a: np.ndarray, b: np.ndarray, n_folds: int | None = None) -> float:
+    """
+    Nadeau-Bengio corrected repeated cross-validation t-test.
+
+    Adjusts the variance estimate for the correlation between CV fold scores arising
+    from overlapping training sets. The correction factor is (1/n + rho/(1-rho)),
+    where rho = 1/k is the fraction of data used for testing in each fold of k-fold CV.
+
+    Parameters
+    ----------
+    a : np.ndarray
+        Fold scores for the first model.
+    b : np.ndarray
+        Fold scores for the second model.
+    n_folds : int or None, default=None
+        Number of folds per repeat, when using repeated CV. For standard k-fold CV this
+        equals len(a). If None, len(a) is used.
+
+    Returns
+    -------
+    float
+        Two-tailed p-value.
+    """
+    diff = a - b
+    n = len(diff)
+    k = n_folds if n_folds is not None else n
+    rho = 1.0 / k
+    var = np.var(diff, ddof=1) * (1.0 / n + rho / (1.0 - rho))
+    if var <= 0:
+        return 1.0
+    t_stat = np.mean(diff) / np.sqrt(var)
+    return float(t_dist.sf(np.abs(t_stat), df=n - 1) * 2)
+
+
+def _cohens_d(a: np.ndarray, b: np.ndarray) -> float:
+    """
+    Calculate Cohen's d effect size for the difference between two sets of scores.
+
+    Parameters
+    ----------
+    a : np.ndarray
+        Fold scores for the first model.
+    b : np.ndarray
+        Fold scores for the second model.
+
+    Returns
+    -------
+    float
+        Cohen's d effect size.
+    """
+    diff = a - b
+    sd = np.std(diff, ddof=1)
+    if sd == 0:
+        return 0.0
+    return float(np.abs(np.mean(diff)) / sd)
+
+
+def _min_detectable_effect(
+    n_total: int, n_folds: int, alpha: float, power: float = 0.8
+) -> float:
+    """
+    Minimum Cohen's d detectable by the Nadeau-Bengio corrected t-test.
+
+    Derived from the corrected test's non-centrality parameter:
+    lambda = d / sqrt(1/n + rho/(1-rho)), where rho = 1/k for k-fold CV.
+    Setting lambda = z_{alpha/2} + z_{power} and solving for d gives the
+    minimum detectable effect size.
+
+    Parameters
+    ----------
+    n_total : int
+        Total number of fold scores (repeats × k for repeated CV, k otherwise).
+    n_folds : int
+        Number of folds per repeat k.
+    alpha : float
+        Significance level (possibly Bonferroni-corrected).
+    power : float, default=0.8
+        Desired statistical power.
+
+    Returns
+    -------
+    float
+        Minimum detectable Cohen's d at the given alpha and power.
+    """
+    from scipy.stats import norm
+
+    z_alpha = norm.ppf(1 - alpha / 2)
+    z_power = norm.ppf(power)
+    rho = 1.0 / n_folds
+    correction_factor = np.sqrt(1.0 / n_total + rho / (1.0 - rho))
+    return float((z_alpha + z_power) * correction_factor)
 
 
 def check_assumptions(
@@ -105,6 +201,15 @@ def check_assumptions(
         fold_variances = True
 
     # Run Shapiro-Wilk test for normality
+    # With fewer than 8 folds the test has too little power to distinguish
+    # "genuinely normal" from "not enough data to detect non-normality".
+    n_folds = len(next(iter(next(iter(results_dict.values())).values())))
+    if n_folds < 8 and verbose:
+        print(
+            f"Warning: Only {n_folds} folds. Shapiro-Wilk has low power at this sample "
+            "size; a non-rejection of normality should not be taken as confirmation."
+        )
+
     pvals_shapiro = []
     for metric in metrics:
         for model in results_dict:
@@ -214,8 +319,9 @@ def find_n_best_models(
     ).T
     stat_for_test = stat_df.dropna(axis=1)
 
+    original_n_models = len(stat_for_test.columns)
     best_models = []
-    for n_models in range(len(stat_for_test.columns), 0, -1):
+    for n_models in range(original_n_models, 0, -1):
         if n_models == 1:  # only one model left, no need to test
             best_models = list(stat_for_test.columns)
             break
@@ -223,8 +329,19 @@ def find_n_best_models(
             # Perform repeated measures ANOVA
             pvalue = pg.rm_anova(stat_for_test)["p_unc"].values[0]
         else:
-            # Perform Friedman test
-            pvalue = pg.friedman(stat_for_test)["p_unc"].values[0]
+            # Perform Friedman test with Iman-Davenport correction
+            friedman = pg.friedman(stat_for_test)
+            chi2 = float(friedman["Q"].values[0])
+            n_f, k = stat_for_test.shape
+            denom = n_f * (k - 1) - chi2
+            if denom <= 0:
+                # chi2 is at (or beyond) its theoretical maximum n_f*(k-1),
+                # meaning models are ranked identically across all folds,
+                # so p-value is exactly 0.
+                pvalue = 0.0
+            else:
+                ff = ((n_f - 1) * chi2) / denom
+                pvalue = float(f_dist.sf(ff, dfn=k - 1, dfd=(k - 1) * (n_f - 1)))
 
         # Bonferroni correction of significance level
         if bf_corr:
@@ -234,12 +351,78 @@ def find_n_best_models(
 
         # Check if there is a statistically significant difference
         if pvalue < threshold:  # significant difference
-            # Remove model with the worst median score
-            model_labels = stat_for_test.columns
-            median_scores = stat_for_test.median()
-            combined = list(zip(median_scores, model_labels))
-            sorted_scores = sorted(combined, key=lambda x: x[0], reverse=maximise)
-            worst_model = sorted_scores[-1][1]
+            # Use post-hoc pairwise tests to identify the model that is significantly
+            # worse than the most others
+            if parametric:
+                anova = pg.rm_anova(stat_for_test, detailed=True)
+                mse = float(anova.loc[1, "MS"])
+                residual_dof = int(anova.loc[1, "DF"])
+                post_hoc_p = tukey_hsd(
+                    mse,
+                    residual_dof,
+                    stat_for_test.mean(axis=0),
+                    stat_for_test.shape[0],
+                )
+            else:
+                post_hoc_p = sp.posthoc_conover_friedman(stat_for_test, p_adjust="holm")
+
+            # Use mean for parametric test and median for non-parametric test
+            central_scores = (
+                stat_for_test.mean() if parametric else stat_for_test.median()
+            )
+            score_dic = central_scores.to_dict()
+            model_labels = list(stat_for_test.columns)
+
+            n_sig_losses = {}
+            for model in model_labels:
+                losses = 0
+                for other in model_labels:
+                    if other == model:
+                        continue
+                    if post_hoc_p.loc[model, other] < 0.05:
+                        if maximise and score_dic[model] < score_dic[other]:
+                            losses += 1
+                        elif not maximise and score_dic[model] > score_dic[other]:
+                            losses += 1
+                n_sig_losses[model] = losses
+
+            max_losses = max(n_sig_losses.values())
+            worst_candidates = [
+                model for model, loss in n_sig_losses.items() if loss == max_losses
+            ]
+
+            if len(worst_candidates) == 1 and max_losses > 0:
+                worst_model = worst_candidates[0]
+            else:
+                # No clear loser from post-hoc: use worst central score as
+                # primary tiebreaker, falling back to worst single-fold score
+                # only when central scores are exactly tied.
+                candidates = worst_candidates if max_losses > 0 else model_labels
+                if maximise:
+                    tied = [
+                        model
+                        for model in candidates
+                        if central_scores[model]
+                        == min(central_scores[c] for c in candidates)
+                    ]
+                    if len(tied) == 1:
+                        worst_model = tied[0]
+                    else:
+                        min_fold = {m: stat_for_test[m].min() for m in tied}
+                        worst_model = min(tied, key=lambda m: min_fold[m])
+                else:
+                    tied = [
+                        m
+                        for m in candidates
+                        if central_scores[m]
+                        == max(central_scores[c] for c in candidates)
+                    ]
+                    if len(tied) == 1:
+                        worst_model = tied[0]
+                    else:
+                        max_fold = {m: stat_for_test[m].max() for m in tied}
+                        worst_model = max(tied, key=lambda m: max_fold[m])
+
             stat_for_test = stat_for_test.drop(worst_model, axis=1)
         else:  # no significant difference
             best_models = list(stat_for_test.columns)
@@ -252,10 +435,14 @@ def perform_statistical_tests(
     results_dic: dict[str, dict[str, list[float]]],
     metric: str,
     parametric: bool = False,
+    n_folds: int | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Perform Tukey's HSD and paired t-test (if parametric=True) or Conover post-hoc and
-    Wilcoxon signed-rank tests (if parametric=False) on the performance of models.
+    Perform Tukey's HSD and Nadeau-Bengio corrected pairwise t-tests (if parametric=True)
+    or Conover post-hoc and Wilcoxon signed-rank tests (if parametric=False) tests on
+    the performance of models. Note that Wilcoxon is anti-conservative under CV fold
+    dependency, but no established non-parametric analogue of the Nadeau-Bengio correction
+    exists.
 
     Parameters
     ----------
@@ -265,6 +452,9 @@ def perform_statistical_tests(
         The metric to use for model comparison.
     parametric : bool, default=False
         Whether to use parametric tests instead of non-parametric tests.
+    n_folds : int or None, default=None
+        Number of folds per repeat, passed through to corrected_ttest for rho.
+        See corrected_ttest for details. Ignored when parametric=False.
 
     Returns
     -------
@@ -284,36 +474,43 @@ def perform_statistical_tests(
 
     if parametric:
         # perform repeated measures ANOVA
-        anova = pg.rm_anova(data=stat_for_test, detailed=True)
+        anova = pg.rm_anova(stat_for_test, detailed=True)
         # extract mean squared error and residual degrees of freedom
         mse = float(anova.loc[1, "MS"])
         residual_dof = int(anova.loc[1, "DF"])
         # calculate mean scores per model
         means = stat_for_test.mean(axis=0)
-        n_folds = stat_for_test.shape[0]
+        n_obs = stat_for_test.shape[0]
         # perform Tukey's HSD test
-        post_hoc_stats = tukey_hsd(mse, residual_dof, means, n_folds)
+        post_hoc_stats = tukey_hsd(mse, residual_dof, means, n_obs)
     else:
         # perform Conover post-hoc test with Holm-Bonferroni adjustment
         post_hoc_stats = sp.posthoc_conover_friedman(stat_for_test, p_adjust="holm")
 
-    if parametric:
-        # Perform paired t-test
-        test = ttest_rel
-    else:
-        # Perform Wilcoxon signed-rank test
-        test = wilcoxon
-    naive_p_values = np.empty((len(stat_for_test.columns), len(stat_for_test.columns)))
-    for n, col1 in enumerate(stat_for_test):
-        for m, col2 in enumerate(stat_for_test):
-            # Skip self-comparisons
-            if col1 == col2:
-                naive_p_values[n, m] = 1.0
-                continue
-            naive_p_values[n, m] = test(
-                stat_for_test[col1],
-                stat_for_test[col2],
-            ).pvalue
+    # Collect raw p-values
+    raw_pvals = []
+    n_cols = len(stat_for_test.columns)
+    cols = list(stat_for_test.columns)
+    unique_pairs = [(n, m) for n in range(n_cols) for m in range(n + 1, n_cols)]
+    for n, m in unique_pairs:
+        a = stat_for_test[cols[n]].to_numpy(dtype=float)
+        b = stat_for_test[cols[m]].to_numpy(dtype=float)
+        if parametric:  # Nadeau-Bengio corrected t-test
+            raw_pvals.append(corrected_ttest(a, b, n_folds=n_folds))
+        else:  # Wilcoxon signed-rank test
+            # avoid ValueError when all differences are zero
+            if np.all(a == b):
+                raw_pvals.append(1.0)
+            else:
+                raw_pvals.append(wilcoxon(a, b).pvalue)
+
+    naive_p_values = np.ones((n_cols, n_cols))
+    # Apply Holm-Bonferroni correction across all pairwise comparisons
+    _, corrected, _, _ = multipletests(raw_pvals, method="holm")
+    for (n, m), pval in zip(unique_pairs, corrected):
+        naive_p_values[n, m] = pval
+        naive_p_values[m, n] = pval  # matrix is symmetric
+
     naive_stats = pd.DataFrame(
         naive_p_values, columns=stat_for_test.columns, index=stat_for_test.columns
     )
@@ -325,9 +522,13 @@ def check_best_model(
     results_dic: dict[str, dict[str, list[float]]],
     test_statistics: pd.DataFrame,
     metric: str,
+    min_effect_size: float = 0.2,
+    use_mean: bool = True,
 ) -> str | None:
     """
-    Check if there is a model that is significantly better than the others.
+    Check if there is a model that is significantly better than the others,
+    only counting pairwise wins that are statistically significant (p < 0.05)
+    and practically meaningful (Cohen's d >= min_effect_size).
 
     Parameters
     ----------
@@ -337,6 +538,12 @@ def check_best_model(
         A dataframe containing the results of the statistical test.
     metric : str
         The metric to use for model comparison.
+    min_effect_size : float, default=0.2
+        Minimum Cohen's d required to count a pairwise difference as meaningful.
+    use_mean : bool, default=True
+        If True, use mean fold scores to determine the direction of pairwise
+        comparisons; if False, use median. Should be True for mean-based
+        (parametric) tests and False for rank-based (non-parametric) tests.
 
     Returns
     -------
@@ -347,87 +554,218 @@ def check_best_model(
         metric in KNOWN_METRICS
     ), f"Unknown metric. Known metrics are: {', '.join(KNOWN_METRICS)}"
 
-    # get model ranking according to median score
-    scores = [np.median(results_dic[model][metric]) for model in results_dic]
+    # get dictionary of models that have significantly worse performing models,
+    # sorted according to how many models they significantly beat
+    scores = [
+        (
+            np.mean(results_dic[model][metric])
+            if use_mean
+            else np.median(results_dic[model][metric])
+        )
+        for model in results_dic
+    ]
     names = [model for model in results_dic]
-    if metric in HIGHER_BETTER:
-        best_models = [names[i] for i in np.argsort(scores)[::-1]]
-    else:
-        best_models = [names[i] for i in np.argsort(scores)]
-
-    # get dictionary of models that are significantly different from the others,
-    # sorted according to how many models perform significantly different
-    sig_diff_models = (
-        test_statistics.where(test_statistics < 0.05)
-        .dropna(axis=0, how="all")
-        .dropna(axis=1, how="all")
-        .count()
-        .sort_values(ascending=False)
-        .to_dict()
+    score_dic = dict(zip(names, scores))
+    sig_worse_models = {}
+    for model in names:
+        n_sig_worse = 0
+        for other_model in names:
+            if other_model == model:
+                continue
+            if test_statistics.loc[model, other_model] < 0.05:
+                a = np.array(results_dic[model][metric])
+                b = np.array(results_dic[other_model][metric])
+                if _cohens_d(a, b) < min_effect_size:
+                    continue
+                if metric in HIGHER_BETTER:
+                    if score_dic[model] > score_dic[other_model]:
+                        n_sig_worse += 1
+                else:
+                    if score_dic[model] < score_dic[other_model]:
+                        n_sig_worse += 1
+        if n_sig_worse > 0:
+            sig_worse_models[model] = n_sig_worse
+    sig_worse_models = dict(
+        sorted(sig_worse_models.items(), key=lambda item: item[1], reverse=True)
     )
 
-    # if no models are significantly different, return None
-    if len(sig_diff_models) == 0:
+    # if no models are significantly better, return None
+    if len(sig_worse_models) == 0:
         return None
 
-    # loop over these models, and check if they are particularly
-    # good (top half) or bad
+    # get the model(s) that are significantly better than the most other models
     final_models = []
-    models = list(sig_diff_models.keys())
+    models = list(sig_worse_models.keys())
     for model in models:
-        rank = best_models.index(model)
-        if rank < 0.5 * len(names):
-            final_models.append(model)
-            # handle case if more than one model is significantly
-            # better than the same number of models
-            done = True
-            for other_model in models[models.index(model) + 1 :]:
-                if sig_diff_models[other_model] == sig_diff_models[model]:
-                    done = False
-            if done:
-                break
+        final_models.append(model)
+        # handle case if more than one model has the same number of
+        # significantly worse models
+        done = True
+        for other_model in models[models.index(model) + 1 :]:
+            if sig_worse_models[other_model] == sig_worse_models[model]:
+                done = False
+        if done:
+            break
 
     # if more than one model is significantly better than the others,
-    # choose the one with the lowest sum of p-values.
-    # This is likely better than choosing the model with the best
-    # median score, because it takes the distribution of scores into account.
+    # choose the one with the lowest sum of p-values for comparisons where it wins
     if len(final_models) > 1:
-        model_pvalues = (
-            test_statistics.where(test_statistics < 0.05)
-            .dropna(axis=0, how="all")
-            .dropna(axis=1, how="all")
-            .to_dict(orient="list")
-        )
-        pvalue_scores = [np.nansum(model_pvalues[model]) for model in final_models]
+
+        def win_pvalue_sum(model):
+            total = 0.0
+            for other in score_dic:
+                if other == model:
+                    continue
+                p = test_statistics.loc[model, other]
+                if p >= 0.05:
+                    continue
+                a = np.array(results_dic[model][metric])
+                b = np.array(results_dic[other][metric])
+                if _cohens_d(a, b) < min_effect_size:
+                    continue
+                is_win = (
+                    score_dic[model] > score_dic[other]
+                    if metric in HIGHER_BETTER
+                    else score_dic[model] < score_dic[other]
+                )
+                if is_win:
+                    total += p
+            return total
+
+        pvalue_scores = [win_pvalue_sum(model) for model in final_models]
         smallest_pvalue = min(pvalue_scores)
+
         if pvalue_scores.count(smallest_pvalue) == 1:
             final_model = final_models[np.argmin(pvalue_scores)]
-        else:
-            # If there is more than one model with the same sum of p-values,
-            # choose the one with the best median score.
-            best_model_idxs = np.where(np.array(pvalue_scores) == smallest_pvalue)[
-                0
-            ].tolist()
-            best_model_scores = [
-                np.median(results_dic[model][metric])
-                for i, model in enumerate(final_models)
-                if i in best_model_idxs
-            ]
-            if metric in HIGHER_BETTER:
-                final_model_idx = best_model_idxs[np.argmax(best_model_scores)]
-            else:
-                final_model_idx = best_model_idxs[np.argmin(best_model_scores)]
-            final_model = final_models[final_model_idx]
 
-    # if none of the models are in top half, return None
-    elif len(final_models) == 0:
-        final_model = None
+        else:  # More than one model with the same sum of p-values
+            # Tiebreaker 1: sum of pairwise fold-level win rates against all other models
+            tied_idxs = np.where(np.array(pvalue_scores) == smallest_pvalue)[0].tolist()
+            tied_models = [final_models[i] for i in tied_idxs]
+            win_rates = []
+            for model in tied_models:
+                a = np.array(results_dic[model][metric])
+                rate = sum(
+                    (
+                        float(np.mean(a > np.array(results_dic[other][metric])))
+                        if metric in HIGHER_BETTER
+                        else float(np.mean(a < np.array(results_dic[other][metric])))
+                    )
+                    for other in score_dic
+                    if other != model
+                )
+                win_rates.append(rate)
+            best_wr = max(win_rates)
+            wr_tied = [tied_models[i] for i, w in enumerate(win_rates) if w == best_wr]
+
+            if len(wr_tied) == 1:
+                final_model = wr_tied[0]
+            else:
+                # Tiebreaker 2: best mean score among remaining ties
+                wr_scores = [np.mean(results_dic[m][metric]) for m in wr_tied]
+                if metric in HIGHER_BETTER:
+                    final_model = wr_tied[int(np.argmax(wr_scores))]
+                else:
+                    final_model = wr_tied[int(np.argmin(wr_scores))]
 
     # if only one model is significantly better than the others, return that model
-    else:
+    elif len(final_models) == 1:
         final_model = final_models[0]
 
+    else:
+        raise ValueError("Unexpected error in check_best_model function.")
+
     return final_model
+
+
+def check_pareto_dominant(
+    results_dict: dict[str, dict[str, list[float]]],
+    main_metric: str,
+    secondary_metrics: list[str],
+    parametric: bool,
+    min_effect_size: float = 0.2,
+) -> str | None:
+    """
+    Find a model that is Pareto-dominant across all metrics (not significantly worse
+    than any other model on any metric, significantly better than at least one other
+    model on at least one metric, using p < 0.05 and Cohen's d >= min_effect_size).
+
+    Parameters
+    ----------
+    results_dict : dict[str, dict[str, list[float]]]
+        A dictionary mapping model names to dictionaries of metric names and scores.
+    main_metric : str
+        The primary metric.
+    secondary_metrics : list[str]
+        Secondary metrics to consider.
+    parametric : bool
+        Whether to use parametric post-hoc tests.
+    min_effect_size : float, default=0.2
+        Minimum Cohen's d required to count a pairwise difference as meaningful.
+
+    Returns
+    -------
+    str or None
+        The name of the Pareto-dominant model, or None if none exists.
+    """
+    available_metrics = set(next(iter(results_dict.values())).keys())
+    all_metrics = [
+        m for m in [main_metric] + secondary_metrics if m in available_metrics
+    ]
+    models = list(results_dict.keys())
+
+    # Gather corrected pairwise p-values for each metric
+    naive_stats_per_metric: dict[str, pd.DataFrame] = {}
+    for metric in all_metrics:
+        try:
+            _, naive_stats = perform_statistical_tests(results_dict, metric, parametric)
+            naive_stats_per_metric[metric] = naive_stats
+        except Exception:
+            pass
+
+    if not naive_stats_per_metric:
+        return None
+
+    pareto_models = []
+    for model in models:
+        is_significantly_worse = False
+        better_on_any = False
+
+        for other in models:
+            if other == model or is_significantly_worse:
+                continue
+            for metric, stats in naive_stats_per_metric.items():
+                p = stats.loc[model, other]
+                a = np.array(results_dict[model][metric])
+                b = np.array(results_dict[other][metric])
+                if p >= 0.05 or _cohens_d(a, b) < min_effect_size:
+                    continue
+                median_a = np.median(a)
+                median_b = np.median(b)
+                if metric in HIGHER_BETTER:
+                    if median_a < median_b:
+                        is_significantly_worse = True
+                    elif median_a > median_b:
+                        better_on_any = True
+                else:
+                    if median_a > median_b:
+                        is_significantly_worse = True
+                    elif median_a < median_b:
+                        better_on_any = True
+
+        if not is_significantly_worse and better_on_any:
+            pareto_models.append(model)
+
+    if not pareto_models:
+        return None
+    if len(pareto_models) == 1:
+        return pareto_models[0]
+
+    # Multiple Pareto-dominant models: pick the one with the best main metric mean
+    scores = [np.mean(results_dict[m][main_metric]) for m in pareto_models]
+    if main_metric in HIGHER_BETTER:
+        return pareto_models[int(np.argmax(scores))]
+    return pareto_models[int(np.argmin(scores))]
 
 
 def get_best_model(
@@ -436,6 +774,7 @@ def get_best_model(
     secondary_metrics: list[str],
     parametric: bool = False,
     bf_corr: bool = True,
+    n_folds: int | None = None,
 ) -> tuple[str, str]:
     """
     Get the best model from a dictionary of model results.
@@ -458,6 +797,24 @@ def get_best_model(
     tuple[str, str]
         A tuple containing the name of the best model and the reason for its selection.
     """
+    n_total = len(next(iter(next(iter(results_dict.values())).values())))
+    n_folds_per_repeat = n_folds if n_folds is not None else n_total
+
+    if parametric:
+        # Warn if the corrected t-test cannot reliably detect a meaningful effect
+        # given the available number of folds.
+        alpha = 0.05 / len(results_dict) if bf_corr else 0.05
+        mdes = _min_detectable_effect(n_total, n_folds_per_repeat, alpha)
+        if mdes > 0.8:
+            logging.warning(
+                f"Low statistical power: with {n_total} fold scores "
+                f"({n_folds_per_repeat} folds/repeat) and alpha={alpha:.4f} the "
+                f"corrected t-test can only detect effects of d >= {mdes:.2f} at 80% "
+                "power (Cohen's large-effect threshold is 0.8). Statistical tests may "
+                "not differentiate models reliably; selection will fall back to mean "
+                "CV score."
+            )
+
     # Perform tests to find the n best models
     n_best_models = find_n_best_models(results_dict, main_metric, parametric, bf_corr)
     results_dict_best = {model: results_dict[model] for model in n_best_models}
@@ -470,48 +827,42 @@ def get_best_model(
 
     # Perform statistical tests on the best models
     post_hoc_stats, naive_stats = perform_statistical_tests(
-        results_dict_best, main_metric, parametric
+        results_dict_best, main_metric, parametric, n_folds=n_folds_per_repeat
     )
 
-    # Check if Tukey's HSD test/Conover post-hoc test yield a best model
-    best_model = check_best_model(results_dict_best, post_hoc_stats, main_metric)
+    # Check if Tukey's HSD test/Conover post-hoc test yield a best model.
+    best_model = check_best_model(
+        results_dict_best, post_hoc_stats, main_metric, use_mean=parametric
+    )
     reason = "Tukey's HSD test" if parametric else "Conover post-hoc test"
 
     # Fall back to naive test
     if not best_model:
-        best_model = check_best_model(results_dict_best, naive_stats, main_metric)
-        reason = "paired t-test" if parametric else "Wilcoxon signed-rank test"
+        best_model = check_best_model(
+            results_dict_best, naive_stats, main_metric, use_mean=parametric
+        )
+        reason = "Corrected t-test" if parametric else "Wilcoxon signed-rank test"
 
-    # Fall back to secondary metrics if the main one doesn't yield a best model
+    # Fall back to Pareto dominance across all metrics jointly
     if not best_model:
-        for metric in secondary_metrics:
-            post_hoc_stats, naive_stats = perform_statistical_tests(
-                results_dict_best, metric, parametric
-            )
-            best_model = check_best_model(results_dict_best, post_hoc_stats, metric)
-            test_used = "Tukey's HSD test" if parametric else "Conover post-hoc test"
-            reason = f"{test_used} using {metric}"
-            if best_model:
-                break
-            best_model = check_best_model(results_dict_best, naive_stats, metric)
-            test_used = "paired t-test" if parametric else "Wilcoxon signed-rank test"
-            reason = f"{test_used} using {metric}"
-            if best_model:
-                break
+        best_model = check_pareto_dominant(
+            results_dict_best, main_metric, secondary_metrics, parametric
+        )
+        if best_model:
+            reason = "Pareto dominance across metrics"
 
-    # If there are no statistically significant differences between the models using any of the metrics,
-    # select the model with the best median score.
     if not best_model:
-        scores = [
-            np.median(results_dict_best[model][main_metric])
-            for model in results_dict_best
+        # No statistically significant differences found by any test: fall back to the model
+        # with the best mean fold score
+        names = list(results_dict_best.keys())
+        mean_scores = [
+            np.mean(results_dict_best[model][main_metric]) for model in names
         ]
-        names = [model for model in results_dict_best]
         if main_metric in HIGHER_BETTER:
-            best_model = names[np.argmax(scores)]
+            best_model = names[int(np.argmax(mean_scores))]
         else:
-            best_model = names[np.argmin(scores)]
-        reason = "median score"
+            best_model = names[int(np.argmin(mean_scores))]
+        reason = "mean CV score"
 
     return best_model, reason
 
@@ -680,12 +1031,12 @@ def run_CV(
 
     if os.path.exists(f"results/{name}/{results_name}.pkl"):
         logging.info("Loading existing results.")
-        with open(f"results/{name}/{results_name}.pkl", "br") as f:
+        with open(f"results/{name}/{results_name}.pkl", "rb") as f:
             results = pickle.load(f)
 
     else:
         try:
-            with open(f"cache/{ckpt_name}.pkl", "br") as f:
+            with open(f"cache/{ckpt_name}.pkl", "rb") as f:
                 results = pickle.load(f)
             logging.info("Loaded checkpoint.")
         except FileNotFoundError:
@@ -869,7 +1220,7 @@ def get_optimised_cv_performance(
                 param_distributions=parameters,
                 cv=cv,
                 n_jobs=n_jobs,
-                scoring=scoring[main_metric],
+                scoring=scoring,
                 n_trials=n_trials,
                 timeout=timeout,
                 refit=True,

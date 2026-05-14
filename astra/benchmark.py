@@ -127,6 +127,18 @@ def run(
     os.makedirs("results", exist_ok=True)
     os.makedirs(f"results/{name}", exist_ok=True)
 
+    if parametric == "auto":
+        parametric_suffix = ""
+    elif parametric is True:
+        parametric_suffix = "_parametric"
+    elif parametric is False:
+        parametric_suffix = "_nonparametric"
+    else:
+        raise ValueError(
+            "`parametric` must be one of [True, False, 'auto']. "
+            f"Got {parametric} instead."
+        )
+
     logging.basicConfig(
         level=logging.INFO,
         datefmt="%d-%m %H:%M",
@@ -275,7 +287,7 @@ def run(
                 pickle.dump(results, f)
         else:
             logging.info("Loading existing results.")
-            with open(f"results/{name}/default_CV_all_folds.pkl", "br") as f:
+            with open(f"results/{name}/default_CV_all_folds.pkl", "rb") as f:
                 results = pickle.load(f)
     else:
         results = run_CV(
@@ -303,13 +315,18 @@ def run(
         logging.info("Checking assumptions for parametric tests.")
         _ = check_assumptions(results_dict=results, verbose=True)
 
+    if run_nested_CV and repeated_CV:
+        logging.warning(
+            "run_nested_CV=True is not supported with repeated CV and will be skipped."
+        )
+
     if run_nested_CV and not repeated_CV:
         logging.info(
             "Starting nested CV with hyperparameter tuning for the best models."
         )
         if os.path.exists(f"results/{name}/nested_CV.pkl"):
             logging.info("Loading existing results.")
-            with open(f"results/{name}/nested_CV.pkl", "br") as f:
+            with open(f"results/{name}/nested_CV.pkl", "rb") as f:
                 results = pickle.load(f)
         else:
             logging.info("Selecting best models.")
@@ -331,7 +348,7 @@ def run(
                 )
 
             try:
-                with open(f"cache/{name}_nested_CV_ckpt.pkl", "br") as f:
+                with open(f"cache/{name}_nested_CV_ckpt.pkl", "rb") as f:
                     results = pickle.load(f)
                 logging.info("Loaded checkpoint.")
             except FileNotFoundError:
@@ -384,6 +401,7 @@ def run(
         secondary_metrics=sec_metrics,
         parametric=parametric,
         bf_corr=True,
+        n_folds=n_folds,
     )
     logging.info(f"Best model: {best_model}. Reason: {reason}.")
 
@@ -397,6 +415,11 @@ def run(
                 else f"results/{name}/unit_test.log"
             ),
         )
+        with open(
+            f"results/{name}/best_model{parametric_suffix}.txt",
+            "w",
+        ) as f:
+            f.write(f"{best_model}")
     else:
         logging.info("Starting final hyperparameter tuning.")
         model = get_best_hparams(
@@ -460,13 +483,24 @@ def run(
                 median_score_main,
                 sec_metrics_scores,
             ) = get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
-        with open(f"results/{name}/final_CV.pkl", "wb") as f:
+        with open(
+            f"results/{name}/final_CV{parametric_suffix}.pkl",
+            "wb",
+        ) as f:
             pickle.dump(final_results_dict, f)
-        with open(f"results/{name}/final_model.pkl", "wb") as f:
+        with open(
+            f"results/{name}/final_model{parametric_suffix}.pkl",
+            "wb",
+        ) as f:
             pickle.dump(final_model, f)
-        with open(f"results/{name}/final_hyperparameters.pkl", "wb") as f:
+        with open(
+            f"results/{name}/final_hyperparameters{parametric_suffix}.pkl",
+            "wb",
+        ) as f:
             pickle.dump(final_hyperparameters, f)
-        cv_results_df.to_csv(f"results/{name}/final_CV_hparam_search.csv")
+        cv_results_df.to_csv(
+            f"results/{name}/final_CV_hparam_search{parametric_suffix}.csv"
+        )
 
         print_final_results(
             final_model_name=final_model_name,

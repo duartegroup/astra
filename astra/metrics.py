@@ -137,7 +137,7 @@ spearmanr_score = make_scorer(get_spearmanr_score)
 SCORING = {
     "accuracy": "accuracy",
     "balanced_accuracy": "balanced_accuracy",
-    "brier_score": "brier_score_loss",
+    "brier_score": "neg_brier_score",
     "f1": "f1",
     "pr_auc": "average_precision",
     "roc_auc": "roc_auc",
@@ -157,9 +157,7 @@ SCORING = {
 HIGHER_BETTER = [
     "accuracy",
     "balanced_accuracy",
-    "brier_score",
     "recall",
-    "roc_auc",
     "f1",
     "pr_auc",
     "roc_auc",
@@ -167,5 +165,8 @@ HIGHER_BETTER = [
     "precision",
     "r2",
     "cohen_kappa",
+    "kendalltau",
+    "pearsonr",
+    "spearmanr",
 ]
-LOWER_BETTER = ["rmse", "mse", "mae"]
+LOWER_BETTER = ["rmse", "mse", "mae", "brier_score"]

@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -36,6 +38,10 @@ from astra.utils import (
     print_performance,
 )
 
+# ---------------------------------------------------------------------------
+# get_data
+# ---------------------------------------------------------------------------
+
 
 def test_get_data():
     for file in [
@@ -49,9 +55,54 @@ def test_get_data():
         assert "Features" in df.columns
         assert isinstance(df["Features"].iloc[0], ndarray)
         assert not df.empty
-    # Test for unsupported file format
     with pytest.raises(ValueError):
         get_data(data="astra/data/example_df.txt", features="Features")
+
+
+def test_get_data_csv_no_features_column(tmp_path):
+    df = pd.DataFrame({"SMILES": ["CCO", "CCN"], "Target": [1.0, 2.0]})
+    csv_path = tmp_path / "test_no_features.csv"
+    df.to_csv(csv_path, index=False)
+    result = get_data(str(csv_path), features="Features")
+    assert "SMILES" in result.columns
+    assert "Features" not in result.columns
+
+
+def test_get_data_csv_features_fromstring_path(tmp_path):
+    df = pd.DataFrame(
+        {
+            "Features": ["[1.0 2.0 3.0]", "[4.0 5.0 6.0]"],
+            "Target": [1.0, 2.0],
+        }
+    )
+    csv_path = tmp_path / "test_fromstring.csv"
+    df.to_csv(csv_path, index=False)
+    result = get_data(str(csv_path), features="Features")
+    assert isinstance(result["Features"].iloc[0], np.ndarray)
+    np.testing.assert_array_almost_equal(result["Features"].iloc[0], [1.0, 2.0, 3.0])
+
+
+def test_get_data_csv_features_conversion_warning(tmp_path, monkeypatch, caplog):
+    def failing_fromstring(*args, **kwargs):
+        raise ValueError("mock parse failure")
+
+    monkeypatch.setattr(np, "fromstring", failing_fromstring)
+    df = pd.DataFrame(
+        {
+            "Features": ["[1.0 2.0 3.0]", "[4.0 5.0 6.0]"],
+            "Target": [1.0, 2.0],
+        }
+    )
+    csv_path = tmp_path / "test_warn.csv"
+    df.to_csv(csv_path, index=False)
+    with caplog.at_level(logging.WARNING):
+        get_data(str(csv_path), features="Features")
+    assert "Could not convert" in caplog.text
+
+
+# ---------------------------------------------------------------------------
+# get_models
+# ---------------------------------------------------------------------------
 
 
 def test_get_models_regression():
@@ -291,6 +342,51 @@ def test_get_models_custom_optuna():
     assert hyperparams["RandomForestClassifier"]["n_estimators"].high == 100
 
 
+def test_get_models_unsupported():
+    custom_models_invalid = {
+        "LogisticRegression": None,
+        "RandomForestClassifier": None,
+        "UnsupportedModel": None,
+    }
+    with pytest.raises(AssertionError):
+        get_models(
+            main_metric="accuracy",
+            sec_metrics=["f1"],
+            scaler=None,
+            custom_models=custom_models_invalid,
+        )
+
+
+def test_get_models_invalid_metric():
+    with pytest.raises(ValueError):
+        get_models(
+            main_metric="invalid_metric",
+            sec_metrics=[],
+            scaler=None,
+            custom_models=None,
+        )
+
+
+def test_get_models_custom_roc_auc_filters_non_probabilistic():
+    custom_models = {
+        "LogisticRegression": None,
+        "LinearSVC": None,  # non-probabilistic, must be filtered out
+    }
+    models, _, _ = get_models(
+        main_metric="roc_auc",
+        sec_metrics=["accuracy"],
+        scaler=None,
+        custom_models=custom_models,
+    )
+    assert "LinearSVC" not in models
+    assert "LogisticRegression" in models
+
+
+# ---------------------------------------------------------------------------
+# get_optuna_grid
+# ---------------------------------------------------------------------------
+
+
 def test_get_optuna_grid():
     hparam_grid = {
         "int_param": [1, 2, 3, 4, 5],
@@ -311,47 +407,30 @@ def test_get_optuna_grid():
     assert optuna_grid["mixed_param"].choices == (1, 0.5, "a")
 
 
-def test_get_models_unsupported():
-    custom_models_invalid = {
-        "LogisticRegression": None,
-        "RandomForestClassifier": None,
-        "UnsupportedModel": None,
-    }
-    with pytest.raises(AssertionError):
-        get_models(
-            main_metric="accuracy",
-            sec_metrics=["f1"],
-            scaler=None,
-            custom_models=custom_models_invalid,
-        )
+# ---------------------------------------------------------------------------
+# build_model
+# ---------------------------------------------------------------------------
 
 
 def test_build_model():
-    # Test with no preprocessing
-    model = build_model(LogisticRegression())
-    assert isinstance(model, LogisticRegression)
+    assert isinstance(build_model(LogisticRegression()), LogisticRegression)
 
-    # Test with imputation
     model = build_model(LogisticRegression(), impute="mean")
     assert isinstance(model, Pipeline)
     assert "simpleimputer" in model.named_steps
 
-    # Test with variance threshold
     model = build_model(LogisticRegression(), remove_constant=0.1)
     assert isinstance(model, Pipeline)
     assert "variancethreshold" in model.named_steps
 
-    # Test with correlation filter
     model = build_model(LogisticRegression(), remove_correlated=0.9)
     assert isinstance(model, Pipeline)
     assert "correlationfilter" in model.named_steps
 
-    # Test with scaler
     model = build_model(LogisticRegression(), scaler="Standard")
     assert isinstance(model, Pipeline)
     assert "standardscaler" in model.named_steps
 
-    # Test with a combination of steps
     model = build_model(
         LogisticRegression(),
         impute="mean",
@@ -365,27 +444,74 @@ def test_build_model():
     assert "correlationfilter" in model.named_steps
     assert "standardscaler" in model.named_steps
 
-    # Test for invalid impute value
     with pytest.raises(ValueError):
         build_model(LogisticRegression(), impute="invalid_impute")
 
-    # Test for invalid scaler value
     with pytest.raises(ValueError):
         build_model(LogisticRegression(), scaler="invalid_scaler")
 
 
+def test_build_model_median_impute():
+    model = build_model(LogisticRegression(), impute="median")
+    assert isinstance(model, Pipeline)
+    assert "simpleimputer" in model.named_steps
+    assert model.named_steps["simpleimputer"].strategy == "median"
+
+
+def test_build_model_knn_impute():
+    model = build_model(LogisticRegression(), impute="knn")
+    assert isinstance(model, Pipeline)
+    assert "knnimputer" in model.named_steps
+
+
+def test_build_model_numeric_impute():
+    model = build_model(LogisticRegression(), impute=0.5)
+    assert isinstance(model, Pipeline)
+    assert "simpleimputer" in model.named_steps
+    assert model.named_steps["simpleimputer"].strategy == "constant"
+    assert model.named_steps["simpleimputer"].fill_value == 0.5
+
+
+def test_build_model_minmax_scaler():
+    model = build_model(LogisticRegression(), scaler="MinMax")
+    assert isinstance(model, Pipeline)
+    assert "minmaxscaler" in model.named_steps
+
+
+def test_build_model_invalid_impute_type():
+    with pytest.raises(ValueError, match="Imputation strategy must be a string"):
+        build_model(LogisticRegression(), impute=[1, 2, 3])
+
+
+def test_build_model_invalid_remove_constant_type():
+    with pytest.raises(ValueError, match="remove_constant must be a numeric value"):
+        build_model(LogisticRegression(), remove_constant=1)
+
+
+def test_build_model_invalid_remove_correlated_type():
+    with pytest.raises(ValueError, match="remove_correlated must be a numeric value"):
+        build_model(LogisticRegression(), remove_correlated=1)
+
+
+# ---------------------------------------------------------------------------
+# get_estimator_name
+# ---------------------------------------------------------------------------
+
+
 def test_get_estimator_name():
-    # Test with a direct estimator
     model = LogisticRegression()
     assert get_estimator_name(model) == "LogisticRegression"
 
-    # Test with a pipeline
     pipeline = Pipeline([("scaler", "passthrough"), ("model", model)])
     assert get_estimator_name(pipeline) == "LogisticRegression"
 
 
+# ---------------------------------------------------------------------------
+# get_scores
+# ---------------------------------------------------------------------------
+
+
 def test_get_scores():
-    # Create a sample cv_results_df
     cv_results_df = pd.DataFrame(
         {
             "rank_test_mse": [1, 2, 3],
@@ -397,7 +523,6 @@ def test_get_scores():
         }
     )
 
-    # Test with a metric where lower is better
     results_dict, mean_score, std_score, median_score, sec_scores = get_scores(
         cv_results_df, "mse", ["r2"], 2
     )
@@ -412,7 +537,6 @@ def test_get_scores():
     assert results_dict["mse"] == [0.1, 0.11]
     assert results_dict["r2"] == [0.9, 0.89]
 
-    # Test with a metric where higher is better
     cv_results_df = pd.DataFrame(
         {
             "rank_test_accuracy": [1, 2, 3],
@@ -437,9 +561,13 @@ def test_get_scores():
     assert results_dict["accuracy"] == [0.9, 0.89]
     assert results_dict["f1"] == [0.8, 0.79]
 
-    # Test for missing columns
     with pytest.raises(AssertionError):
         get_scores(cv_results_df, "accuracy", ["precision"], 2)
+
+
+# ---------------------------------------------------------------------------
+# load_config
+# ---------------------------------------------------------------------------
 
 
 def test_load_config(tmp_path):
@@ -450,6 +578,11 @@ def test_load_config(tmp_path):
 
     config = load_config(config_file)
     assert config == config_data
+
+
+# ---------------------------------------------------------------------------
+# print_performance / print_file_console / print_final_results
+# ---------------------------------------------------------------------------
 
 
 def test_print_performance(capsys, tmp_path):
@@ -463,11 +596,19 @@ def test_print_performance(capsys, tmp_path):
     assert "metric1: 0.900" in captured.out
     assert "metric2: 0.700" in captured.out
 
-    with open(file, "r") as f:
+    with open(file) as f:
         content = f.read()
-        assert "Performance for TestModel:" in content
-        assert "metric1: 0.900" in content
-        assert "metric2: 0.700" in content
+    assert "Performance for TestModel:" in content
+    assert "metric1: 0.900" in content
+    assert "metric2: 0.700" in content
+
+
+def test_print_performance_no_file(capsys):
+    results_dict = {"metric1": [0.8, 0.9, 1.0]}
+    print_performance("TestModel", results_dict)
+    captured = capsys.readouterr()
+    assert "Performance for TestModel" in captured.out
+    assert "metric1" in captured.out
 
 
 def test_print_file_console(capsys, tmp_path):
@@ -479,9 +620,9 @@ def test_print_file_console(capsys, tmp_path):
     captured = capsys.readouterr()
     assert message in captured.out
 
-    with open(file, "r") as f:
+    with open(file) as f:
         content = f.read()
-        assert message in content
+    assert message in content
 
 
 def test_print_final_results(capsys, tmp_path):
@@ -516,14 +657,14 @@ def test_print_final_results(capsys, tmp_path):
     assert "Mean f1: 0.920" in captured.out
     assert "Median f1: 0.930" in captured.out
 
-    with open(file, "r") as f:
+    with open(file) as f:
         content = f.read()
-        assert "Final results" in content
-        assert f"Final model: {final_model_name}" in content
-        assert "Hyperparameters:" in content
-        assert "param1: 10" in content
-        assert "param2: abc" in content
-        assert f"Mean {main_metric}: {mean_score_main:.3f}" in content
-        assert f"Median {main_metric}: {median_score_main:.3f}" in content
-        assert "Mean f1: 0.920" in content
-        assert "Median f1: 0.930" in content
+    assert "Final results" in content
+    assert f"Final model: {final_model_name}" in content
+    assert "Hyperparameters:" in content
+    assert "param1: 10" in content
+    assert "param2: abc" in content
+    assert f"Mean {main_metric}: {mean_score_main:.3f}" in content
+    assert f"Median {main_metric}: {median_score_main:.3f}" in content
+    assert "Mean f1: 0.920" in content
+    assert "Median f1: 0.930" in content
