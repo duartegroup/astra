@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html">
 
-    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
         <title>astra.model_selection - ASTRA</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
@@ -284,10 +284,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">optuna.distributions</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDistribution</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">optuna.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExperimentalWarning</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">optuna.integration</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptunaSearchCV</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">levene</span><span class="p">,</span> <span class="n">shapiro</span><span class="p">,</span> <span class="n">ttest_rel</span><span class="p">,</span> <span class="n">wilcoxon</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">f</span> <span class="k">as</span> <span class="n">f_dist</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">levene</span><span class="p">,</span> <span class="n">shapiro</span><span class="p">,</span> <span class="n">wilcoxon</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">t</span> <span class="k">as</span> <span class="n">t_dist</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">clone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridSearchCV</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.stats.libqsturng</span><span class="w"> </span><span class="kn">import</span> <span class="n">psturng</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.stats.multitest</span><span class="w"> </span><span class="kn">import</span> <span class="n">multipletests</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">CLASSIFICATION_METRICS</span><span class="p">,</span>
@@ -299,6 +302,108 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_model</span><span class="p">,</span> <span class="n">print_performance</span>
 
 <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">ExperimentalWarning</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="corrected_ttest">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection.corrected_ttest">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">corrected_ttest</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n_folds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Nadeau-Bengio corrected repeated cross-validation t-test.</span>
+
+<span class="sd">    Adjusts the variance estimate for the correlation between CV fold scores arising</span>
+<span class="sd">    from overlapping training sets. The correction factor is (1/n + rho/(1-rho)),</span>
+<span class="sd">    where rho = 1/k is the fraction of data used for testing in each fold of k-fold CV.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a : np.ndarray</span>
+<span class="sd">        Fold scores for the first model.</span>
+<span class="sd">    b : np.ndarray</span>
+<span class="sd">        Fold scores for the second model.</span>
+<span class="sd">    n_folds : int or None, default=None</span>
+<span class="sd">        Number of folds per repeat, when using repeated CV. For standard k-fold CV this</span>
+<span class="sd">        equals len(a). If None, len(a) is used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Two-tailed p-value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">n_folds</span> <span class="k">if</span> <span class="n">n_folds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">n</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">k</span>
+    <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">diff</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">n</span> <span class="o">+</span> <span class="n">rho</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">rho</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">var</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">1.0</span>
+    <span class="n">t_stat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">t_dist</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">t_stat</span><span class="p">),</span> <span class="n">df</span><span class="o">=</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="_cohens_d">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection._cohens_d">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">_cohens_d</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate Cohen&#39;s d effect size for the difference between two sets of scores.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a : np.ndarray</span>
+<span class="sd">        Fold scores for the first model.</span>
+<span class="sd">    b : np.ndarray</span>
+<span class="sd">        Fold scores for the second model.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Cohen&#39;s d effect size.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span>
+    <span class="n">sd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">diff</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sd</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">diff</span><span class="p">))</span> <span class="o">/</span> <span class="n">sd</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="_min_detectable_effect">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection._min_detectable_effect">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">_min_detectable_effect</span><span class="p">(</span>
+    <span class="n">n_total</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_folds</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Minimum Cohen&#39;s d detectable by the Nadeau-Bengio corrected t-test.</span>
+
+<span class="sd">    Derived from the corrected test&#39;s non-centrality parameter:</span>
+<span class="sd">    lambda = d / sqrt(1/n + rho/(1-rho)), where rho = 1/k for k-fold CV.</span>
+<span class="sd">    Setting lambda = z_{alpha/2} + z_{power} and solving for d gives the</span>
+<span class="sd">    minimum detectable effect size.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_total : int</span>
+<span class="sd">        Total number of fold scores (repeats × k for repeated CV, k otherwise).</span>
+<span class="sd">    n_folds : int</span>
+<span class="sd">        Number of folds per repeat k.</span>
+<span class="sd">    alpha : float</span>
+<span class="sd">        Significance level (possibly Bonferroni-corrected).</span>
+<span class="sd">    power : float, default=0.8</span>
+<span class="sd">        Desired statistical power.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Minimum detectable Cohen&#39;s d at the given alpha and power.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">norm</span>
+
+    <span class="n">z_alpha</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">z_power</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">power</span><span class="p">)</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">n_folds</span>
+    <span class="n">correction_factor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">n_total</span> <span class="o">+</span> <span class="n">rho</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">rho</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">((</span><span class="n">z_alpha</span> <span class="o">+</span> <span class="n">z_power</span><span class="p">)</span> <span class="o">*</span> <span class="n">correction_factor</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="check_assumptions">
@@ -376,6 +481,15 @@
         <span class="n">fold_variances</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="c1"># Run Shapiro-Wilk test for normality</span>
+    <span class="c1"># With fewer than 8 folds the test has too little power to distinguish</span>
+    <span class="c1"># &quot;genuinely normal&quot; from &quot;not enough data to detect non-normality&quot;.</span>
+    <span class="n">n_folds</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">results_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+    <span class="k">if</span> <span class="n">n_folds</span> <span class="o">&lt;</span> <span class="mi">8</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Warning: Only </span><span class="si">{</span><span class="n">n_folds</span><span class="si">}</span><span class="s2"> folds. Shapiro-Wilk has low power at this sample &quot;</span>
+            <span class="s2">&quot;size; a non-rejection of normality should not be taken as confirmation.&quot;</span>
+        <span class="p">)</span>
+
     <span class="n">pvals_shapiro</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dict</span><span class="p">:</span>
@@ -491,8 +605,9 @@
     <span class="p">)</span><span class="o">.</span><span class="n">T</span>
     <span class="n">stat_for_test</span> <span class="o">=</span> <span class="n">stat_df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
+    <span class="n">original_n_models</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
     <span class="n">best_models</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">n_models</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">n_models</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">original_n_models</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">n_models</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># only one model left, no need to test</span>
             <span class="n">best_models</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
             <span class="k">break</span>
@@ -500,8 +615,19 @@
             <span class="c1"># Perform repeated measures ANOVA</span>
             <span class="n">pvalue</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">rm_anova</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">)[</span><span class="s2">&quot;p_unc&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Perform Friedman test</span>
-            <span class="n">pvalue</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">friedman</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">)[</span><span class="s2">&quot;p_unc&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># Perform Friedman test with Iman-Davenport correction</span>
+            <span class="n">friedman</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">friedman</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">)</span>
+            <span class="n">chi2</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">friedman</span><span class="p">[</span><span class="s2">&quot;Q&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">n_f</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">denom</span> <span class="o">=</span> <span class="n">n_f</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">chi2</span>
+            <span class="k">if</span> <span class="n">denom</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># chi2 is at (or beyond) its theoretical maximum n_f*(k-1),</span>
+                <span class="c1"># meaning models are ranked identically across all folds,</span>
+                <span class="c1"># so p-value is exactly 0.</span>
+                <span class="n">pvalue</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ff</span> <span class="o">=</span> <span class="p">((</span><span class="n">n_f</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">chi2</span><span class="p">)</span> <span class="o">/</span> <span class="n">denom</span>
+                <span class="n">pvalue</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">f_dist</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">ff</span><span class="p">,</span> <span class="n">dfn</span><span class="o">=</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dfd</span><span class="o">=</span><span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_f</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
 
         <span class="c1"># Bonferroni correction of significance level</span>
         <span class="k">if</span> <span class="n">bf_corr</span><span class="p">:</span>
@@ -511,12 +637,78 @@
 
         <span class="c1"># Check if there is a statistically significant difference</span>
         <span class="k">if</span> <span class="n">pvalue</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">:</span>  <span class="c1"># significant difference</span>
-            <span class="c1"># Remove model with the worst median score</span>
-            <span class="n">model_labels</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span>
-            <span class="n">median_scores</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="o">.</span><span class="n">median</span><span class="p">()</span>
-            <span class="n">combined</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">median_scores</span><span class="p">,</span> <span class="n">model_labels</span><span class="p">))</span>
-            <span class="n">sorted_scores</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="n">maximise</span><span class="p">)</span>
-            <span class="n">worst_model</span> <span class="o">=</span> <span class="n">sorted_scores</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># Use post-hoc pairwise tests to identify the model that is significantly</span>
+            <span class="c1"># worse than the most others</span>
+            <span class="k">if</span> <span class="n">parametric</span><span class="p">:</span>
+                <span class="n">anova</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">rm_anova</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">,</span> <span class="n">detailed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">mse</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">anova</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;MS&quot;</span><span class="p">])</span>
+                <span class="n">residual_dof</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">anova</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;DF&quot;</span><span class="p">])</span>
+                <span class="n">post_hoc_p</span> <span class="o">=</span> <span class="n">tukey_hsd</span><span class="p">(</span>
+                    <span class="n">mse</span><span class="p">,</span>
+                    <span class="n">residual_dof</span><span class="p">,</span>
+                    <span class="n">stat_for_test</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                    <span class="n">stat_for_test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">post_hoc_p</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">posthoc_conover_friedman</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">,</span> <span class="n">p_adjust</span><span class="o">=</span><span class="s2">&quot;holm&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Use mean for parametric test and median for non-parametric test</span>
+            <span class="n">central_scores</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">stat_for_test</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="k">if</span> <span class="n">parametric</span> <span class="k">else</span> <span class="n">stat_for_test</span><span class="o">.</span><span class="n">median</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="n">score_dic</span> <span class="o">=</span> <span class="n">central_scores</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+            <span class="n">model_labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+            <span class="n">n_sig_losses</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">model_labels</span><span class="p">:</span>
+                <span class="n">losses</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">model_labels</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="n">model</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="n">post_hoc_p</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">model</span><span class="p">,</span> <span class="n">other</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">maximise</span> <span class="ow">and</span> <span class="n">score_dic</span><span class="p">[</span><span class="n">model</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">score_dic</span><span class="p">[</span><span class="n">other</span><span class="p">]:</span>
+                            <span class="n">losses</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">elif</span> <span class="ow">not</span> <span class="n">maximise</span> <span class="ow">and</span> <span class="n">score_dic</span><span class="p">[</span><span class="n">model</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">score_dic</span><span class="p">[</span><span class="n">other</span><span class="p">]:</span>
+                            <span class="n">losses</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">n_sig_losses</span><span class="p">[</span><span class="n">model</span><span class="p">]</span> <span class="o">=</span> <span class="n">losses</span>
+
+            <span class="n">max_losses</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">n_sig_losses</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">worst_candidates</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">model</span> <span class="k">for</span> <span class="n">model</span><span class="p">,</span> <span class="n">loss</span> <span class="ow">in</span> <span class="n">n_sig_losses</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">loss</span> <span class="o">==</span> <span class="n">max_losses</span>
+            <span class="p">]</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">worst_candidates</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">max_losses</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">worst_model</span> <span class="o">=</span> <span class="n">worst_candidates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># No clear loser from post-hoc: use worst central score as</span>
+                <span class="c1"># primary tiebreaker, falling back to worst single-fold score</span>
+                <span class="c1"># only when central scores are exactly tied.</span>
+                <span class="n">candidates</span> <span class="o">=</span> <span class="n">worst_candidates</span> <span class="k">if</span> <span class="n">max_losses</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">model_labels</span>
+                <span class="k">if</span> <span class="n">maximise</span><span class="p">:</span>
+                    <span class="n">tied</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="n">model</span>
+                        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">candidates</span>
+                        <span class="k">if</span> <span class="n">central_scores</span><span class="p">[</span><span class="n">model</span><span class="p">]</span>
+                        <span class="o">==</span> <span class="nb">min</span><span class="p">(</span><span class="n">central_scores</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">)</span>
+                    <span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tied</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">worst_model</span> <span class="o">=</span> <span class="n">tied</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">min_fold</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="p">:</span> <span class="n">stat_for_test</span><span class="p">[</span><span class="n">m</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">tied</span><span class="p">}</span>
+                        <span class="n">worst_model</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">tied</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">min_fold</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">tied</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="n">m</span>
+                        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">candidates</span>
+                        <span class="k">if</span> <span class="n">central_scores</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+                        <span class="o">==</span> <span class="nb">max</span><span class="p">(</span><span class="n">central_scores</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">)</span>
+                    <span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tied</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">worst_model</span> <span class="o">=</span> <span class="n">tied</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">max_fold</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="p">:</span> <span class="n">stat_for_test</span><span class="p">[</span><span class="n">m</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">tied</span><span class="p">}</span>
+                        <span class="n">worst_model</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">tied</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">max_fold</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+
             <span class="n">stat_for_test</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">worst_model</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># no significant difference</span>
             <span class="n">best_models</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
@@ -532,10 +724,14 @@
     <span class="n">results_dic</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span>
     <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">parametric</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">n_folds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Perform Tukey&#39;s HSD and paired t-test (if parametric=True) or Conover post-hoc and</span>
-<span class="sd">    Wilcoxon signed-rank tests (if parametric=False) on the performance of models.</span>
+<span class="sd">    Perform Tukey&#39;s HSD and Nadeau-Bengio corrected pairwise t-tests (if parametric=True)</span>
+<span class="sd">    or Conover post-hoc and Wilcoxon signed-rank tests (if parametric=False) tests on</span>
+<span class="sd">    the performance of models. Note that Wilcoxon is anti-conservative under CV fold</span>
+<span class="sd">    dependency, but no established non-parametric analogue of the Nadeau-Bengio correction</span>
+<span class="sd">    exists.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -545,6 +741,9 @@
 <span class="sd">        The metric to use for model comparison.</span>
 <span class="sd">    parametric : bool, default=False</span>
 <span class="sd">        Whether to use parametric tests instead of non-parametric tests.</span>
+<span class="sd">    n_folds : int or None, default=None</span>
+<span class="sd">        Number of folds per repeat, passed through to corrected_ttest for rho.</span>
+<span class="sd">        See corrected_ttest for details. Ignored when parametric=False.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -564,36 +763,43 @@
 
     <span class="k">if</span> <span class="n">parametric</span><span class="p">:</span>
         <span class="c1"># perform repeated measures ANOVA</span>
-        <span class="n">anova</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">rm_anova</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">stat_for_test</span><span class="p">,</span> <span class="n">detailed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">anova</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">rm_anova</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">,</span> <span class="n">detailed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="c1"># extract mean squared error and residual degrees of freedom</span>
         <span class="n">mse</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">anova</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;MS&quot;</span><span class="p">])</span>
         <span class="n">residual_dof</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">anova</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;DF&quot;</span><span class="p">])</span>
         <span class="c1"># calculate mean scores per model</span>
         <span class="n">means</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">n_folds</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">n_obs</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="c1"># perform Tukey&#39;s HSD test</span>
-        <span class="n">post_hoc_stats</span> <span class="o">=</span> <span class="n">tukey_hsd</span><span class="p">(</span><span class="n">mse</span><span class="p">,</span> <span class="n">residual_dof</span><span class="p">,</span> <span class="n">means</span><span class="p">,</span> <span class="n">n_folds</span><span class="p">)</span>
+        <span class="n">post_hoc_stats</span> <span class="o">=</span> <span class="n">tukey_hsd</span><span class="p">(</span><span class="n">mse</span><span class="p">,</span> <span class="n">residual_dof</span><span class="p">,</span> <span class="n">means</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># perform Conover post-hoc test with Holm-Bonferroni adjustment</span>
         <span class="n">post_hoc_stats</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">posthoc_conover_friedman</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">,</span> <span class="n">p_adjust</span><span class="o">=</span><span class="s2">&quot;holm&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">parametric</span><span class="p">:</span>
-        <span class="c1"># Perform paired t-test</span>
-        <span class="n">test</span> <span class="o">=</span> <span class="n">ttest_rel</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Perform Wilcoxon signed-rank test</span>
-        <span class="n">test</span> <span class="o">=</span> <span class="n">wilcoxon</span>
-    <span class="n">naive_p_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">)))</span>
-    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">col1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">col2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stat_for_test</span><span class="p">):</span>
-            <span class="c1"># Skip self-comparisons</span>
-            <span class="k">if</span> <span class="n">col1</span> <span class="o">==</span> <span class="n">col2</span><span class="p">:</span>
-                <span class="n">naive_p_values</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
-                <span class="k">continue</span>
-            <span class="n">naive_p_values</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">test</span><span class="p">(</span>
-                <span class="n">stat_for_test</span><span class="p">[</span><span class="n">col1</span><span class="p">],</span>
-                <span class="n">stat_for_test</span><span class="p">[</span><span class="n">col2</span><span class="p">],</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">pvalue</span>
+    <span class="c1"># Collect raw p-values</span>
+    <span class="n">raw_pvals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">n_cols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">unique_pairs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_cols</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">unique_pairs</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="p">[</span><span class="n">cols</span><span class="p">[</span><span class="n">n</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">stat_for_test</span><span class="p">[</span><span class="n">cols</span><span class="p">[</span><span class="n">m</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parametric</span><span class="p">:</span>  <span class="c1"># Nadeau-Bengio corrected t-test</span>
+            <span class="n">raw_pvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">corrected_ttest</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">n_folds</span><span class="o">=</span><span class="n">n_folds</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Wilcoxon signed-rank test</span>
+            <span class="c1"># avoid ValueError when all differences are zero</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">):</span>
+                <span class="n">raw_pvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">raw_pvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wilcoxon</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">pvalue</span><span class="p">)</span>
+
+    <span class="n">naive_p_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">n_cols</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">))</span>
+    <span class="c1"># Apply Holm-Bonferroni correction across all pairwise comparisons</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">corrected</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">multipletests</span><span class="p">(</span><span class="n">raw_pvals</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;holm&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">),</span> <span class="n">pval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">unique_pairs</span><span class="p">,</span> <span class="n">corrected</span><span class="p">):</span>
+        <span class="n">naive_p_values</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">pval</span>
+        <span class="n">naive_p_values</span><span class="p">[</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">pval</span>  <span class="c1"># matrix is symmetric</span>
+
     <span class="n">naive_stats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
         <span class="n">naive_p_values</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">stat_for_test</span><span class="o">.</span><span class="n">columns</span>
     <span class="p">)</span>
@@ -608,9 +814,13 @@
     <span class="n">results_dic</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span>
     <span class="n">test_statistics</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">min_effect_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">use_mean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Check if there is a model that is significantly better than the others.</span>
+<span class="sd">    Check if there is a model that is significantly better than the others,</span>
+<span class="sd">    only counting pairwise wins that are statistically significant (p &lt; 0.05)</span>
+<span class="sd">    and practically meaningful (Cohen&#39;s d &gt;= min_effect_size).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -620,6 +830,12 @@
 <span class="sd">        A dataframe containing the results of the statistical test.</span>
 <span class="sd">    metric : str</span>
 <span class="sd">        The metric to use for model comparison.</span>
+<span class="sd">    min_effect_size : float, default=0.2</span>
+<span class="sd">        Minimum Cohen&#39;s d required to count a pairwise difference as meaningful.</span>
+<span class="sd">    use_mean : bool, default=True</span>
+<span class="sd">        If True, use mean fold scores to determine the direction of pairwise</span>
+<span class="sd">        comparisons; if False, use median. Should be True for mean-based</span>
+<span class="sd">        (parametric) tests and False for rank-based (non-parametric) tests.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -630,87 +846,221 @@
         <span class="n">metric</span> <span class="ow">in</span> <span class="n">KNOWN_METRICS</span>
     <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Unknown metric. Known metrics are: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">KNOWN_METRICS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
 
-    <span class="c1"># get model ranking according to median score</span>
-    <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dic</span><span class="p">]</span>
+    <span class="c1"># get dictionary of models that have significantly worse performing models,</span>
+    <span class="c1"># sorted according to how many models they significantly beat</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">use_mean</span>
+            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dic</span>
+    <span class="p">]</span>
     <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dic</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">HIGHER_BETTER</span><span class="p">:</span>
-        <span class="n">best_models</span> <span class="o">=</span> <span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">scores</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">best_models</span> <span class="o">=</span> <span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">scores</span><span class="p">)]</span>
-
-    <span class="c1"># get dictionary of models that are significantly different from the others,</span>
-    <span class="c1"># sorted according to how many models perform significantly different</span>
-    <span class="n">sig_diff_models</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">test_statistics</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">test_statistics</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">)</span>
-        <span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
-        <span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
-        <span class="o">.</span><span class="n">count</span><span class="p">()</span>
-        <span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+    <span class="n">score_dic</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">scores</span><span class="p">))</span>
+    <span class="n">sig_worse_models</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+        <span class="n">n_sig_worse</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">other_model</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">other_model</span> <span class="o">==</span> <span class="n">model</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">test_statistics</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">model</span><span class="p">,</span> <span class="n">other_model</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">other_model</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">_cohens_d</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">min_effect_size</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">HIGHER_BETTER</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">score_dic</span><span class="p">[</span><span class="n">model</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">score_dic</span><span class="p">[</span><span class="n">other_model</span><span class="p">]:</span>
+                        <span class="n">n_sig_worse</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">score_dic</span><span class="p">[</span><span class="n">model</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">score_dic</span><span class="p">[</span><span class="n">other_model</span><span class="p">]:</span>
+                        <span class="n">n_sig_worse</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">n_sig_worse</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">sig_worse_models</span><span class="p">[</span><span class="n">model</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_sig_worse</span>
+    <span class="n">sig_worse_models</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="nb">sorted</span><span class="p">(</span><span class="n">sig_worse_models</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="p">)</span>
 
-    <span class="c1"># if no models are significantly different, return None</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sig_diff_models</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="c1"># if no models are significantly better, return None</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sig_worse_models</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="c1"># loop over these models, and check if they are particularly</span>
-    <span class="c1"># good (top half) or bad</span>
+    <span class="c1"># get the model(s) that are significantly better than the most other models</span>
     <span class="n">final_models</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">models</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sig_diff_models</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">models</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sig_worse_models</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
     <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
-        <span class="n">rank</span> <span class="o">=</span> <span class="n">best_models</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">rank</span> <span class="o">&lt;</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
-            <span class="n">final_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-            <span class="c1"># handle case if more than one model is significantly</span>
-            <span class="c1"># better than the same number of models</span>
-            <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">for</span> <span class="n">other_model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]:</span>
-                <span class="k">if</span> <span class="n">sig_diff_models</span><span class="p">[</span><span class="n">other_model</span><span class="p">]</span> <span class="o">==</span> <span class="n">sig_diff_models</span><span class="p">[</span><span class="n">model</span><span class="p">]:</span>
-                    <span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">if</span> <span class="n">done</span><span class="p">:</span>
-                <span class="k">break</span>
+        <span class="n">final_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="c1"># handle case if more than one model has the same number of</span>
+        <span class="c1"># significantly worse models</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">other_model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]:</span>
+            <span class="k">if</span> <span class="n">sig_worse_models</span><span class="p">[</span><span class="n">other_model</span><span class="p">]</span> <span class="o">==</span> <span class="n">sig_worse_models</span><span class="p">[</span><span class="n">model</span><span class="p">]:</span>
+                <span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">done</span><span class="p">:</span>
+            <span class="k">break</span>
 
     <span class="c1"># if more than one model is significantly better than the others,</span>
-    <span class="c1"># choose the one with the lowest sum of p-values.</span>
-    <span class="c1"># This is likely better than choosing the model with the best</span>
-    <span class="c1"># median score, because it takes the distribution of scores into account.</span>
+    <span class="c1"># choose the one with the lowest sum of p-values for comparisons where it wins</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">final_models</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">model_pvalues</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">test_statistics</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">test_statistics</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;list&quot;</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">pvalue_scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">model_pvalues</span><span class="p">[</span><span class="n">model</span><span class="p">])</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">final_models</span><span class="p">]</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">win_pvalue_sum</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+            <span class="n">total</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">score_dic</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="n">model</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">test_statistics</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">model</span><span class="p">,</span> <span class="n">other</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">p</span> <span class="o">&gt;=</span> <span class="mf">0.05</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">other</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">_cohens_d</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">min_effect_size</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">is_win</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">score_dic</span><span class="p">[</span><span class="n">model</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">score_dic</span><span class="p">[</span><span class="n">other</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">HIGHER_BETTER</span>
+                    <span class="k">else</span> <span class="n">score_dic</span><span class="p">[</span><span class="n">model</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">score_dic</span><span class="p">[</span><span class="n">other</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">is_win</span><span class="p">:</span>
+                    <span class="n">total</span> <span class="o">+=</span> <span class="n">p</span>
+            <span class="k">return</span> <span class="n">total</span>
+
+        <span class="n">pvalue_scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">win_pvalue_sum</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">final_models</span><span class="p">]</span>
         <span class="n">smallest_pvalue</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">pvalue_scores</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">pvalue_scores</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">smallest_pvalue</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">final_model</span> <span class="o">=</span> <span class="n">final_models</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">pvalue_scores</span><span class="p">)]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># If there is more than one model with the same sum of p-values,</span>
-            <span class="c1"># choose the one with the best median score.</span>
-            <span class="n">best_model_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pvalue_scores</span><span class="p">)</span> <span class="o">==</span> <span class="n">smallest_pvalue</span><span class="p">)[</span>
-                <span class="mi">0</span>
-            <span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-            <span class="n">best_model_scores</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span>
-                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">final_models</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">best_model_idxs</span>
-            <span class="p">]</span>
-            <span class="k">if</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">HIGHER_BETTER</span><span class="p">:</span>
-                <span class="n">final_model_idx</span> <span class="o">=</span> <span class="n">best_model_idxs</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">best_model_scores</span><span class="p">)]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">final_model_idx</span> <span class="o">=</span> <span class="n">best_model_idxs</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">best_model_scores</span><span class="p">)]</span>
-            <span class="n">final_model</span> <span class="o">=</span> <span class="n">final_models</span><span class="p">[</span><span class="n">final_model_idx</span><span class="p">]</span>
 
-    <span class="c1"># if none of the models are in top half, return None</span>
-    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">final_models</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">final_model</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># More than one model with the same sum of p-values</span>
+            <span class="c1"># Tiebreaker 1: sum of pairwise fold-level win rates against all other models</span>
+            <span class="n">tied_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pvalue_scores</span><span class="p">)</span> <span class="o">==</span> <span class="n">smallest_pvalue</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">tied_models</span> <span class="o">=</span> <span class="p">[</span><span class="n">final_models</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tied_idxs</span><span class="p">]</span>
+            <span class="n">win_rates</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">tied_models</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span>
+                <span class="n">rate</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">a</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">other</span><span class="p">][</span><span class="n">metric</span><span class="p">])))</span>
+                        <span class="k">if</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">HIGHER_BETTER</span>
+                        <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">a</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">other</span><span class="p">][</span><span class="n">metric</span><span class="p">])))</span>
+                    <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">score_dic</span>
+                    <span class="k">if</span> <span class="n">other</span> <span class="o">!=</span> <span class="n">model</span>
+                <span class="p">)</span>
+                <span class="n">win_rates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span>
+            <span class="n">best_wr</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">win_rates</span><span class="p">)</span>
+            <span class="n">wr_tied</span> <span class="o">=</span> <span class="p">[</span><span class="n">tied_models</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">win_rates</span><span class="p">)</span> <span class="k">if</span> <span class="n">w</span> <span class="o">==</span> <span class="n">best_wr</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">wr_tied</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">final_model</span> <span class="o">=</span> <span class="n">wr_tied</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Tiebreaker 2: best mean score among remaining ties</span>
+                <span class="n">wr_scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">results_dic</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">wr_tied</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">HIGHER_BETTER</span><span class="p">:</span>
+                    <span class="n">final_model</span> <span class="o">=</span> <span class="n">wr_tied</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">wr_scores</span><span class="p">))]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">final_model</span> <span class="o">=</span> <span class="n">wr_tied</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">wr_scores</span><span class="p">))]</span>
 
     <span class="c1"># if only one model is significantly better than the others, return that model</span>
-    <span class="k">else</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">final_models</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">final_model</span> <span class="o">=</span> <span class="n">final_models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unexpected error in check_best_model function.&quot;</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="n">final_model</span></div>
+
+
+
+<div class="viewcode-block" id="check_pareto_dominant">
+<a class="viewcode-back" href="../../autosummary/astra.model_selection.html#astra.model_selection.check_pareto_dominant">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_pareto_dominant</span><span class="p">(</span>
+    <span class="n">results_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span>
+    <span class="n">main_metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">secondary_metrics</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">parametric</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">min_effect_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find a model that is Pareto-dominant across all metrics (not significantly worse</span>
+<span class="sd">    than any other model on any metric, significantly better than at least one other</span>
+<span class="sd">    model on at least one metric, using p &lt; 0.05 and Cohen&#39;s d &gt;= min_effect_size).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results_dict : dict[str, dict[str, list[float]]]</span>
+<span class="sd">        A dictionary mapping model names to dictionaries of metric names and scores.</span>
+<span class="sd">    main_metric : str</span>
+<span class="sd">        The primary metric.</span>
+<span class="sd">    secondary_metrics : list[str]</span>
+<span class="sd">        Secondary metrics to consider.</span>
+<span class="sd">    parametric : bool</span>
+<span class="sd">        Whether to use parametric post-hoc tests.</span>
+<span class="sd">    min_effect_size : float, default=0.2</span>
+<span class="sd">        Minimum Cohen&#39;s d required to count a pairwise difference as meaningful.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or None</span>
+<span class="sd">        The name of the Pareto-dominant model, or None if none exists.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">available_metrics</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">results_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">all_metrics</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span><span class="n">main_metric</span><span class="p">]</span> <span class="o">+</span> <span class="n">secondary_metrics</span> <span class="k">if</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">available_metrics</span>
+    <span class="p">]</span>
+    <span class="n">models</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="c1"># Gather corrected pairwise p-values for each metric</span>
+    <span class="n">naive_stats_per_metric</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">all_metrics</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">naive_stats</span> <span class="o">=</span> <span class="n">perform_statistical_tests</span><span class="p">(</span><span class="n">results_dict</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">parametric</span><span class="p">)</span>
+            <span class="n">naive_stats_per_metric</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span> <span class="o">=</span> <span class="n">naive_stats</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">naive_stats_per_metric</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">pareto_models</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
+        <span class="n">is_significantly_worse</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">better_on_any</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="n">model</span> <span class="ow">or</span> <span class="n">is_significantly_worse</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">stats</span> <span class="ow">in</span> <span class="n">naive_stats_per_metric</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">model</span><span class="p">,</span> <span class="n">other</span><span class="p">]</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_dict</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_dict</span><span class="p">[</span><span class="n">other</span><span class="p">][</span><span class="n">metric</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">p</span> <span class="o">&gt;=</span> <span class="mf">0.05</span> <span class="ow">or</span> <span class="n">_cohens_d</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">min_effect_size</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">median_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="n">median_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">HIGHER_BETTER</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">median_a</span> <span class="o">&lt;</span> <span class="n">median_b</span><span class="p">:</span>
+                        <span class="n">is_significantly_worse</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">elif</span> <span class="n">median_a</span> <span class="o">&gt;</span> <span class="n">median_b</span><span class="p">:</span>
+                        <span class="n">better_on_any</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">median_a</span> <span class="o">&gt;</span> <span class="n">median_b</span><span class="p">:</span>
+                        <span class="n">is_significantly_worse</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">elif</span> <span class="n">median_a</span> <span class="o">&lt;</span> <span class="n">median_b</span><span class="p">:</span>
+                        <span class="n">better_on_any</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_significantly_worse</span> <span class="ow">and</span> <span class="n">better_on_any</span><span class="p">:</span>
+            <span class="n">pareto_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pareto_models</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pareto_models</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pareto_models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Multiple Pareto-dominant models: pick the one with the best main metric mean</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">results_dict</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">main_metric</span><span class="p">])</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">pareto_models</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">main_metric</span> <span class="ow">in</span> <span class="n">HIGHER_BETTER</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pareto_models</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">scores</span><span class="p">))]</span>
+    <span class="k">return</span> <span class="n">pareto_models</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">scores</span><span class="p">))]</span></div>
 
 
 
@@ -722,6 +1072,7 @@
     <span class="n">secondary_metrics</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="n">parametric</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">bf_corr</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">n_folds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the best model from a dictionary of model results.</span>
@@ -744,6 +1095,24 @@
 <span class="sd">    tuple[str, str]</span>
 <span class="sd">        A tuple containing the name of the best model and the reason for its selection.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">results_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+    <span class="n">n_folds_per_repeat</span> <span class="o">=</span> <span class="n">n_folds</span> <span class="k">if</span> <span class="n">n_folds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">n_total</span>
+
+    <span class="k">if</span> <span class="n">parametric</span><span class="p">:</span>
+        <span class="c1"># Warn if the corrected t-test cannot reliably detect a meaningful effect</span>
+        <span class="c1"># given the available number of folds.</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">results_dict</span><span class="p">)</span> <span class="k">if</span> <span class="n">bf_corr</span> <span class="k">else</span> <span class="mf">0.05</span>
+        <span class="n">mdes</span> <span class="o">=</span> <span class="n">_min_detectable_effect</span><span class="p">(</span><span class="n">n_total</span><span class="p">,</span> <span class="n">n_folds_per_repeat</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mdes</span> <span class="o">&gt;</span> <span class="mf">0.8</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Low statistical power: with </span><span class="si">{</span><span class="n">n_total</span><span class="si">}</span><span class="s2"> fold scores &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">n_folds_per_repeat</span><span class="si">}</span><span class="s2"> folds/repeat) and alpha=</span><span class="si">{</span><span class="n">alpha</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> the &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;corrected t-test can only detect effects of d &gt;= </span><span class="si">{</span><span class="n">mdes</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> at 80% &quot;</span>
+                <span class="s2">&quot;power (Cohen&#39;s large-effect threshold is 0.8). Statistical tests may &quot;</span>
+                <span class="s2">&quot;not differentiate models reliably; selection will fall back to mean &quot;</span>
+                <span class="s2">&quot;CV score.&quot;</span>
+            <span class="p">)</span>
+
     <span class="c1"># Perform tests to find the n best models</span>
     <span class="n">n_best_models</span> <span class="o">=</span> <span class="n">find_n_best_models</span><span class="p">(</span><span class="n">results_dict</span><span class="p">,</span> <span class="n">main_metric</span><span class="p">,</span> <span class="n">parametric</span><span class="p">,</span> <span class="n">bf_corr</span><span class="p">)</span>
     <span class="n">results_dict_best</span> <span class="o">=</span> <span class="p">{</span><span class="n">model</span><span class="p">:</span> <span class="n">results_dict</span><span class="p">[</span><span class="n">model</span><span class="p">]</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">n_best_models</span><span class="p">}</span>
@@ -756,48 +1125,42 @@
 
     <span class="c1"># Perform statistical tests on the best models</span>
     <span class="n">post_hoc_stats</span><span class="p">,</span> <span class="n">naive_stats</span> <span class="o">=</span> <span class="n">perform_statistical_tests</span><span class="p">(</span>
-        <span class="n">results_dict_best</span><span class="p">,</span> <span class="n">main_metric</span><span class="p">,</span> <span class="n">parametric</span>
+        <span class="n">results_dict_best</span><span class="p">,</span> <span class="n">main_metric</span><span class="p">,</span> <span class="n">parametric</span><span class="p">,</span> <span class="n">n_folds</span><span class="o">=</span><span class="n">n_folds_per_repeat</span>
     <span class="p">)</span>
 
-    <span class="c1"># Check if Tukey&#39;s HSD test/Conover post-hoc test yield a best model</span>
-    <span class="n">best_model</span> <span class="o">=</span> <span class="n">check_best_model</span><span class="p">(</span><span class="n">results_dict_best</span><span class="p">,</span> <span class="n">post_hoc_stats</span><span class="p">,</span> <span class="n">main_metric</span><span class="p">)</span>
+    <span class="c1"># Check if Tukey&#39;s HSD test/Conover post-hoc test yield a best model.</span>
+    <span class="n">best_model</span> <span class="o">=</span> <span class="n">check_best_model</span><span class="p">(</span>
+        <span class="n">results_dict_best</span><span class="p">,</span> <span class="n">post_hoc_stats</span><span class="p">,</span> <span class="n">main_metric</span><span class="p">,</span> <span class="n">use_mean</span><span class="o">=</span><span class="n">parametric</span>
+    <span class="p">)</span>
     <span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Tukey&#39;s HSD test&quot;</span> <span class="k">if</span> <span class="n">parametric</span> <span class="k">else</span> <span class="s2">&quot;Conover post-hoc test&quot;</span>
 
     <span class="c1"># Fall back to naive test</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">best_model</span><span class="p">:</span>
-        <span class="n">best_model</span> <span class="o">=</span> <span class="n">check_best_model</span><span class="p">(</span><span class="n">results_dict_best</span><span class="p">,</span> <span class="n">naive_stats</span><span class="p">,</span> <span class="n">main_metric</span><span class="p">)</span>
-        <span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;paired t-test&quot;</span> <span class="k">if</span> <span class="n">parametric</span> <span class="k">else</span> <span class="s2">&quot;Wilcoxon signed-rank test&quot;</span>
+        <span class="n">best_model</span> <span class="o">=</span> <span class="n">check_best_model</span><span class="p">(</span>
+            <span class="n">results_dict_best</span><span class="p">,</span> <span class="n">naive_stats</span><span class="p">,</span> <span class="n">main_metric</span><span class="p">,</span> <span class="n">use_mean</span><span class="o">=</span><span class="n">parametric</span>
+        <span class="p">)</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Corrected t-test&quot;</span> <span class="k">if</span> <span class="n">parametric</span> <span class="k">else</span> <span class="s2">&quot;Wilcoxon signed-rank test&quot;</span>
 
-    <span class="c1"># Fall back to secondary metrics if the main one doesn&#39;t yield a best model</span>
+    <span class="c1"># Fall back to Pareto dominance across all metrics jointly</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">best_model</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">secondary_metrics</span><span class="p">:</span>
-            <span class="n">post_hoc_stats</span><span class="p">,</span> <span class="n">naive_stats</span> <span class="o">=</span> <span class="n">perform_statistical_tests</span><span class="p">(</span>
-                <span class="n">results_dict_best</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">parametric</span>
-            <span class="p">)</span>
-            <span class="n">best_model</span> <span class="o">=</span> <span class="n">check_best_model</span><span class="p">(</span><span class="n">results_dict_best</span><span class="p">,</span> <span class="n">post_hoc_stats</span><span class="p">,</span> <span class="n">metric</span><span class="p">)</span>
-            <span class="n">test_used</span> <span class="o">=</span> <span class="s2">&quot;Tukey&#39;s HSD test&quot;</span> <span class="k">if</span> <span class="n">parametric</span> <span class="k">else</span> <span class="s2">&quot;Conover post-hoc test&quot;</span>
-            <span class="n">reason</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">test_used</span><span class="si">}</span><span class="s2"> using </span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="k">if</span> <span class="n">best_model</span><span class="p">:</span>
-                <span class="k">break</span>
-            <span class="n">best_model</span> <span class="o">=</span> <span class="n">check_best_model</span><span class="p">(</span><span class="n">results_dict_best</span><span class="p">,</span> <span class="n">naive_stats</span><span class="p">,</span> <span class="n">metric</span><span class="p">)</span>
-            <span class="n">test_used</span> <span class="o">=</span> <span class="s2">&quot;paired t-test&quot;</span> <span class="k">if</span> <span class="n">parametric</span> <span class="k">else</span> <span class="s2">&quot;Wilcoxon signed-rank test&quot;</span>
-            <span class="n">reason</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">test_used</span><span class="si">}</span><span class="s2"> using </span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="k">if</span> <span class="n">best_model</span><span class="p">:</span>
-                <span class="k">break</span>
+        <span class="n">best_model</span> <span class="o">=</span> <span class="n">check_pareto_dominant</span><span class="p">(</span>
+            <span class="n">results_dict_best</span><span class="p">,</span> <span class="n">main_metric</span><span class="p">,</span> <span class="n">secondary_metrics</span><span class="p">,</span> <span class="n">parametric</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">best_model</span><span class="p">:</span>
+            <span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Pareto dominance across metrics&quot;</span>
 
-    <span class="c1"># If there are no statistically significant differences between the models using any of the metrics,</span>
-    <span class="c1"># select the model with the best median score.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">best_model</span><span class="p">:</span>
-        <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">results_dict_best</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">main_metric</span><span class="p">])</span>
-            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dict_best</span>
+        <span class="c1"># No statistically significant differences found by any test: fall back to the model</span>
+        <span class="c1"># with the best mean fold score</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results_dict_best</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">mean_scores</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">results_dict_best</span><span class="p">[</span><span class="n">model</span><span class="p">][</span><span class="n">main_metric</span><span class="p">])</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">names</span>
         <span class="p">]</span>
-        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">results_dict_best</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">main_metric</span> <span class="ow">in</span> <span class="n">HIGHER_BETTER</span><span class="p">:</span>
-            <span class="n">best_model</span> <span class="o">=</span> <span class="n">names</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">scores</span><span class="p">)]</span>
+            <span class="n">best_model</span> <span class="o">=</span> <span class="n">names</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">mean_scores</span><span class="p">))]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">best_model</span> <span class="o">=</span> <span class="n">names</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">scores</span><span class="p">)]</span>
-        <span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;median score&quot;</span>
+            <span class="n">best_model</span> <span class="o">=</span> <span class="n">names</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">mean_scores</span><span class="p">))]</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;mean CV score&quot;</span>
 
     <span class="k">return</span> <span class="n">best_model</span><span class="p">,</span> <span class="n">reason</span></div>
 
@@ -972,12 +1335,12 @@
 
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;results/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">results_name</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">):</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading existing results.&quot;</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;results/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">results_name</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;br&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;results/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">results_name</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">results</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="k">else</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cache/</span><span class="si">{</span><span class="n">ckpt_name</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;br&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cache/</span><span class="si">{</span><span class="n">ckpt_name</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">results</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loaded checkpoint.&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
@@ -1164,7 +1527,7 @@
                 <span class="n">param_distributions</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
                 <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span>
                 <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
-                <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">[</span><span class="n">main_metric</span><span class="p">],</span>
+                <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">,</span>
                 <span class="n">n_trials</span><span class="o">=</span><span class="n">n_trials</span><span class="p">,</span>
                 <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
                 <span class="n">refit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>

@@ -10,6 +10,8 @@
    
       check_assumptions
       check_best_model
+      check_pareto_dominant
+      corrected_ttest
       find_n_best_models
       get_best_hparams
       get_best_model
