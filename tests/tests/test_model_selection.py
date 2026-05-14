@@ -704,3 +704,199 @@ def test_get_best_hparams(classification_df, monkeypatch):
         1,
     )
     assert isinstance(clf, MockGridSearchCV)
+
+
+# ---------------------------------------------------------------------------
+# Additional coverage tests
+# ---------------------------------------------------------------------------
+
+
+def test_check_assumptions_verbose_high_fold_diff(capsys):
+    # m1 has tiny variance, m2 has large variance -> ratio >> 9 -> triggers warning
+    results = {
+        "m1": {
+            "accuracy": [
+                0.800,
+                0.801,
+                0.800,
+                0.801,
+                0.800,
+                0.801,
+                0.800,
+                0.801,
+                0.800,
+                0.801,
+            ]
+        },
+        "m2": {
+            "accuracy": [0.30, 0.50, 0.70, 0.40, 0.60, 0.50, 0.30, 0.70, 0.40, 0.60]
+        },
+    }
+    check_assumptions(results, verbose=True)
+    out = capsys.readouterr().out
+    assert "Warning" in out
+
+
+def test_get_optimised_cv_performance_cohen_kappa(classification_df, monkeypatch):
+    # cohen_kappa branch in get_optimised_cv_performance
+    class MockGridSearchCV:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def fit(self, *args, **kwargs):
+            pass
+
+        def predict(self, X):
+            return np.zeros(X.shape[0], dtype=int)
+
+        def predict_proba(self, X):
+            return np.column_stack(
+                [np.ones(X.shape[0]) * 0.5, np.ones(X.shape[0]) * 0.5]
+            )
+
+    monkeypatch.setattr("astra.model_selection.GridSearchCV", MockGridSearchCV)
+
+    metrics = get_optimised_cv_performance(
+        LogisticRegression(),
+        classification_df,
+        "Features",
+        "Target",
+        "Fold",
+        ["accuracy", "cohen_kappa"],
+        "accuracy",
+        {"C": [0.1, 1]},
+        1,
+    )
+    assert "cohen_kappa" in metrics
+    assert len(metrics["cohen_kappa"]) == 5
+
+
+def test_get_optimised_cv_performance_optuna_n_jobs_warning(
+    classification_df, monkeypatch
+):
+    class MockOptunaSearchCV:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def fit(self, *args, **kwargs):
+            pass
+
+        def predict(self, X):
+            return np.zeros(X.shape[0], dtype=int)
+
+        def predict_proba(self, X):
+            return np.column_stack(
+                [np.ones(X.shape[0]) * 0.5, np.ones(X.shape[0]) * 0.5]
+            )
+
+    monkeypatch.setattr("astra.model_selection.OptunaSearchCV", MockOptunaSearchCV)
+
+    from optuna.distributions import FloatDistribution
+
+    with pytest.warns(UserWarning, match="n_jobs=2 runs Optuna trials in parallel"):
+        get_optimised_cv_performance(
+            LogisticRegression(),
+            classification_df,
+            "Features",
+            "Target",
+            "Fold",
+            ["accuracy"],
+            "accuracy",
+            {"C": FloatDistribution(0.01, 10.0)},
+            n_jobs=2,
+            use_optuna=True,
+            timeout=60,
+        )
+
+
+def test_get_best_hparams_optuna_n_jobs_warning(classification_df, monkeypatch):
+    class MockOptunaSearchCV:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def fit(self, *args, **kwargs):
+            pass
+
+    monkeypatch.setattr("astra.model_selection.OptunaSearchCV", MockOptunaSearchCV)
+
+    from optuna.distributions import FloatDistribution
+
+    with pytest.warns(UserWarning, match="n_jobs=2 runs Optuna trials in parallel"):
+        get_best_hparams(
+            LogisticRegression(),
+            classification_df,
+            "Features",
+            "Target",
+            "Fold",
+            "accuracy",
+            ["f1"],
+            {"C": FloatDistribution(0.01, 10.0)},
+            n_jobs=2,
+            use_optuna=True,
+            timeout=60,
+        )
+
+
+def test_get_best_model_high_power_no_warning(caplog):
+    rng = np.random.default_rng(42)
+    results = {
+        "m1": {"accuracy": (0.80 + rng.normal(0, 0.01, 50)).tolist()},
+        "m2": {"accuracy": (0.70 + rng.normal(0, 0.01, 50)).tolist()},
+    }
+    with caplog.at_level(logging.WARNING):
+        get_best_model(results, "accuracy", [], parametric=True)
+    assert not any("Low statistical power" in m for m in caplog.messages)
+
+
+def test_get_best_model_naive_fallback(monkeypatch):
+    results = {
+        "m1": {
+            "accuracy": [0.80, 0.81, 0.82, 0.80, 0.81, 0.82, 0.80, 0.81, 0.82, 0.80]
+        },
+        "m2": {
+            "accuracy": [0.70, 0.71, 0.72, 0.70, 0.71, 0.72, 0.70, 0.71, 0.72, 0.70]
+        },
+    }
+    models = list(results.keys())
+
+    # post-hoc: no significant differences (p >= 0.05)
+    post_hoc = pd.DataFrame([[1.0, 0.3], [0.3, 1.0]], index=models, columns=models)
+    # naive: m1 significantly beats m2 (p < 0.05, large effect size guaranteed by the data)
+    naive = pd.DataFrame([[1.0, 0.01], [0.01, 1.0]], index=models, columns=models)
+
+    monkeypatch.setattr(
+        "astra.model_selection.find_n_best_models", lambda *a, **kw: models
+    )
+    monkeypatch.setattr(
+        "astra.model_selection.perform_statistical_tests",
+        lambda *a, **kw: (post_hoc, naive),
+    )
+
+    best, reason = get_best_model(results, "accuracy", [])
+    assert reason == "Wilcoxon signed-rank test"
+    assert best == "m1"
+
+
+def test_get_best_model_pareto_fallback(monkeypatch):
+    results = {
+        "m1": {"accuracy": [0.80] * 10, "f1": [0.75] * 10},
+        "m2": {"accuracy": [0.79] * 10, "f1": [0.74] * 10},
+    }
+    models = list(results.keys())
+
+    equal_stats = pd.DataFrame([[1.0, 1.0], [1.0, 1.0]], index=models, columns=models)
+
+    monkeypatch.setattr(
+        "astra.model_selection.find_n_best_models", lambda *a, **kw: models
+    )
+    monkeypatch.setattr(
+        "astra.model_selection.perform_statistical_tests",
+        lambda *a, **kw: (equal_stats, equal_stats),
+    )
+    monkeypatch.setattr(
+        "astra.model_selection.check_pareto_dominant", lambda *a, **kw: "m1"
+    )
+
+    best, reason = get_best_model(results, "accuracy", ["f1"])
+    assert best == "m1"
+    assert reason == "Pareto dominance across metrics"

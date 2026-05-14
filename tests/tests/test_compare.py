@@ -1,19 +1,14 @@
 import os
 import pickle
-import shutil
 import subprocess
 
 import pytest
 
 from astra.compare import run
 
-
-@pytest.fixture
-def temp_dir():
-    dir_path = "temp_test_dir"
-    os.makedirs(dir_path, exist_ok=True)
-    yield dir_path
-    shutil.rmtree(dir_path)
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 
 def create_model_data(dir_path, model_name, roc_auc, pr_auc):
@@ -22,30 +17,19 @@ def create_model_data(dir_path, model_name, roc_auc, pr_auc):
         pickle.dump(data, f)
 
 
-@pytest.fixture
-def cv_results_single_dir_no_models(temp_dir):
-    dir_path = os.path.join(temp_dir, "cv_results_no_models")
-    os.makedirs(dir_path, exist_ok=True)
-    return dir_path
+def run_command(command):
+    return subprocess.run(command, capture_output=True, text=True)
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
-def cv_results_single_dir_one_model(temp_dir):
-    dir_path = os.path.join(temp_dir, "cv_results_one_model")
-    os.makedirs(dir_path, exist_ok=True)
-    create_model_data(
-        dir_path,
-        "model1",
-        [0.9, 0.91, 0.92, 0.93, 0.94],
-        [0.8, 0.81, 0.82, 0.83, 0.84],
-    )
-    return dir_path
-
-
-@pytest.fixture
-def cv_results_single_dir_two_models(temp_dir):
-    dir_path = os.path.join(temp_dir, "cv_results_two_models")
-    os.makedirs(dir_path, exist_ok=True)
+def cv_results_single_dir_two_models(tmp_path):
+    dir_path = str(tmp_path / "cv_results_two_models")
+    os.makedirs(dir_path)
     create_model_data(
         dir_path,
         "model1",
@@ -58,14 +42,13 @@ def cv_results_single_dir_two_models(temp_dir):
         [0.95, 0.96, 0.97, 0.98, 0.99],
         [0.85, 0.86, 0.87, 0.88, 0.89],
     )
-
     return dir_path
 
 
 @pytest.fixture
-def cv_results_single_dir(temp_dir):
-    dir_path = os.path.join(temp_dir, "cv_results")
-    os.makedirs(dir_path, exist_ok=True)
+def cv_results_single_dir(tmp_path):
+    dir_path = str(tmp_path / "cv_results")
+    os.makedirs(dir_path)
     create_model_data(
         dir_path,
         "model1",
@@ -96,12 +79,11 @@ def cv_results_single_dir(temp_dir):
         [0.91, 0.92, 0.93, 0.94, 0.95],
         [0.79, 0.80, 0.81, 0.82, 0.83],
     )
-
     return dir_path
 
 
 @pytest.fixture
-def cv_results_multiple_dirs(temp_dir):
+def cv_results_multiple_dirs(tmp_path):
     dir_paths = []
     for i, (roc_auc, pr_auc) in enumerate(
         [
@@ -112,18 +94,19 @@ def cv_results_multiple_dirs(temp_dir):
             ([0.91, 0.92, 0.93, 0.94, 0.95], [0.79, 0.80, 0.81, 0.82, 0.83]),
         ]
     ):
-        dir_path = os.path.join(temp_dir, f"model{i + 1}")
-        os.makedirs(dir_path, exist_ok=True)
+        dir_path = str(tmp_path / f"model{i + 1}")
+        os.makedirs(dir_path)
         create_model_data(dir_path, "CV_results", roc_auc, pr_auc)
         dir_paths.append(dir_path)
     return dir_paths
 
 
-def run_command(command):
-    return subprocess.run(command, capture_output=True, text=True)
+# ---------------------------------------------------------------------------
+# Validation-error tests
+# ---------------------------------------------------------------------------
 
 
-def test_path_does_not_exist(temp_dir):
+def test_path_does_not_exist():
     command = [
         "astra",
         "compare",
@@ -139,9 +122,9 @@ def test_path_does_not_exist(temp_dir):
         run(["non_existent_dir"], "roc_auc", ["pr_auc"])
 
 
-def test_directory_is_empty(temp_dir):
-    dir_path = os.path.join(temp_dir, "empty_dir")
-    os.makedirs(dir_path, exist_ok=True)
+def test_directory_is_empty(tmp_path):
+    dir_path = str(tmp_path / "empty_dir")
+    os.makedirs(dir_path)
     command = [
         "astra",
         "compare",
@@ -157,9 +140,9 @@ def test_directory_is_empty(temp_dir):
         run([dir_path], "roc_auc", ["pr_auc"])
 
 
-def test_no_cv_results_found(temp_dir):
-    dir_path = os.path.join(temp_dir, "no_results_dir")
-    os.makedirs(dir_path, exist_ok=True)
+def test_no_cv_results_found(tmp_path):
+    dir_path = str(tmp_path / "no_results_dir")
+    os.makedirs(dir_path)
     with open(os.path.join(dir_path, "some_file.txt"), "w") as f:
         f.write("dummy content")
     command = [
@@ -177,9 +160,9 @@ def test_no_cv_results_found(temp_dir):
         run([dir_path], "roc_auc", ["pr_auc"])
 
 
-def test_only_one_cv_result_found(temp_dir):
-    dir_path = os.path.join(temp_dir, "one_result_dir")
-    os.makedirs(dir_path, exist_ok=True)
+def test_only_one_cv_result_found(tmp_path):
+    dir_path = str(tmp_path / "one_result_dir")
+    os.makedirs(dir_path)
     data = {
         "roc_auc": [0.9, 0.91, 0.92, 0.93, 0.94],
         "pr_auc": [0.8, 0.81, 0.82, 0.83, 0.84],
@@ -251,6 +234,11 @@ def test_invalid_parametric(cv_results_single_dir):
         run([cv_results_single_dir], "roc_auc", ["pr_auc"], parametric="invalid")
 
 
+# ---------------------------------------------------------------------------
+# Integration tests — single directory
+# ---------------------------------------------------------------------------
+
+
 def test_two_models_single_dir(cv_results_single_dir_two_models):
     command = [
         "astra",
@@ -264,55 +252,6 @@ def test_two_models_single_dir(cv_results_single_dir_two_models):
     result = run_command(command)
     assert result.returncode == 0
     run([cv_results_single_dir_two_models], "roc_auc", ["pr_auc"])
-
-
-def test_multiple_models_single_dir(cv_results_single_dir):
-    command = [
-        "astra",
-        "compare",
-        cv_results_single_dir,
-        "--main_metric",
-        "roc_auc",
-        "--sec_metrics",
-        "pr_auc",
-    ]
-    result = run_command(command)
-    assert result.returncode == 0
-    run([cv_results_single_dir], "roc_auc", ["pr_auc"])
-
-
-def test_two_models_two_dirs(cv_results_multiple_dirs):
-    model_list = [
-        cv_results_multiple_dirs[0],
-        cv_results_multiple_dirs[1],
-    ]
-    command = [
-        "astra",
-        "compare",
-        *model_list,
-        "--main_metric",
-        "roc_auc",
-        "--sec_metrics",
-        "pr_auc",
-    ]
-    result = run_command(command)
-    assert result.returncode == 0
-    run(cv_results_multiple_dirs, "roc_auc", ["pr_auc"])
-
-
-def test_multiple_models_multiple_dirs(cv_results_multiple_dirs):
-    command = [
-        "astra",
-        "compare",
-        *cv_results_multiple_dirs,
-        "--main_metric",
-        "roc_auc",
-        "--sec_metrics",
-        "pr_auc",
-    ]
-    result = run_command(command)
-    assert result.returncode == 0
-    run(cv_results_multiple_dirs, "roc_auc", ["pr_auc"])
 
 
 def test_two_models_single_dir_parametric_false(cv_results_single_dir_two_models):
@@ -349,6 +288,21 @@ def test_two_models_single_dir_parametric_true(cv_results_single_dir_two_models)
     run([cv_results_single_dir_two_models], "roc_auc", ["pr_auc"], parametric=True)
 
 
+def test_multiple_models_single_dir(cv_results_single_dir):
+    command = [
+        "astra",
+        "compare",
+        cv_results_single_dir,
+        "--main_metric",
+        "roc_auc",
+        "--sec_metrics",
+        "pr_auc",
+    ]
+    result = run_command(command)
+    assert result.returncode == 0
+    run([cv_results_single_dir], "roc_auc", ["pr_auc"])
+
+
 def test_multiple_models_single_dir_parametric_true(cv_results_single_dir):
     command = [
         "astra",
@@ -383,11 +337,29 @@ def test_multiple_models_single_dir_parametric_false(cv_results_single_dir):
     run([cv_results_single_dir], "roc_auc", ["pr_auc"], parametric=False)
 
 
-def test_two_models_two_dirs_parametric_false(cv_results_multiple_dirs):
-    model_list = [
-        cv_results_multiple_dirs[0],
-        cv_results_multiple_dirs[1],
+# ---------------------------------------------------------------------------
+# Integration tests — multiple directories
+# ---------------------------------------------------------------------------
+
+
+def test_two_models_two_dirs(cv_results_multiple_dirs):
+    model_list = cv_results_multiple_dirs[:2]
+    command = [
+        "astra",
+        "compare",
+        *model_list,
+        "--main_metric",
+        "roc_auc",
+        "--sec_metrics",
+        "pr_auc",
     ]
+    result = run_command(command)
+    assert result.returncode == 0
+    run(cv_results_multiple_dirs, "roc_auc", ["pr_auc"])
+
+
+def test_two_models_two_dirs_parametric_false(cv_results_multiple_dirs):
+    model_list = cv_results_multiple_dirs[:2]
     command = [
         "astra",
         "compare",
@@ -405,10 +377,7 @@ def test_two_models_two_dirs_parametric_false(cv_results_multiple_dirs):
 
 
 def test_two_models_two_dirs_parametric_true(cv_results_multiple_dirs):
-    model_list = [
-        cv_results_multiple_dirs[0],
-        cv_results_multiple_dirs[1],
-    ]
+    model_list = cv_results_multiple_dirs[:2]
     command = [
         "astra",
         "compare",
@@ -423,6 +392,21 @@ def test_two_models_two_dirs_parametric_true(cv_results_multiple_dirs):
     result = run_command(command)
     assert result.returncode == 0
     run(model_list, "roc_auc", ["pr_auc"], parametric=True)
+
+
+def test_multiple_models_multiple_dirs(cv_results_multiple_dirs):
+    command = [
+        "astra",
+        "compare",
+        *cv_results_multiple_dirs,
+        "--main_metric",
+        "roc_auc",
+        "--sec_metrics",
+        "pr_auc",
+    ]
+    result = run_command(command)
+    assert result.returncode == 0
+    run(cv_results_multiple_dirs, "roc_auc", ["pr_auc"])
 
 
 def test_multiple_models_multiple_dirs_parametric_true(cv_results_multiple_dirs):

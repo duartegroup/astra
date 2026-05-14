@@ -56,7 +56,7 @@ def get_data(data: str, features: str) -> pd.DataFrame:
                 data_df[features] = data_df[features].apply(
                     lambda x: ast.literal_eval(x)
                 )
-            except ValueError, SyntaxError:
+            except (ValueError, SyntaxError):
                 try:
                     data_df[features] = data_df[features].apply(
                         lambda x: np.fromstring(x.strip("[]"), sep=" ")
