@@ -130,9 +130,9 @@ def run(
     if parametric == "auto":
         parametric_suffix = ""
     elif parametric is True:
-        parametric_suffix = "parametric"
+        parametric_suffix = "_parametric"
     elif parametric is False:
-        parametric_suffix = "nonparametric"
+        parametric_suffix = "_nonparametric"
     else:
         raise ValueError(
             "`parametric` must be one of [True, False, 'auto']. "
@@ -494,12 +494,12 @@ def run(
         ) as f:
             pickle.dump(final_model, f)
         with open(
-            f"results/{name}/final_hyperparameters_{parametric_suffix}.pkl",
+            f"results/{name}/final_hyperparameters{parametric_suffix}.pkl",
             "wb",
         ) as f:
             pickle.dump(final_hyperparameters, f)
         cv_results_df.to_csv(
-            f"results/{name}/final_CV_hparam_search_{parametric_suffix}.csv"
+            f"results/{name}/final_CV_hparam_search{parametric_suffix}.csv"
         )
 
         print_final_results(
