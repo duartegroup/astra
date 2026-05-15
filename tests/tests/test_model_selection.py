@@ -919,9 +919,10 @@ def test_build_equivalent_ensemble_regression(regression_df):
     ensemble = build_equivalent_ensemble(
         top_n_models=["A", "B"],
         estimators={"A": est_a, "B": est_b},
-        X=X,
-        y=y,
-        classification=False,
+        df=regression_df,
+        features_col="Features",
+        target_col="Target",
+        main_metric="R2",
     )
 
     preds = ensemble.predict(X)
@@ -938,9 +939,10 @@ def test_build_equivalent_ensemble_classification_soft(classification_df):
     ensemble = build_equivalent_ensemble(
         top_n_models=["A", "B"],
         estimators={"A": est_a, "B": est_b},
-        X=X,
-        y=y,
-        classification=True,
+        df=classification_df,
+        features_col="Features",
+        target_col="Target",
+        main_metric="accuracy",
     )
 
     assert ensemble.voting == "soft"
@@ -963,9 +965,10 @@ def test_build_equivalent_ensemble_classification_hard_fallback(
         ensemble = build_equivalent_ensemble(
             top_n_models=["lr", "svc"],
             estimators={"lr": est_a, "svc": est_b},
-            X=X,
-            y=y,
-            classification=True,
+            df=classification_df,
+            features_col="Features",
+            target_col="Target",
+            main_metric="accuracy",
         )
 
     assert ensemble.voting == "hard"

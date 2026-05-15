@@ -5,7 +5,6 @@ import pickle
 import numpy as np
 import pandas as pd
 
-from .metrics import CLASSIFICATION_METRICS
 from .model_selection import (
     build_equivalent_ensemble,
     check_assumptions,
@@ -188,6 +187,12 @@ def run(
 
     assert features in data_df.columns, f"Data does not contain a '{features}' column."
     assert target in data_df.columns, f"Data does not contain a '{target}' column."
+
+    if ensemble:
+        logging.info(
+            "Ensemble mode enabled. Will build an ensemble of statistically "
+            "equivalent top-n models instead of selecting a single best model."
+        )
 
     logging.info("Starting benchmarking.")
     logging.info(f"Features column: {features}")
@@ -481,9 +486,6 @@ def run(
         logging.info("Done!")
 
         logging.info("Building ensemble.")
-        classification = main_metric in CLASSIFICATION_METRICS
-        X_full = np.vstack(data_df[features].to_numpy())
-        y_full = np.vstack(data_df[target].to_numpy()).ravel()
         fitted_estimators = {
             model_name: tuned[model_name].best_estimator_
             for model_name in n_best_models
@@ -491,13 +493,14 @@ def run(
         final_model = build_equivalent_ensemble(
             top_n_models=n_best_models,
             estimators=fitted_estimators,
-            X=X_full,
-            y=y_full,
-            classification=classification,
+            df=data_df,
+            features_col=features,
+            target_col=target,
+            main_metric=main_metric,
         )
 
         with open(
-            f"results/{name}/final_model{parametric_suffix}.pkl",
+            f"results/{name}/ensemble_model{parametric_suffix}.pkl",
             "wb",
         ) as f:
             pickle.dump(final_model, f)
@@ -516,14 +519,69 @@ def run(
                 for key, value in best_params.items()
             }
         with open(
-            f"results/{name}/final_hyperparameters{parametric_suffix}.pkl",
+            f"results/{name}/ensemble_hyperparameters{parametric_suffix}.pkl",
             "wb",
         ) as f:
             pickle.dump(final_hyperparameters, f)
+        
+        logging.info("Final CV performance of ensemble:")
+        _ensemble_metric_list = [
+            m for m in [main_metric] + sec_metrics
+            if not (m in ["pr_auc", "roc_auc"] and getattr(final_model, "voting", None) == "hard")
+        ]
+        ensemble_results_dict = get_cv_performance(
+            model_class=final_model,
+            df=data_df,
+            features_col=features,
+            target_col=target,
+            fold_col=fold_col,
+            metric_list=_ensemble_metric_list,
+            impute=None,
+            remove_constant=None,
+            remove_correlated=None,
+            scaler=None,
+        )
+        mean_score_main = np.mean(ensemble_results_dict[main_metric])
+        std_score_main = np.std(ensemble_results_dict[main_metric])
+        median_score_main = np.median(ensemble_results_dict[main_metric])
+        sec_metrics_scores = {}
+        for metric in sec_metrics:
+            if metric in ensemble_results_dict:
+                sec_metrics_scores[metric] = [
+                    np.mean(ensemble_results_dict[metric]),
+                    np.std(ensemble_results_dict[metric]),
+                    np.median(ensemble_results_dict[metric]),
+                ]
+        with open(
+            f"results/{name}/ensemble_CV{parametric_suffix}.pkl",
+            "wb",
+        ) as f:
+            pickle.dump(ensemble_results_dict, f)
+
+        final_model_name = get_estimator_name(final_model)
+        flat_hyperparameters = {
+            f"{model_name}__{param}": value
+            for model_name, hparams in final_hyperparameters.items()
+            for param, value in hparams.items()
+        }
+        print_final_results(
+            final_model_name=final_model_name,
+            final_hyperparameters=flat_hyperparameters,
+            main_metric=main_metric,
+            mean_score_main=mean_score_main,
+            std_score_main=std_score_main,
+            median_score_main=median_score_main,
+            sec_metrics_scores=sec_metrics_scores,
+            file=(
+                logging.getLogger().handlers[0].stream.name
+                if not test_mode
+                else f"results/{name}/unit_test.log"
+            ),
+        )
 
         logging.info(
             f"Ensemble of {len(n_best_models)} models saved to "
-            f"results/{name}/final_model{parametric_suffix}.pkl."
+            f"results/{name}/ensemble_model{parametric_suffix}.pkl."
         )
 
     else:

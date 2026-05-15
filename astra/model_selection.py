@@ -871,9 +871,10 @@ def get_best_model(
 def build_equivalent_ensemble(
     top_n_models: list[str],
     estimators: dict[str, BaseEstimator],
-    X: np.ndarray,
-    y: np.ndarray,
-    classification: bool,
+    df: pd.DataFrame,
+    features_col: str,
+    target_col: str,
+    main_metric: str,
 ) -> BaseEstimator:
     """
     Build and fit an ensemble from statistically equivalent top-n models.
@@ -884,18 +885,23 @@ def build_equivalent_ensemble(
         Model names returned by find_n_best_models.
     estimators : dict[str, BaseEstimator]
         Map of model name -> fitted estimator (e.g. best_estimator_ from get_best_hparams).
-    X : np.ndarray
-        Full training feature matrix.
-    y : np.ndarray
-        Full training target vector.
-    classification : bool
-        True for classification tasks, False for regression.
+    df : pd.DataFrame
+        Full training dataframe.
+    features_col : str
+        Name of the column containing features.
+    target_col : str
+        Name of the column containing the target variable.
+    main_metric : str
+        Main metric, used to infer whether the task is classification or regression.
 
     Returns
     -------
     BaseEstimator
         A fitted VotingClassifier or VotingRegressor.
     """
+    classification = main_metric in CLASSIFICATION_METRICS
+    X = np.vstack(df[features_col].to_numpy())
+    y = np.vstack(df[target_col].to_numpy()).ravel()
     named_estimators = [(name, estimators[name]) for name in top_n_models]
     if classification:
         supports_proba = all(hasattr(est, "predict_proba") for _, est in named_estimators)

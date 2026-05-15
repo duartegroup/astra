@@ -160,6 +160,11 @@ def _setup_ensemble_mocks(monkeypatch, data_df, n_best):
         lambda **kw: {"ensemble": "fake"},  # picklable sentinel
     )
     monkeypatch.setattr("astra.benchmark.get_estimator_name", lambda x: "FM")
+    monkeypatch.setattr(
+        "astra.benchmark.get_cv_performance",
+        lambda **kw: {"mse": [0.1] * 5, "r2": [0.9] * 5},
+    )
+    monkeypatch.setattr("astra.benchmark.print_final_results", lambda **kw: None)
 
 
 # ---------------------------------------------------------------------------
@@ -539,9 +544,10 @@ def test_benchmark_ensemble_non_repeated(tmp_path, monkeypatch, single_fold_df):
         test_mode=True,
     )
 
-    assert os.path.exists("results/test_ensemble/final_model.pkl")
+    assert os.path.exists("results/test_ensemble/ensemble_model.pkl")
     assert os.path.exists("results/test_ensemble/ensemble_model_names.txt")
-    assert os.path.exists("results/test_ensemble/final_hyperparameters.pkl")
+    assert os.path.exists("results/test_ensemble/ensemble_hyperparameters.pkl")
+    assert os.path.exists("results/test_ensemble/ensemble_CV.pkl")
     with open("results/test_ensemble/ensemble_model_names.txt") as f:
         saved_names = f.read().splitlines()
     assert saved_names == n_best
