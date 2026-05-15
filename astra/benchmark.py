@@ -5,7 +5,9 @@ import pickle
 import numpy as np
 import pandas as pd
 
+from .metrics import CLASSIFICATION_METRICS
 from .model_selection import (
+    build_equivalent_ensemble,
     check_assumptions,
     find_n_best_models,
     get_best_hparams,
@@ -47,6 +49,7 @@ def run(
         | None
     ) = None,
     n_jobs: int = 1,
+    ensemble: bool = False,
     test_mode: bool = False,
 ) -> None:
     """
@@ -109,6 +112,12 @@ def run(
         Default models are defined in astra.models.classification and astra.models.regression.
     n_jobs : int, default=1
         Number of jobs to run in parallel for hyperparameter tuning.
+    ensemble : bool, default=False
+        Whether to build an ensemble of statistically equivalent top-n models instead of
+        selecting a single best model. When True and using non-repeated CV, each equivalent
+        model is hyperparameter-tuned separately and the resulting fitted estimators are
+        combined into a VotingClassifier or VotingRegressor saved as final_model.pkl. When
+        True and using repeated CV, the constituent model names are saved to a text file.
     test_mode : bool, default=False
         Exists for compatibility with the unit tests. If True, will run in test mode.
 
@@ -394,125 +403,249 @@ def run(
             os.remove(f"cache/{name}_nested_CV_ckpt.pkl")
             logging.info("Done!")
 
-    logging.info("Finding best model.")
-    best_model, reason = get_best_model(
-        results_dict=results,
-        main_metric=main_metric,
-        secondary_metrics=sec_metrics,
-        parametric=parametric,
-        bf_corr=True,
-        n_folds=n_folds,
-    )
-    logging.info(f"Best model: {best_model}. Reason: {reason}.")
-
-    if repeated_CV:
-        print_performance(
-            model_name=best_model,
-            results_dict=results[best_model],
-            file=(
-                logging.getLogger().handlers[0].stream.name
-                if not test_mode
-                else f"results/{name}/unit_test.log"
-            ),
+    if ensemble and repeated_CV:
+        logging.info("Finding best models.")
+        n_best_models = find_n_best_models(
+            results_dic=results,
+            metric=main_metric,
+            parametric=parametric,
+            bf_corr=True,
         )
+        logging.info(
+            f"Equivalent model ensemble ({len(n_best_models)} models): "
+            + ", ".join(n_best_models)
+        )
+        if len(n_best_models) < 3:
+            logging.info(
+                f"Only {len(n_best_models)} statistically equivalent model(s) found. "
+                "A small ensemble provides limited diversity and adds complexity for "
+                "modest gain."
+            )
+        for model_name in n_best_models:
+            print_performance(
+                model_name=model_name,
+                results_dict=results[model_name],
+                file=(
+                    logging.getLogger().handlers[0].stream.name
+                    if not test_mode
+                    else f"results/{name}/unit_test.log"
+                ),
+            )
         with open(
-            f"results/{name}/best_model{parametric_suffix}.txt",
+            f"results/{name}/ensemble_models{parametric_suffix}.txt",
             "w",
         ) as f:
-            f.write(f"{best_model}")
-    else:
-        logging.info("Starting final hyperparameter tuning.")
-        model = get_best_hparams(
-            model_class=models[best_model],
-            df=data_df,
-            features_col=features,
-            target_col=target,
-            fold_col=fold_col,
-            main_metric=main_metric,
-            sec_metrics=sec_metrics,
-            parameters=params[best_model],
-            n_jobs=n_jobs,
-            use_optuna=use_optuna,
-            n_trials=n_trials,
-            timeout=timeout,
-            impute=impute,
-            remove_constant=remove_constant,
-            remove_correlated=remove_correlated,
-            scaler=scaler,
-        )
-        logging.info("Done!")
+            f.write("\n".join(n_best_models))
 
-        final_model = model.best_estimator_
-        final_model_name = get_estimator_name(final_model)
-        final_hyperparameters = model.best_params_
-        final_hyperparameters = {
-            key.replace(f"{final_model_name.lower()}__", ""): value
-            for key, value in final_hyperparameters.items()
-        }
-        if use_optuna:
-            cv_results_df = pd.DataFrame(model.trials_dataframe())
-            final_results_dict = get_cv_performance(
-                model_class=models[best_model],
+    elif ensemble and not repeated_CV:
+        logging.info("Finding best models.")
+        n_best_models = find_n_best_models(
+            results_dic=results,
+            metric=main_metric,
+            parametric=parametric,
+            bf_corr=True,
+        )
+        logging.info(
+            f"Building ensemble from {len(n_best_models)} statistically equivalent "
+            "models: " + ", ".join(n_best_models)
+        )
+        if len(n_best_models) < 3:
+            logging.info(
+                f"Only {len(n_best_models)} statistically equivalent model(s) found. "
+                "A small ensemble provides limited diversity and adds complexity for "
+                "modest gain."
+            )
+
+        logging.info("Tuning constituent models for ensemble.")
+        tuned = {}
+        for model_name in n_best_models:
+            logging.info(f"Tuning {model_name}.")
+            tuned[model_name] = get_best_hparams(
+                model_class=models[model_name],
                 df=data_df,
                 features_col=features,
                 target_col=target,
                 fold_col=fold_col,
-                metric_list=[main_metric] + sec_metrics,
+                main_metric=main_metric,
+                sec_metrics=sec_metrics,
+                parameters=params[model_name],
+                n_jobs=n_jobs,
+                use_optuna=use_optuna,
+                n_trials=n_trials,
+                timeout=timeout,
                 impute=impute,
                 remove_constant=remove_constant,
                 remove_correlated=remove_correlated,
                 scaler=scaler,
-                custom_params=final_hyperparameters,
             )
-            mean_score_main = np.mean(final_results_dict[main_metric])
-            std_score_main = np.std(final_results_dict[main_metric])
-            median_score_main = np.median(final_results_dict[main_metric])
-            sec_metrics_scores = {}
-            for metric in sec_metrics:
-                sec_metrics_scores[metric] = [
-                    np.mean(final_results_dict[metric]),
-                    np.std(final_results_dict[metric]),
-                    np.median(final_results_dict[metric]),
-                ]
-        else:
-            cv_results_df = pd.DataFrame(model.cv_results_)
-            (
-                final_results_dict,
-                mean_score_main,
-                std_score_main,
-                median_score_main,
-                sec_metrics_scores,
-            ) = get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
-        with open(
-            f"results/{name}/final_CV{parametric_suffix}.pkl",
-            "wb",
-        ) as f:
-            pickle.dump(final_results_dict, f)
+        logging.info("Done!")
+
+        logging.info("Building ensemble.")
+        classification = main_metric in CLASSIFICATION_METRICS
+        X_full = np.vstack(data_df[features].to_numpy())
+        y_full = np.vstack(data_df[target].to_numpy()).ravel()
+        fitted_estimators = {
+            model_name: tuned[model_name].best_estimator_
+            for model_name in n_best_models
+        }
+        final_model = build_equivalent_ensemble(
+            top_n_models=n_best_models,
+            estimators=fitted_estimators,
+            X=X_full,
+            y=y_full,
+            classification=classification,
+        )
+
         with open(
             f"results/{name}/final_model{parametric_suffix}.pkl",
             "wb",
         ) as f:
             pickle.dump(final_model, f)
         with open(
+            f"results/{name}/ensemble_model_names{parametric_suffix}.txt",
+            "w",
+        ) as f:
+            f.write("\n".join(n_best_models))
+
+        final_hyperparameters = {}
+        for model_name in n_best_models:
+            best_params = tuned[model_name].best_params_
+            est_name = get_estimator_name(tuned[model_name].best_estimator_)
+            final_hyperparameters[model_name] = {
+                key.replace(f"{est_name.lower()}__", ""): value
+                for key, value in best_params.items()
+            }
+        with open(
             f"results/{name}/final_hyperparameters{parametric_suffix}.pkl",
             "wb",
         ) as f:
             pickle.dump(final_hyperparameters, f)
-        cv_results_df.to_csv(
-            f"results/{name}/final_CV_hparam_search{parametric_suffix}.csv"
+
+        logging.info(
+            f"Ensemble of {len(n_best_models)} models saved to "
+            f"results/{name}/final_model{parametric_suffix}.pkl."
         )
 
-        print_final_results(
-            final_model_name=final_model_name,
-            final_hyperparameters=final_hyperparameters,
+    else:
+        logging.info("Finding best model.")
+        best_model, reason = get_best_model(
+            results_dict=results,
             main_metric=main_metric,
-            mean_score_main=mean_score_main,
-            std_score_main=std_score_main,
-            median_score_main=median_score_main,
-            sec_metrics_scores=sec_metrics_scores,
-            file=(
-                logging.getLogger().handlers[0].stream.name
-                if not test_mode
-                else f"results/{name}/unit_test.log"
-            ),
+            secondary_metrics=sec_metrics,
+            parametric=parametric,
+            bf_corr=True,
+            n_folds=n_folds,
         )
+        logging.info(f"Best model: {best_model}. Reason: {reason}.")
+
+        if repeated_CV:
+            print_performance(
+                model_name=best_model,
+                results_dict=results[best_model],
+                file=(
+                    logging.getLogger().handlers[0].stream.name
+                    if not test_mode
+                    else f"results/{name}/unit_test.log"
+                ),
+            )
+            with open(
+                f"results/{name}/best_model{parametric_suffix}.txt",
+                "w",
+            ) as f:
+                f.write(f"{best_model}")
+        else:
+            logging.info("Starting final hyperparameter tuning.")
+            model = get_best_hparams(
+                model_class=models[best_model],
+                df=data_df,
+                features_col=features,
+                target_col=target,
+                fold_col=fold_col,
+                main_metric=main_metric,
+                sec_metrics=sec_metrics,
+                parameters=params[best_model],
+                n_jobs=n_jobs,
+                use_optuna=use_optuna,
+                n_trials=n_trials,
+                timeout=timeout,
+                impute=impute,
+                remove_constant=remove_constant,
+                remove_correlated=remove_correlated,
+                scaler=scaler,
+            )
+            logging.info("Done!")
+
+            final_model = model.best_estimator_
+            final_model_name = get_estimator_name(final_model)
+            final_hyperparameters = model.best_params_
+            final_hyperparameters = {
+                key.replace(f"{final_model_name.lower()}__", ""): value
+                for key, value in final_hyperparameters.items()
+            }
+            if use_optuna:
+                cv_results_df = pd.DataFrame(model.trials_dataframe())
+                final_results_dict = get_cv_performance(
+                    model_class=models[best_model],
+                    df=data_df,
+                    features_col=features,
+                    target_col=target,
+                    fold_col=fold_col,
+                    metric_list=[main_metric] + sec_metrics,
+                    impute=impute,
+                    remove_constant=remove_constant,
+                    remove_correlated=remove_correlated,
+                    scaler=scaler,
+                    custom_params=final_hyperparameters,
+                )
+                mean_score_main = np.mean(final_results_dict[main_metric])
+                std_score_main = np.std(final_results_dict[main_metric])
+                median_score_main = np.median(final_results_dict[main_metric])
+                sec_metrics_scores = {}
+                for metric in sec_metrics:
+                    sec_metrics_scores[metric] = [
+                        np.mean(final_results_dict[metric]),
+                        np.std(final_results_dict[metric]),
+                        np.median(final_results_dict[metric]),
+                    ]
+            else:
+                cv_results_df = pd.DataFrame(model.cv_results_)
+                (
+                    final_results_dict,
+                    mean_score_main,
+                    std_score_main,
+                    median_score_main,
+                    sec_metrics_scores,
+                ) = get_scores(cv_results_df, main_metric, sec_metrics, n_folds)
+            with open(
+                f"results/{name}/final_CV{parametric_suffix}.pkl",
+                "wb",
+            ) as f:
+                pickle.dump(final_results_dict, f)
+            with open(
+                f"results/{name}/final_model{parametric_suffix}.pkl",
+                "wb",
+            ) as f:
+                pickle.dump(final_model, f)
+            with open(
+                f"results/{name}/final_hyperparameters{parametric_suffix}.pkl",
+                "wb",
+            ) as f:
+                pickle.dump(final_hyperparameters, f)
+            cv_results_df.to_csv(
+                f"results/{name}/final_CV_hparam_search{parametric_suffix}.csv"
+            )
+
+            print_final_results(
+                final_model_name=final_model_name,
+                final_hyperparameters=final_hyperparameters,
+                main_metric=main_metric,
+                mean_score_main=mean_score_main,
+                std_score_main=std_score_main,
+                median_score_main=median_score_main,
+                sec_metrics_scores=sec_metrics_scores,
+                file=(
+                    logging.getLogger().handlers[0].stream.name
+                    if not test_mode
+                    else f"results/{name}/unit_test.log"
+                ),
+            )

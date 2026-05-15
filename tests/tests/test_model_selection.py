@@ -5,8 +5,10 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.svm import SVC
 
 from astra.model_selection import (
+    build_equivalent_ensemble,
     check_assumptions,
     check_best_model,
     check_pareto_dominant,
@@ -900,3 +902,73 @@ def test_get_best_model_pareto_fallback(monkeypatch):
     best, reason = get_best_model(results, "accuracy", ["f1"])
     assert best == "m1"
     assert reason == "Pareto dominance across metrics"
+
+
+# ---------------------------------------------------------------------------
+# build_equivalent_ensemble
+# ---------------------------------------------------------------------------
+
+
+def test_build_equivalent_ensemble_regression(regression_df):
+    X = np.vstack(regression_df["Features"].to_numpy())
+    y = regression_df["Target"].to_numpy()
+
+    est_a = LinearRegression().fit(X, y)
+    est_b = LinearRegression().fit(X, y)
+
+    ensemble = build_equivalent_ensemble(
+        top_n_models=["A", "B"],
+        estimators={"A": est_a, "B": est_b},
+        X=X,
+        y=y,
+        classification=False,
+    )
+
+    preds = ensemble.predict(X)
+    assert preds.shape == (len(y),)
+
+
+def test_build_equivalent_ensemble_classification_soft(classification_df):
+    X = np.vstack(classification_df["Features"].to_numpy())
+    y = classification_df["Target"].to_numpy()
+
+    est_a = LogisticRegression(max_iter=1000).fit(X, y)
+    est_b = LogisticRegression(max_iter=1000, C=0.1).fit(X, y)
+
+    ensemble = build_equivalent_ensemble(
+        top_n_models=["A", "B"],
+        estimators={"A": est_a, "B": est_b},
+        X=X,
+        y=y,
+        classification=True,
+    )
+
+    assert ensemble.voting == "soft"
+    assert hasattr(ensemble, "predict_proba")
+    preds = ensemble.predict(X)
+    assert preds.shape == (len(y),)
+
+
+def test_build_equivalent_ensemble_classification_hard_fallback(
+    classification_df, caplog
+):
+    X = np.vstack(classification_df["Features"].to_numpy())
+    y = classification_df["Target"].to_numpy()
+
+    # SVC without probability=True does not have predict_proba
+    est_a = LogisticRegression(max_iter=1000).fit(X, y)
+    est_b = SVC(kernel="linear").fit(X, y)
+
+    with caplog.at_level(logging.INFO):
+        ensemble = build_equivalent_ensemble(
+            top_n_models=["lr", "svc"],
+            estimators={"lr": est_a, "svc": est_b},
+            X=X,
+            y=y,
+            classification=True,
+        )
+
+    assert ensemble.voting == "hard"
+    assert "hard voting" in caplog.text
+    preds = ensemble.predict(X)
+    assert preds.shape == (len(y),)

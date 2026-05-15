@@ -1,8 +1,11 @@
 from ._version import __version__
 from .data import CorrelationFilter
 from .model_selection import (
+    build_equivalent_ensemble,
     check_assumptions,
     check_best_model,
+    check_pareto_dominant,
+    corrected_ttest,
     find_n_best_models,
     get_best_hparams,
     get_best_model,
@@ -25,7 +28,10 @@ from .models import (
 __all__ = [
     "__version__",
     "CorrelationFilter",
+    "build_equivalent_ensemble",
     "check_assumptions",
+    "check_pareto_dominant",
+    "corrected_ttest",
     "tukey_hsd",
     "find_n_best_models",
     "perform_statistical_tests",

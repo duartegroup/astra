@@ -19,6 +19,7 @@ from scipy.stats import f as f_dist
 from scipy.stats import levene, shapiro, wilcoxon
 from scipy.stats import t as t_dist
 from sklearn.base import BaseEstimator, clone
+from sklearn.ensemble import VotingClassifier, VotingRegressor
 from sklearn.model_selection import GridSearchCV
 from statsmodels.stats.libqsturng import psturng
 from statsmodels.stats.multitest import multipletests
@@ -865,6 +866,50 @@ def get_best_model(
         reason = "mean CV score"
 
     return best_model, reason
+
+
+def build_equivalent_ensemble(
+    top_n_models: list[str],
+    estimators: dict[str, BaseEstimator],
+    X: np.ndarray,
+    y: np.ndarray,
+    classification: bool,
+) -> BaseEstimator:
+    """
+    Build and fit an ensemble from statistically equivalent top-n models.
+
+    Parameters
+    ----------
+    top_n_models : list[str]
+        Model names returned by find_n_best_models.
+    estimators : dict[str, BaseEstimator]
+        Map of model name -> fitted estimator (e.g. best_estimator_ from get_best_hparams).
+    X : np.ndarray
+        Full training feature matrix.
+    y : np.ndarray
+        Full training target vector.
+    classification : bool
+        True for classification tasks, False for regression.
+
+    Returns
+    -------
+    BaseEstimator
+        A fitted VotingClassifier or VotingRegressor.
+    """
+    named_estimators = [(name, estimators[name]) for name in top_n_models]
+    if classification:
+        supports_proba = all(hasattr(est, "predict_proba") for _, est in named_estimators)
+        if not supports_proba:
+            logging.info(
+                "One or more ensemble members do not support predict_proba; "
+                "falling back to hard voting."
+            )
+        voting = "soft" if supports_proba else "hard"
+        ensemble = VotingClassifier(estimators=named_estimators, voting=voting)
+    else:
+        ensemble = VotingRegressor(estimators=named_estimators)
+    ensemble.fit(X, y)
+    return ensemble
 
 
 def get_cv_performance(

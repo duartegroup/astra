@@ -188,6 +188,16 @@ def get_CLI_parser() -> argparse.ArgumentParser:
         default=1,
         help="Number of jobs to run in parallel for hyperparameter tuning. Default: 1.",
     )
+    benchmark_parser.add_argument(
+        "--ensemble",
+        action="store_true",
+        default=False,
+        help="Build an ensemble of statistically equivalent top-n models instead of\n"
+        "selecting a single best model. For non-repeated CV, each equivalent model\n"
+        "is hyperparameter-tuned separately and combined into a VotingClassifier or\n"
+        "VotingRegressor saved as final_model.pkl. For repeated CV, constituent model\n"
+        "names are saved to ensemble_models.txt. Default: False.",
+    )
 
     compare_parser = subparsers.add_parser("compare", help="Compare model performance")
     compare_parser.add_argument(
@@ -325,6 +335,7 @@ def main() -> int:
             scaler=args.scaler,
             custom_models=args.models if hasattr(args, "models") else None,
             n_jobs=args.n_jobs,
+            ensemble=args.ensemble,
         )
 
     elif args.command == "compare":

@@ -129,6 +129,39 @@ def _setup_repeated_cv_mocks(monkeypatch, data_df):
     )
 
 
+def _setup_ensemble_mocks(monkeypatch, data_df, n_best):
+    """Wire up mocks for an ensemble benchmark run."""
+    mock_search = MagicMock()
+    mock_search.best_estimator_ = MagicMock()
+    mock_search.best_params_ = {"fm__param": 1}
+
+    monkeypatch.setattr("astra.benchmark.get_data", lambda *_, **__: data_df)
+    monkeypatch.setattr(
+        "astra.benchmark.get_models",
+        lambda **kw: (
+            {m: MagicMock() for m in n_best},
+            {m: {} for m in n_best},
+            None,
+        ),
+    )
+    monkeypatch.setattr(
+        "astra.benchmark.run_CV",
+        lambda **kw: {m: {"mse": [0.1] * 5, "r2": [0.9] * 5} for m in n_best},
+    )
+    monkeypatch.setattr("astra.benchmark.check_assumptions", lambda **kw: True)
+    monkeypatch.setattr(
+        "astra.benchmark.find_n_best_models", lambda *a, **kw: n_best
+    )
+    monkeypatch.setattr(
+        "astra.benchmark.get_best_hparams", lambda **kw: mock_search
+    )
+    monkeypatch.setattr(
+        "astra.benchmark.build_equivalent_ensemble",
+        lambda **kw: {"ensemble": "fake"},  # picklable sentinel
+    )
+    monkeypatch.setattr("astra.benchmark.get_estimator_name", lambda x: "FM")
+
+
 # ---------------------------------------------------------------------------
 # Integration tests
 # ---------------------------------------------------------------------------
@@ -484,3 +517,92 @@ def test_benchmark_nested_cv_repeated_cv_warning(
         )
 
     assert "run_nested_CV=True is not supported with repeated CV" in caplog.text
+
+
+# ---------------------------------------------------------------------------
+# Ensemble tests
+# ---------------------------------------------------------------------------
+
+
+def test_benchmark_ensemble_non_repeated(tmp_path, monkeypatch, single_fold_df):
+    monkeypatch.chdir(tmp_path)
+    n_best = ["ModelA", "ModelB", "ModelC"]
+    _setup_ensemble_mocks(monkeypatch, single_fold_df, n_best)
+
+    run(
+        data="dummy.csv",
+        name="test_ensemble",
+        main_metric="mse",
+        sec_metrics=["r2"],
+        fold_col="Fold_0",
+        ensemble=True,
+        test_mode=True,
+    )
+
+    assert os.path.exists("results/test_ensemble/final_model.pkl")
+    assert os.path.exists("results/test_ensemble/ensemble_model_names.txt")
+    assert os.path.exists("results/test_ensemble/final_hyperparameters.pkl")
+    with open("results/test_ensemble/ensemble_model_names.txt") as f:
+        saved_names = f.read().splitlines()
+    assert saved_names == n_best
+
+
+def test_benchmark_ensemble_repeated_cv(tmp_path, monkeypatch, repeated_fold_df):
+    monkeypatch.chdir(tmp_path)
+    n_best = ["ModelA", "ModelB"]
+
+    fake_results = {m: {"mse": [0.1] * 10, "r2": [0.9] * 10} for m in n_best}
+    os.makedirs("results/test_ensemble_rc", exist_ok=True)
+    with open("results/test_ensemble_rc/default_CV_all_folds.pkl", "wb") as fh:
+        pickle.dump(fake_results, fh)
+
+    monkeypatch.setattr("astra.benchmark.get_data", lambda *_, **__: repeated_fold_df)
+    monkeypatch.setattr(
+        "astra.benchmark.get_models",
+        lambda **kw: (
+            {m: MagicMock() for m in n_best},
+            {m: {} for m in n_best},
+            None,
+        ),
+    )
+    monkeypatch.setattr("astra.benchmark.check_assumptions", lambda **kw: True)
+    monkeypatch.setattr(
+        "astra.benchmark.find_n_best_models", lambda *a, **kw: n_best
+    )
+    monkeypatch.setattr("astra.benchmark.print_performance", lambda **kw: None)
+
+    run(
+        data="dummy.csv",
+        name="test_ensemble_rc",
+        main_metric="mse",
+        sec_metrics=["r2"],
+        fold_col=["Fold_0", "Fold_1"],
+        ensemble=True,
+        test_mode=True,
+    )
+
+    assert os.path.exists("results/test_ensemble_rc/ensemble_models.txt")
+    with open("results/test_ensemble_rc/ensemble_models.txt") as f:
+        saved_names = f.read().splitlines()
+    assert saved_names == n_best
+
+
+def test_benchmark_ensemble_small_logs_warning(
+    tmp_path, monkeypatch, single_fold_df, caplog
+):
+    monkeypatch.chdir(tmp_path)
+    n_best = ["ModelA", "ModelB"]  # < 3 triggers the diversity warning
+    _setup_ensemble_mocks(monkeypatch, single_fold_df, n_best)
+
+    with caplog.at_level(logging.INFO):
+        run(
+            data="dummy.csv",
+            name="test_ensemble_small",
+            main_metric="mse",
+            sec_metrics=["r2"],
+            fold_col="Fold_0",
+            ensemble=True,
+            test_mode=True,
+        )
+
+    assert "limited diversity" in caplog.text
